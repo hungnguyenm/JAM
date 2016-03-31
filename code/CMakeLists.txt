@@ -3,7 +3,7 @@ project(JAM)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES src/main.cpp)
+set(SOURCE_FILES src/main.cpp src/client_manager.cpp)
 add_executable(JAM ${SOURCE_FILES})
 
 set(DEV_B_SOURCES src/dev/dev_b.cpp)
