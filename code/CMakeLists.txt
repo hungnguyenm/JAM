@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.4)
 project(JAM)
 
-message(STATUS "running cmake...")
+message(STATUS "Running cmake...")
 
 find_package(Boost 1.58.0 COMPONENTS system filesystem REQUIRED)
 if(Boost_FOUND)
