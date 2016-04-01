@@ -7,7 +7,7 @@ using namespace std;
 int main() {
     cout << "Test";
 
-    Payload payload;
+    Payload payload();
 
     return 0;
 }

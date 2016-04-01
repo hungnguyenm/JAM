@@ -10,28 +10,22 @@
 
 #include "../include/payload.h"
 
-Payload::Payload(std::string ip, uint32_t port) {
+using namespace std;
 
+Payload::Payload() {
+    _type = NA;
 }
 
 Payload::~Payload() {
 
 }
 
-const uint8_t *Payload::ip() const {
-    return _ip;
+const sockaddr_in &Payload::GetAddress() const {
+    return _address;
 }
 
-uint8_t *Payload::ip() {
-    return _ip;
-}
-
-uint32_t Payload::GetPort() const {
-    return _port;
-}
-
-void Payload::SetPort(uint32_t port) {
-    _port = port;
+void Payload::SetAddress(const sockaddr_in &address) {
+    Payload::_address = address;
 }
 
 EncryptOption Payload::GetEncryption() const {
@@ -78,21 +72,47 @@ uint32_t Payload::GetMessageLength() const {
     return _message_length;
 }
 
-const uint8_t *Payload::message() const {
-    return _message;
+string Payload::GetUsername() {
+    return string(_username, _username + _username_length);
+};
+
+JamStatus Payload::SetUsername(string username) {
+    JamStatus ret = SUCCESS;
+
+    if (username.size() < MAX_USER_NAME_LENGTH) {
+        _username_length = (uint32_t) username.size() + 1;
+        uint32_t i = 0;
+        for(i = 0; i < _username_length; i++) {
+            _username[i] = (uint8_t) username[i];
+        }
+        _username[i] = '\0';
+    } else {
+        ret = ERROR_INVALID_PARAMETERS;
+    }
+
+    return ret;
+};
+
+string Payload::GetMessage() {
+    return string(_message, _message + _message_length);
 }
 
-uint8_t *Payload::message() {
-    return _message;
-}
+JamStatus Payload::SetMessage(string message) {
+    JamStatus ret = SUCCESS;
 
-const uint8_t *Payload::username() const {
-    return _username;
-}
+    if (message.size() < MAX_MESSAGE_LENGTH) {
+        _message_length = (uint32_t) message.size() + 1;
+        uint32_t i = 0;
+        for(i = 0; i < _message_length; i++) {
+            _message[i] = (uint8_t) message[i];
+        }
+        _message[i] = '\0';
+    } else {
+        ret = ERROR_INVALID_PARAMETERS;
+    }
 
-uint8_t *Payload::username() {
-    return _username;
-}
+    return ret;
+};
 
 const uint8_t *Payload::payload() const {
     return _payload;
@@ -187,7 +207,27 @@ JamStatus Payload::DecodePayload() {
 JamStatus Payload::ValidateForEncode() {
     JamStatus ret = SUCCESS;
 
-    // TODO: implement encoding validation algorithm
+    // Validation logic:
+    // + UDP Port must be set to greater than MIN_PORT
+    // + Message type must be set to other than NA
+    // + UID must be set to greater than 0
+    // + If type is Chat Message then it must contain an username length & message length > 0
+
+    if (_address.sin_port < MIN_PORT || _uid == 0)
+        ret = ENCODE_VALIDATION_FAILED;
+
+    switch (_type) {
+        case CHAT_MSG:
+            if (_username_length == 0 || _message_length == 0)
+                ret = ENCODE_VALIDATION_FAILED;
+            break;
+        case NA:
+            ret = ENCODE_VALIDATION_FAILED;
+            break;
+        default:
+            break;
+    }
+
     return ret;
 }
 

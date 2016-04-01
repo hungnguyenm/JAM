@@ -11,6 +11,8 @@
 #ifndef JAM_CONFIG_H
 #define JAM_CONFIG_H
 
+#define DEFAULT_PORT            9000    // Default UDP datagram port
+#define MIN_PORT                9000    // Port must be greater than MIN_PORT
 #define MAX_MESSAGE_LENGTH      100     // Maximum message length per payload
 #define MAX_USER_NAME_LENGTH    20      // Maximum displayed user name length
 
@@ -26,6 +28,7 @@ enum JamStatus {
     SUCCESS								= MK_ERROR(0x0000),
 
     ERROR_UNEXPECTED					= MK_ERROR(0x0001),
+    ERROR_INVALID_PARAMETERS            = MK_ERROR(0x0002),
 
     ENCODE_ERROR						= MK_ERROR(0x1001),
     ENCODE_VALIDATION_FAILED            = MK_ERROR(0x1002),

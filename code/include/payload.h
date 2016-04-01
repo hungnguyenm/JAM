@@ -15,9 +15,13 @@
 #include <cstdint>
 #include <cstdlib>
 #include <string>
+#include <vector>
+
+#include <sys/socket.h>
+#include <netdb.h>
 
 enum MessageType : uint8_t {
-    CHAT_MSG, STATUS_MSG, ELECTION_MSG, RECOVER_MSG, ACK_MSG
+    CHAT_MSG, STATUS_MSG, ELECTION_MSG, RECOVER_MSG, ACK_MSG, NA
 };
 
 enum Status : uint8_t {
@@ -38,17 +42,13 @@ enum AckStatus : uint8_t {
 
 class Payload {
 public:
-    Payload(std::string ip, uint32_t port);
+    Payload();
 
     ~Payload();
 
-    const uint8_t *ip() const;
+    const sockaddr_in &GetAddress() const;
 
-    uint8_t *ip();
-
-    uint32_t GetPort() const;
-
-    void SetPort(uint32_t port);
+    void SetAddress(const sockaddr_in &address);
 
     EncryptOption GetEncryption() const;
 
@@ -72,13 +72,13 @@ public:
 
     uint32_t GetMessageLength() const;
 
-    const uint8_t *message() const;
+    std::string GetUsername();
 
-    uint8_t *message();
+    JamStatus SetUsername(std::string username);
 
-    const uint8_t *username() const;
+    std::string GetMessage();
 
-    uint8_t *username();
+    JamStatus SetMessage(std::string message);
 
     const uint8_t *payload() const;
 
@@ -106,15 +106,10 @@ public:
 
 private:
     enum {
-        HEADER_LENGTH = 10          // (in bytes)
-    };
-    enum {
-        IP_LENGTH = 16              // IPv4 only (in bytes)
+        HEADER_LENGTH = 18          // (in bytes)
     };
 
-    uint8_t _ip[IP_LENGTH];
-    uint32_t _port;                 // UDP port
-    uint32_t _length;               // Total payload length in byte stream
+    sockaddr_in _address;           // Sender/Receiver address (IPv4 only)
     EncryptOption _encrypt;
     uint8_t _username[MAX_USER_NAME_LENGTH];
     uint8_t _message[MAX_MESSAGE_LENGTH];
@@ -123,7 +118,7 @@ private:
     MessageType _type;              // Payload type
     int32_t _order;                 // -1 for no total-ordering
     uint32_t _uid;                  // Unique sequence ID for each client
-    union {                   // Payload _code for each message type
+    union {                         // Payload code for each message type
         Status status;
         ElectionCommand election;
         RecoverCommand recover;
