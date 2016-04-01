@@ -7,7 +7,7 @@ message(STATUS "Running cmake...")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11")
 
-find_package(Boost 1.58.0 COMPONENTS signals)
+find_package(Boost 1.58.0 COMPONENTS thread)
 if(Boost_FOUND)
     message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
     message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
@@ -26,9 +26,12 @@ set(DEV_C_SOURCES src/dev/dev_c.cpp)
 add_executable(jam-dev_c ${DEV_C_SOURCES})
 
 # Executables depend on BOOST:
-set(DEV_H_SOURCES src/dev/dev_h.cpp)
-add_executable(jam-dev_h ${DEV_H_SOURCES})
+set(DEV_H_HEADERS include/config.h include/payload.h)
+set(DEV_H_SOURCES src/dev/dev_h.cpp src/payload.cpp)
+add_executable(jam-dev_h_1 ${DEV_H_HEADERS} ${DEV_H_SOURCES})
+add_executable(jam-dev_h_2 ${DEV_H_HEADERS} ${DEV_H_SOURCES})
 
 if(Boost_FOUND)
-    target_link_libraries(jam-dev_h ${Boost_LIBRARIES})
+    target_link_libraries(jam-dev_h_1 ${Boost_LIBRARIES})
+    target_link_libraries(jam-dev_h_2 ${Boost_LIBRARIES})
 endif()
