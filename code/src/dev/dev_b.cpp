@@ -1,29 +1,14 @@
-//
-// Created by Hung Nguyen on 3/31/16.
-//
-// C++ includes
-#include <vector>
-#include <string>
 #include <iostream>
 
-void add_client(const std::string& name);
-struct Client {
-    std::string client_name;
-};
+using namespace std;
+#include "../../include/client_manager.h"
 
-std::vector<Client> client_list;
-
-int main() {
-    std::cout << "Hello, World!" << std::endl;
-
-    std::string name = "Bipeen";
-    add_client(name);
+// create a cat, set its age, have it
+// meow, tell us its age, then meow again.
+int main()
+{
+    //cout<<"How old is Frisky? ";
+    //cin>>Age;
+    ClientManager Frisky();
     return 0;
-}
-
-void add_client(const std::string& name) {
-    Client cl;
-    cl.client_name = name;
-
-    client_list.push_back(cl);
 }

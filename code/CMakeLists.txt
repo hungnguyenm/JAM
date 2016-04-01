@@ -19,7 +19,7 @@ endif()
 set(SOURCE_FILES src/main.cpp)
 add_executable(jam-main ${SOURCE_FILES})
 
-set(DEV_B_SOURCES src/dev/dev_b.cpp)
+set(DEV_B_SOURCES src/dev/dev_b.cpp src/client_manager.cpp)
 add_executable(jam-dev_b ${DEV_B_SOURCES})
 
 set(DEV_C_SOURCES src/dev/dev_c.cpp)
