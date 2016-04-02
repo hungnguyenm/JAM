@@ -3,6 +3,9 @@
  *
  * payload.h
  * Payload object sent over the network via UDP wrapper.
+ * There are 2 different payloads:
+ *  + Normal communication payload
+ *  + ACK payload
  *
  * @author: Hung Nguyen
  * @version 1.0 04/01/16
@@ -58,15 +61,21 @@ public:
 
     void SetType(MessageType type);
 
-    int32_t GetOrder() const;
-
-    void SetOrder(int32_t order);
-
     uint32_t GetUid() const;
 
     void SetUid(uint32_t uid);
 
+    AckStatus GetAck() const;
+
+    void SetAck(AckStatus ack);
+
+    int32_t GetOrder() const;
+
+    void SetOrder(int32_t order);
+
     std::size_t GetLength() const;
+
+    void SetLength(uint32_t length);
 
     uint32_t GetUsernameLength() const;
 
@@ -85,7 +94,7 @@ public:
     uint8_t *payload();
 
     /*
-     * Function:  EncodePayload
+     * Function: EncodePayload
      * --------------------
      * computes byte stream payload from private variables
      *
@@ -95,7 +104,17 @@ public:
     JamStatus EncodePayload();
 
     /*
-     * Function:  DecodePayload
+     * Function: EncodeAckPayload
+     * --------------------
+     * computes byte stream ack payload without prior private variables
+     *
+     *  returns: SUCCESS on normal operation
+     *           other JamStatus errors otherwise
+     */
+    JamStatus EncodeAckPayload(uint32_t uid, AckStatus ack);
+
+    /*
+     * Function: DecodePayload
      * --------------------
      * extracts private variables from byte stream payload
      *
@@ -106,29 +125,34 @@ public:
 
 private:
     enum {
-        HEADER_LENGTH = 18          // (in bytes)
+        ACK_LENGTH = 5,             // byte stream length for ACK message
+        HEADER_LENGTH = 18          // header byte stream length for normal message
     };
 
-    sockaddr_in _address;           // Sender/Receiver address (IPv4 only)
-    EncryptOption _encrypt;
-    uint8_t _username[MAX_USER_NAME_LENGTH];
-    uint8_t _message[MAX_MESSAGE_LENGTH];
+    sockaddr_in address_;           // Sender/Receiver address (IPv4 only)
+    EncryptOption encrypt_;
+    uint8_t username_[MAX_USER_NAME_LENGTH];
+    uint8_t message_[MAX_MESSAGE_LENGTH];
 
     // The following variables are encoded in header in the same order
-    MessageType _type;              // Payload type
-    int32_t _order;                 // -1 for no total-ordering
-    uint32_t _uid;                  // Unique sequence ID for each client
+    MessageType type_;              // Payload type
+    uint32_t uid_;                  // Unique sequence ID for each client
+
+    // -- If ACK payload
+    AckStatus ack_;                 // ACK status
+    // -- If normal payload
+    int32_t order_;                 // -1 for no total-ordering
     union {                         // Payload code for each message type
         Status status;
         ElectionCommand election;
         RecoverCommand recover;
-        AckStatus ack;
-    } _code;
-    uint32_t _username_length;      // User name string length in payload
-    uint32_t _message_length;       // Message string length in payload
+    } code_;
+    uint32_t username_length_;      // User name string length in payload
+    uint32_t message_length_;       // Message string length in payload
 
     // Actual payload in byte stream
-    uint8_t _payload[HEADER_LENGTH + MAX_USER_NAME_LENGTH + MAX_MESSAGE_LENGTH];
+    uint8_t payload_[HEADER_LENGTH + MAX_USER_NAME_LENGTH + MAX_MESSAGE_LENGTH];
+    uint32_t length_;
 
     // Helper functions
     // -- Validate functions

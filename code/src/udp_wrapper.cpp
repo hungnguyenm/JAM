@@ -10,3 +10,13 @@
  * -------------------------------------------------------------------------*/
 
 #include "../include/udp_wrapper.h"
+
+using namespace std;
+
+UdpWrapper::UdpWrapper() {
+
+}
+
+UdpWrapper::~UdpWrapper() {
+
+}

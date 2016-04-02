@@ -1,8 +1,11 @@
 /* ---------------------------------------------------------------------------
  * Just Another Messenger (JAM)
  *
- * payload.cpp
+ * payload.h
  * Payload object sent over the network via UDP wrapper.
+ * There are 2 different payloads:
+ *  + Normal communication payload
+ *  + ACK payload
  *
  * @author: Hung Nguyen
  * @version 1.0 04/01/16
@@ -13,7 +16,7 @@
 using namespace std;
 
 Payload::Payload() {
-    _type = NA;
+    type_ = NA;
 }
 
 Payload::~Payload() {
@@ -21,71 +24,90 @@ Payload::~Payload() {
 }
 
 const sockaddr_in &Payload::GetAddress() const {
-    return _address;
+    return address_;
 }
 
 void Payload::SetAddress(const sockaddr_in &address) {
-    Payload::_address = address;
+    Payload::address_ = address;
 }
 
 EncryptOption Payload::GetEncryption() const {
-    return _encrypt;
+    return encrypt_;
 }
 
 void Payload::SetEncryption(EncryptOption encrypt) {
-    _encrypt = encrypt;
+    encrypt_ = encrypt;
 }
 
 MessageType Payload::GetType() const {
-    return _type;
+    return type_;
 }
 
 void Payload::SetType(MessageType type) {
-    _type = type;
-}
-
-int32_t Payload::GetOrder() const {
-    return _order;
-}
-
-void Payload::SetOrder(int32_t order) {
-    _order = order;
+    type_ = type;
+    if (type_ == ACK_MSG) {
+        length_ = ACK_LENGTH;
+    } else if (type_!= NA) {
+        length_ = HEADER_LENGTH + username_length_ + message_length_;
+    }
 }
 
 uint32_t Payload::GetUid() const {
-    return _uid;
+    return uid_;
 }
 
 void Payload::SetUid(uint32_t uid) {
-    _uid = uid;
+    uid_ = uid;
+}
+
+AckStatus Payload::GetAck() const {
+    return ack_;
+}
+
+void Payload::SetAck(AckStatus ack) {
+    Payload::ack_ = ack;
+}
+
+int32_t Payload::GetOrder() const {
+    return order_;
+}
+
+void Payload::SetOrder(int32_t order) {
+    order_ = order;
 }
 
 size_t Payload::GetLength() const {
-    return HEADER_LENGTH + _username_length + _message_length;
+    return length_;
 }
 
+void Payload::SetLength(uint32_t length) {
+    length_ = length;
+}
+
+
 uint32_t Payload::GetUsernameLength() const {
-    return _username_length;
+    return username_length_;
 }
 
 uint32_t Payload::GetMessageLength() const {
-    return _message_length;
+    return message_length_;
 }
 
 string Payload::GetUsername() {
-    return string(_username, _username + _username_length);
+    return string(username_, username_ + username_length_);
 };
 
 JamStatus Payload::SetUsername(string username) {
     JamStatus ret = SUCCESS;
 
     if (username.size() < MAX_USER_NAME_LENGTH) {
-        _username_length = (uint32_t) username.size() + 1;
+        username_length_ = (uint32_t) username.size() + 1;
         uint32_t i = 0;
-        for(i = 0; i < _username_length; i++) {
-            _username[i] = (uint8_t) username[i];
+        for (i = 0; i < username_length_; i++) {
+            username_[i] = (uint8_t) username[i];
         }
-        _username[i] = '\0';
+        username_[i] = '\0';
+        length_ = HEADER_LENGTH + username_length_ + message_length_;
     } else {
         ret = ERROR_INVALID_PARAMETERS;
     }
@@ -94,19 +116,20 @@ JamStatus Payload::SetUsername(string username) {
 };
 
 string Payload::GetMessage() {
-    return string(_message, _message + _message_length);
+    return string(message_, message_ + message_length_);
 }
 
 JamStatus Payload::SetMessage(string message) {
     JamStatus ret = SUCCESS;
 
     if (message.size() < MAX_MESSAGE_LENGTH) {
-        _message_length = (uint32_t) message.size() + 1;
+        message_length_ = (uint32_t) message.size() + 1;
         uint32_t i = 0;
-        for(i = 0; i < _message_length; i++) {
-            _message[i] = (uint8_t) message[i];
+        for (i = 0; i < message_length_; i++) {
+            message_[i] = (uint8_t) message[i];
         }
-        _message[i] = '\0';
+        message_[i] = '\0';
+        length_ = HEADER_LENGTH + username_length_ + message_length_;
     } else {
         ret = ERROR_INVALID_PARAMETERS;
     }
@@ -115,44 +138,41 @@ JamStatus Payload::SetMessage(string message) {
 };
 
 const uint8_t *Payload::payload() const {
-    return _payload;
+    return payload_;
 };
 
 uint8_t *Payload::payload() {
-    return _payload;
+    return payload_;
 };
 
 JamStatus Payload::EncodePayload() {
     JamStatus ret = SUCCESS;
-    uint8_t *buffer = _payload;
+    uint8_t *buffer = payload_;
 
     if (ValidateForEncode() == SUCCESS) {
         try {
-            packu8(buffer, _type);
-            packi32(buffer, _order);
-            packu32(buffer, _uid);
-            switch (_type) {
+            packu8(buffer, type_);
+            packu32(buffer, uid_);
+            packi32(buffer, order_);
+            switch (type_) {
                 case STATUS_MSG:
-                    packu8(buffer, _code.status);
+                    packu8(buffer, code_.status);
                     break;
                 case ELECTION_MSG:
-                    packu8(buffer, _code.election);
+                    packu8(buffer, code_.election);
                     break;
                 case RECOVER_MSG:
-                    packu8(buffer, _code.recover);
-                    break;
-                case ACK_MSG:
-                    packu8(buffer, _code.ack);
+                    packu8(buffer, code_.recover);
                     break;
                 default:
                     packu8(buffer, 0);
                     break;
             }
-            packu32(buffer, _username_length);
-            packu32(buffer, _message_length);
-            memcpy(buffer, _username, _username_length);
-            buffer += _username_length;
-            memcpy(buffer, _message, _message_length);
+            packu32(buffer, username_length_);
+            packu32(buffer, message_length_);
+            memcpy(buffer, username_, username_length_);
+            buffer += username_length_;
+            memcpy(buffer, message_, message_length_);
         } catch (...) {
             ret = ENCODE_ERROR;
         }
@@ -164,36 +184,59 @@ JamStatus Payload::EncodePayload() {
     return ret;
 }
 
+JamStatus Payload::EncodeAckPayload(uint32_t uid, AckStatus ack) {
+    JamStatus ret = SUCCESS;
+    uint8_t *buffer = payload_;
+
+    try {
+        // Set private variables accordingly
+        type_ = ACK_MSG;
+        uid_ = uid;
+        ack_ = ack;
+        length_ = ACK_LENGTH;
+
+        // Computes payload
+        packu8(buffer, type_);
+        packu32(buffer, uid_);
+        packu8(buffer, ack_);
+    } catch (...) {
+        ret = ENCODE_ERROR;
+    }
+
+    return ret;
+}
+
 JamStatus Payload::DecodePayload() {
     JamStatus ret = SUCCESS;
-    uint8_t *buffer = _payload;
+    uint8_t *buffer = payload_;
 
     if (ValidateForDecode() == SUCCESS) {
         try {
-            _type = (MessageType) unpacku8(buffer);
-            _order = unpacki32(buffer);
-            _uid = unpacku32(buffer);
-            switch (_type) {
-                case STATUS_MSG:
-                    _code.status = (Status) unpacku8(buffer);
-                    break;
-                case ELECTION_MSG:
-                    _code.election = (ElectionCommand) unpacku8(buffer);
-                    break;
-                case RECOVER_MSG:
-                    _code.recover = (RecoverCommand) unpacku8(buffer);
-                    break;
-                case ACK_MSG:
-                    _code.ack = (AckStatus) unpacku8(buffer);
-                    break;
-                default:
-                    break;
+            type_ = (MessageType) unpacku8(buffer);
+            uid_ = unpacku32(buffer);
+            if (type_ == ACK_MSG) {
+                ack_ = (AckStatus) unpacku8(buffer);
+            } else {
+                order_ = unpacki32(buffer);
+                switch (type_) {
+                    case STATUS_MSG:
+                        code_.status = (Status) unpacku8(buffer);
+                        break;
+                    case ELECTION_MSG:
+                        code_.election = (ElectionCommand) unpacku8(buffer);
+                        break;
+                    case RECOVER_MSG:
+                        code_.recover = (RecoverCommand) unpacku8(buffer);
+                        break;
+                    default:
+                        break;
+                }
+                username_length_ = unpacku32(buffer);
+                message_length_ = unpacku32(buffer);
+                memcpy(username_, buffer, username_length_);
+                buffer += username_length_;
+                memcpy(message_, buffer, message_length_);
             }
-            _username_length = unpacku32(buffer);
-            _message_length = unpacku32(buffer);
-            memcpy(_username, buffer, _username_length);
-            buffer += _username_length;
-            memcpy(_message, buffer, _message_length);
         } catch (...) {
             ret = DECODE_ERROR;
         }
@@ -209,17 +252,20 @@ JamStatus Payload::ValidateForEncode() {
 
     // Validation logic:
     // + UDP Port must be set to greater than MIN_PORT
-    // + Message type must be set to other than NA
+    // + Message type must be set to other than ACK_MSG and NA
     // + UID must be set to greater than 0
     // + If type is Chat Message then it must contain an username length & message length > 0
 
-    if (_address.sin_port < MIN_PORT || _uid == 0)
+    if (address_.sin_port < MIN_PORT || uid_ == 0)
         ret = ENCODE_VALIDATION_FAILED;
 
-    switch (_type) {
+    switch (type_) {
         case CHAT_MSG:
-            if (_username_length == 0 || _message_length == 0)
+            if (username_length_ == 0 || message_length_ == 0)
                 ret = ENCODE_VALIDATION_FAILED;
+            break;
+        case ACK_MSG:
+            ret = ENCODE_VALIDATION_FAILED;
             break;
         case NA:
             ret = ENCODE_VALIDATION_FAILED;

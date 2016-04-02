@@ -8,13 +8,22 @@
 
 class ClientManager {
     char *string;
+    std::vector<sockaddr_in> _client_list;
+
+
     public:                    // begin public section
         ClientManager();     // constructor
-        //Cat(const Cat& copy_from); //copy constructor
-        //Cat& operator=(const Cat& copy_from); //copy assignment
-        ~ClientManager();                  // destructor
+        ~ClientManager();    // destructor
+        std::vector<sockaddr_in> GetAllClients(); //return a list of all current clients
+        std::vector<sockaddr_in> GetHigherOrderClients(); //return a list of higher order clients for election
+        void HandleNotification(); //status update
+        void AddClient();
+        void RemoveClient();
 
-    private:                   // begin private section
+    private:
+        void HandleNewClient(); //deals with new clients joining the chat
+        void HandleCrashClient(); //deals with existing clients crashing
+
 };
 
 
