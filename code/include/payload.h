@@ -47,6 +47,9 @@ class Payload {
 public:
     Payload();
 
+    // Init Payload with ACK type and encoded byte stream
+    Payload(uint32_t uid, AckStatus ack);
+
     ~Payload();
 
     const sockaddr_in &GetAddress() const;

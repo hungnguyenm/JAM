@@ -19,6 +19,10 @@ Payload::Payload() {
     type_ = NA;
 }
 
+Payload::Payload(uint32_t uid, AckStatus ack) {
+    EncodeAckPayload(uid, ack);
+}
+
 Payload::~Payload() {
 
 }
