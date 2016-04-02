@@ -20,7 +20,6 @@
 
 enum EncryptOption {
     NO_ENCRYPTION,
-    HASH_ONLY,
     ENCRYPT
 };
 
@@ -34,7 +33,11 @@ enum JamStatus {
     ENCODE_VALIDATION_FAILED            = MK_ERROR(0x1002),
 
     DECODE_ERROR                        = MK_ERROR(0x2001),
-    DECODE_VALIDATION_FAILED            = MK_ERROR(0x2002)
+    DECODE_VALIDATION_FAILED            = MK_ERROR(0x2002),
+
+    UDP_SEND_ERROR                      = MK_ERROR(0x3001),
+
+    UDP_DISTRIBUTE_ERROR                = MK_ERROR(0x4001)
 };
 
 #endif //JAM_CONFIG_H
