@@ -1,13 +1,22 @@
 #include <iostream>
 
-#include "../../include/payload.h"
+#include <boost/thread.hpp>
 
 using namespace std;
 
-int main() {
-    cout << "Test";
+void TestFunction() {
+    for (int i = 0; i < 10; i++) {
+        cout << i << " in test." << endl;
+        boost::this_thread::yield();
+    }
+}
 
-    Payload payload();
+int main() {
+    boost::thread t(&TestFunction);
+
+    for (int i = 0; i < 10; i++) {
+        cout << i << " in main." << endl;
+    }
 
     return 0;
 }

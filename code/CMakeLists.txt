@@ -7,7 +7,7 @@ message(STATUS "Running cmake...")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11")
 
-find_package(Boost 1.58.0 COMPONENTS thread)
+find_package(Boost 1.58.0 COMPONENTS system thread)
 if(Boost_FOUND)
     message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
     message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
