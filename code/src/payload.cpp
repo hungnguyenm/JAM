@@ -13,8 +13,8 @@
 
 using namespace std;
 
-Payload::Payload() {
-    type_ = NA;
+Payload::Payload()
+        : type_(NA) {
 }
 
 Payload::Payload(uint32_t uid, AckStatus ack) {
@@ -22,6 +22,24 @@ Payload::Payload(uint32_t uid, AckStatus ack) {
 }
 
 Payload::Payload(const Payload &payload) {
+    memcpy(&address_, &(payload.address_), sizeof(address_));
+    encrypt_ = payload.encrypt_;
+    memcpy(username_, payload.username_, MAX_USER_NAME_LENGTH);
+    memcpy(message_, payload.message_, MAX_MESSAGE_LENGTH);
+
+    type_ = payload.type_;
+    uid_ = payload.uid_;
+    ack_ = payload.ack_;
+    order_ = payload.order_;
+    code_ = payload.code_;
+
+    username_length_ = payload.username_length_;
+    message_length_ = payload.message_length_;
+    memcpy(payload_, payload.payload_, HEADER_LENGTH + MAX_USER_NAME_LENGTH + MAX_MESSAGE_LENGTH);
+    length_ = payload.length_;
+}
+
+void Payload::operator=(const Payload &payload) {
     memcpy(&address_, &(payload.address_), sizeof(address_));
     encrypt_ = payload.encrypt_;
     memcpy(username_, payload.username_, MAX_USER_NAME_LENGTH);
@@ -67,7 +85,7 @@ void Payload::SetType(MessageType type) {
     type_ = type;
     if (type_ == ACK_MSG) {
         length_ = ACK_LENGTH;
-    } else if (type_!= NA) {
+    } else if (type_ != NA) {
         length_ = HEADER_LENGTH + username_length_ + message_length_;
     }
 }

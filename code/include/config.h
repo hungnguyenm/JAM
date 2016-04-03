@@ -43,6 +43,8 @@ enum JamStatus {
     UDP_GET_FD_ERROR                    = MK_ERROR(0x3002),
     UDP_BIND_ERROR                      = MK_ERROR(0x3003),
     UDP_NOT_INIT_ERROR                  = MK_ERROR(0x3004),
+    UDP_START_READER_ERROR              = MK_ERROR(0x3005),
+    UDP_START_WRITER_ERROR              = MK_ERROR(0x3006),
 
     UDP_SEND_ERROR                      = MK_ERROR(0x4001),
     UDP_DISTRIBUTE_ERROR                = MK_ERROR(0x4002)

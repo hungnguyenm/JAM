@@ -53,6 +53,9 @@ public:
     // Copy constructor
     Payload(const Payload &payload);
 
+    // = operator
+    void operator=(const Payload &payload);
+
     ~Payload();
 
     const sockaddr_in &GetAddress() const;

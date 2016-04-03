@@ -9,9 +9,8 @@
 #include "../include/udp_wrapper.h"
 
 
-UdpWrapper::UdpWrapper() {
-    is_ready_ = false;
-    reader_ = UdpReader();
+UdpWrapper::UdpWrapper()
+        : is_ready_(false), uid_(0) {
 }
 
 UdpWrapper::~UdpWrapper() {
@@ -23,9 +22,8 @@ JamStatus UdpWrapper::Start() {
     JamStatus ret = InitUdpSocket();
 
     if (ret == SUCCESS) {
-        reader_.Init(&sockfd_);
-        t_reader_ = boost::thread(boost::ref(reader_));
-        t_writer_ = boost::thread(boost::ref(writer_));
+        t_reader_ = boost::thread(boost::bind(&UdpWrapper::RunReader, this));
+        t_writer_ = boost::thread(boost::bind(&UdpWrapper::RunWriter, this));
     }
 
     return ret;
@@ -35,6 +33,7 @@ JamStatus UdpWrapper::Stop() {
     JamStatus ret = SUCCESS;
 
     if (is_ready_) {
+        // TODO: properly handle termination
         t_reader_.join();
         t_writer_.join();
     }
@@ -42,6 +41,11 @@ JamStatus UdpWrapper::Stop() {
     close(sockfd_);
 
     return ret;
+}
+
+void UdpWrapper::UpdateClientList(std::vector<sockaddr_in> *clients) {
+    clients_.clear();
+    clients_ = std::vector<sockaddr_in>(*clients);
 }
 
 JamStatus UdpWrapper::SendPayload(sockaddr_in addr, Payload payload) {
@@ -56,7 +60,7 @@ JamStatus UdpWrapper::SendPayload(sockaddr_in addr, Payload payload) {
     return ret;
 }
 
-JamStatus UdpWrapper::DistributePayload(std::vector<sockaddr_in> addr, Payload payload) {
+JamStatus UdpWrapper::DistributePayload(Payload payload) {
     JamStatus ret = SUCCESS;
 
     if (is_ready_) {
@@ -80,9 +84,9 @@ JamStatus UdpWrapper::InitUdpSocket() {
     if (getaddrinfo(NULL, DEFAULT_PORT, &hints, &servinfo) == 0) {
         if ((sockfd_ = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) >= 0) {
             if (bind(sockfd_, servinfo->ai_addr, servinfo->ai_addrlen) == 0) {
+                DCOUT("INFO: UdpWrapper - Socket binds successful at port " + std::string(DEFAULT_PORT) + ".");
                 freeaddrinfo(servinfo);
                 is_ready_ = true;
-                DCOUT("INFO: UdpWrapper - Socket binds successful at port " + std::string(DEFAULT_PORT) + ".");
             } else {
                 ret = UDP_BIND_ERROR;
             }
@@ -94,4 +98,33 @@ JamStatus UdpWrapper::InitUdpSocket() {
     }
 
     return ret;
+}
+
+void UdpWrapper::RunReader() {
+    DCOUT("INFO: UdpWrapper - Reader started.");
+
+    sockaddr_storage clientaddr;
+    socklen_t addrlen = sizeof clientaddr;
+    unsigned char buffer[MAX_BUFFER_LENGTH];
+    int size = 0;
+
+    for (; ;) {
+        if ((size = (int) recvfrom(sockfd_, buffer, MAX_BUFFER_LENGTH - 1, 0,
+                                   (sockaddr *) &clientaddr, &addrlen)) > 0) {
+            if (size == QUIT_MSG_LENGTH) {
+                DCOUT("INFO: UdpReader - Receive terminate message.");
+                break;
+            } else {
+                // TODO: Implement process payload
+
+            }
+        } else {
+            DCOUT("WARNING: UdpReader - Error receiving packet.");
+        }
+    }
+}
+
+void UdpWrapper::RunWriter() {
+    DCOUT("INFO: UdpWrapper - Writer started.");
+
 }

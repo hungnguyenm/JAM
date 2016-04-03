@@ -11,8 +11,6 @@
 
 #include "config.h"
 #include "payload.h"
-#include "udp_reader.h"
-#include "udp_writer.h"
 
 #include <boost/thread/thread.hpp>
 
@@ -39,6 +37,13 @@ public:
     JamStatus Stop();
 
     /**
+     * Update internal client list
+     *
+     * @param clients   list of client sockaddr_in
+     */
+    void UpdateClientList(std::vector<sockaddr_in> *clients);
+
+    /**
      * Put payload to a single receiver to queue
      * UDP socket must be init before this function can be used.
      *
@@ -50,25 +55,23 @@ public:
     JamStatus SendPayload(sockaddr_in addr, Payload payload);
 
     /**
-     * Put payload to a list of receivers to queue
+     * Put payload to client list to queue
      * UDP socket must be init before this function can be used.
      *
-     * @param addr      address of the receivers (IPv4/port)
      * @param payload   ready to encode payload
      *
-     * @returns         SUCCESS on normal operation, other JamStatus errors otherwise
+     * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
-    JamStatus DistributePayload(std::vector<sockaddr_in> addr, Payload payload);
+    JamStatus DistributePayload(Payload payload);
 
 private:
-    bool is_ready_;             // UDP socket ready for communication
-    int sockfd_;                // Main socket file descriptor
+    bool is_ready_;                     // UDP socket ready for communication
+    int sockfd_;                        // Main socket file descriptor
+    std::vector<sockaddr_in> clients_;  // Up-to-date client list
+    uint32_t uid_;                      // UID counter
 
-    UdpReader reader_;
-    UdpWriter writer_;
-
-    boost::thread t_reader_;
-    boost::thread t_writer_;
+    boost::thread t_reader_;            // Reader thread for RunReader()
+    boost::thread t_writer_;            // Writer thread for RunWriter()
 
     /**
      * Initialize listening UDP socket (bind to specific port)
@@ -76,6 +79,16 @@ private:
      * @returns         SUCCESS if bind normally, other JamStatus errors otherwise
      */
     JamStatus InitUdpSocket();
+
+    /**
+     * Start reader thread to listen for incoming packets.
+     */
+    void RunReader();
+
+    /**
+     * Start writer thread to distribute packets.
+     */
+    void RunWriter();
 };
 
 #endif //JAM_UDP_WRAPPER_H
