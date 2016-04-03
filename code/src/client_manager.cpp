@@ -20,14 +20,14 @@ ClientManager::~ClientManager()                 // destructor, just an example
 }
 
 vector ClientManager::GetAllClients() {
-    return _client_list;
+    return client_list_;
 }
 
 vector ClientManager::GetHigherOrderClients() {
     for (int i=0; i<_client_list.size(); i++) {
                 
     }
-    return _client_list;
+    return client_list_;
 }
 
 void ClientManager::HandleNotification() {
@@ -44,7 +44,7 @@ void ClientManager::HandleCrashClient() {
 }
 
 void ClientManager::AddClient() {
-
+    client_list_.push_back(payload_.GetAddress());
 }
 
 void ClientManager::RemoveClient() {

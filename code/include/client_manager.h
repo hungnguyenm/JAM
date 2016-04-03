@@ -13,10 +13,14 @@ struct client {
     std::string client_port;
 };
 
+//TODO: client list is a vector of clients (which includes username, ip_address, client_port)?
+
 class ClientManager {
     char *string;
     sockaddr_in address_;
     std::vector<sockaddr_in> client_list_;
+
+    Payload payload_;
 
     public:                    // begin public section
         ClientManager();     // constructor
