@@ -38,11 +38,11 @@ public:
     JamStatus Stop();
 
     /**
-     * Update internal client list
+     * Update internal client addresses
      *
      * @param clients   list of client sockaddr_in
      */
-    void UpdateClientList(std::vector<sockaddr_in> *clients);
+    void UpdateClientAddresses(std::vector<sockaddr_in> *clients);
 
     /**
      * Put payload to a single receiver to queue
@@ -71,7 +71,7 @@ public:
 private:
     bool is_ready_;                         // UDP socket ready for communication
     int sockfd_;                            // Main socket file descriptor
-    std::vector<sockaddr_in> clients_;      // Up-to-date client list
+    std::vector<sockaddr_in> clients_;      // Up-to-date client addresses
     uint32_t uid_;                          // UID counter
 
     ConcurrentQueue<Payload> out_queue_;    // Thread-safe outgoing payload queue for distributing

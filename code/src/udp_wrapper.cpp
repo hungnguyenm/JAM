@@ -46,7 +46,7 @@ JamStatus UdpWrapper::Stop() {
     return ret;
 }
 
-void UdpWrapper::UpdateClientList(std::vector<sockaddr_in> *clients) {
+void UdpWrapper::UpdateClientAddresses(std::vector<sockaddr_in> *clients) {
     clients_.clear();
     clients_ = std::vector<sockaddr_in>(*clients);
 }
