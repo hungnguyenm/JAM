@@ -1,5 +1,6 @@
 //
-// Created by acharyab on 3/31/16.
+// Author: Bipeen Acharya
+// Created: 03/30/16
 //
 #include <iostream>
 #include <vector>

@@ -6,10 +6,17 @@
 #define JAM_CLIENTMANAGER_H
 
 
+/* Data Structs */
+struct client {
+    std::string username;
+    std::string client_ip_address;
+    std::string client_port;
+};
+
 class ClientManager {
     char *string;
-    std::vector<sockaddr_in> _client_list;
-
+    sockaddr_in address_;
+    std::vector<sockaddr_in> client_list_;
 
     public:                    // begin public section
         ClientManager();     // constructor
