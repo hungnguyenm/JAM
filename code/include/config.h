@@ -12,8 +12,15 @@
 #define MIN_PORT                9000    // Port must be greater than MIN_PORT
 #define MAX_MESSAGE_LENGTH      100     // Maximum message length per payload
 #define MAX_USER_NAME_LENGTH    20      // Maximum displayed user name length
+#define MAX_BUFFER_LENGTH       200     // Maximum UDP socket buffer length
 
 #define MK_ERROR(x)             (0x00000000|(x))
+
+#ifdef DEBUG
+#define DCOUT(str) do { std::cout << "DEBUG - " << str << std::endl; } while ( false )
+#else
+#define DCOUT(str) do { } while ( false )
+#endif
 
 enum EncryptOption {
     NO_ENCRYPTION,

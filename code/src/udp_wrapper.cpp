@@ -23,8 +23,9 @@ JamStatus UdpWrapper::Start() {
     JamStatus ret = InitUdpSocket();
 
     if (ret == SUCCESS) {
-        reader_.SetFd(&sockfd_);
+        reader_.Init(&sockfd_);
         t_reader_ = boost::thread(boost::ref(reader_));
+        t_writer_ = boost::thread(boost::ref(writer_));
     }
 
     return ret;
@@ -35,6 +36,7 @@ JamStatus UdpWrapper::Stop() {
 
     if (is_ready_) {
         t_reader_.join();
+        t_writer_.join();
     }
 
     close(sockfd_);
@@ -80,6 +82,7 @@ JamStatus UdpWrapper::InitUdpSocket() {
             if (bind(sockfd_, servinfo->ai_addr, servinfo->ai_addrlen) == 0) {
                 freeaddrinfo(servinfo);
                 is_ready_ = true;
+                DCOUT("INFO: UdpWrapper - Socket binds successful at port " + std::string(DEFAULT_PORT) + ".");
             } else {
                 ret = UDP_BIND_ERROR;
             }

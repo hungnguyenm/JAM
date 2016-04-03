@@ -16,7 +16,9 @@ public:
 
     ~UdpReader();
 
-    void SetFd(int *sockfd);
+    void Init(int *sockfd);
+
+    void Stop();
 
     void operator()();
 
