@@ -1,13 +1,15 @@
 #include <iostream>
 
-#include "../../include/payload.h"
+#include "../../include/udp_wrapper.h"
 
 using namespace std;
 
 int main() {
-    cout << "Test";
+    UdpWrapper udpWrapper;
 
-    Payload payload();
+    udpWrapper.Start();
+
+    udpWrapper.Stop();
 
     return 0;
 }

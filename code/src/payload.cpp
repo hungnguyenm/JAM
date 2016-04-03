@@ -1,15 +1,13 @@
-/* ---------------------------------------------------------------------------
- * Just Another Messenger (JAM)
- *
- * payload.h
+/**
  * Payload object sent over the network via UDP wrapper.
+ *
  * There are 2 different payloads:
  *  + Normal communication payload
  *  + ACK payload
  *
  * @author: Hung Nguyen
- * @version 1.0 04/01/16
- * -------------------------------------------------------------------------*/
+ * @version 1.0 03/31/16
+ */
 
 #include "../include/payload.h"
 
@@ -21,6 +19,24 @@ Payload::Payload() {
 
 Payload::Payload(uint32_t uid, AckStatus ack) {
     EncodeAckPayload(uid, ack);
+}
+
+Payload::Payload(const Payload &payload) {
+    memcpy(&address_, &(payload.address_), sizeof(address_));
+    encrypt_ = payload.encrypt_;
+    memcpy(username_, payload.username_, MAX_USER_NAME_LENGTH);
+    memcpy(message_, payload.message_, MAX_MESSAGE_LENGTH);
+
+    type_ = payload.type_;
+    uid_ = payload.uid_;
+    ack_ = payload.ack_;
+    order_ = payload.order_;
+    code_ = payload.code_;
+
+    username_length_ = payload.username_length_;
+    message_length_ = payload.message_length_;
+    memcpy(payload_, payload.payload_, HEADER_LENGTH + MAX_USER_NAME_LENGTH + MAX_MESSAGE_LENGTH);
+    length_ = payload.length_;
 }
 
 Payload::~Payload() {
@@ -107,7 +123,7 @@ JamStatus Payload::SetUsername(string username) {
     if (username.size() < MAX_USER_NAME_LENGTH) {
         username_length_ = (uint32_t) username.size() + 1;
         uint32_t i = 0;
-        for (i = 0; i < username_length_; i++) {
+        for (i = 0; i < username_length_; ++i) {
             username_[i] = (uint8_t) username[i];
         }
         username_[i] = '\0';
@@ -129,7 +145,7 @@ JamStatus Payload::SetMessage(string message) {
     if (message.size() < MAX_MESSAGE_LENGTH) {
         message_length_ = (uint32_t) message.size() + 1;
         uint32_t i = 0;
-        for (i = 0; i < message_length_; i++) {
+        for (i = 0; i < message_length_; ++i) {
             message_[i] = (uint8_t) message[i];
         }
         message_[i] = '\0';
