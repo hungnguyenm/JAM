@@ -1,12 +1,9 @@
-/* ---------------------------------------------------------------------------
- * Just Another Messenger (JAM)
- *
- * config.h
+/**
  * General configuration for entire project.
  *
  * @author: Hung Nguyen
  * @version 1.0 03/31/16
- * -------------------------------------------------------------------------*/
+ */
 
 #ifndef JAM_CONFIG_H
 #define JAM_CONFIG_H

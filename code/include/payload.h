@@ -1,15 +1,13 @@
-/* ---------------------------------------------------------------------------
- * Just Another Messenger (JAM)
- *
- * payload.h
+/**
  * Payload object sent over the network via UDP wrapper.
+ *
  * There are 2 different payloads:
  *  + Normal communication payload
  *  + ACK payload
  *
  * @author: Hung Nguyen
- * @version 1.0 04/01/16
- * -------------------------------------------------------------------------*/
+ * @version 1.0 03/31/16
+ */
 
 #ifndef JAM_PAYLOAD_H
 #define JAM_PAYLOAD_H
@@ -49,6 +47,9 @@ public:
 
     // Init Payload with ACK type and encoded byte stream
     Payload(uint32_t uid, AckStatus ack);
+
+    // Copy constructor
+    Payload(const Payload &payload);
 
     ~Payload();
 
@@ -96,33 +97,25 @@ public:
 
     uint8_t *payload();
 
-    /*
-     * Function: EncodePayload
-     * --------------------
-     * computes byte stream payload from private variables
+    /**
+     * Computes byte stream payload from private variables
      *
-     *  returns: SUCCESS on normal operation
-     *           other JamStatus errors otherwise
+     * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
     JamStatus EncodePayload();
 
-    /*
-     * Function: EncodeAckPayload
-     * --------------------
-     * computes byte stream ack payload without prior private variables
+
+    /**
+     * Computes byte stream ack payload without prior private variables
      *
-     *  returns: SUCCESS on normal operation
-     *           other JamStatus errors otherwise
+     * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
     JamStatus EncodeAckPayload(uint32_t uid, AckStatus ack);
 
-    /*
-     * Function: DecodePayload
-     * --------------------
-     * extracts private variables from byte stream payload
+    /**
+     * Extracts private variables from byte stream payload
      *
-     *  returns: SUCCESS on normal operation
-     *           other JamStatus errors otherwise
+     * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
     JamStatus DecodePayload();
 
