@@ -22,8 +22,10 @@ JamStatus UdpWrapper::Start() {
     JamStatus ret = InitUdpSocket();
 
     if (ret == SUCCESS) {
+        // Start all task threads
         t_reader_ = boost::thread(boost::bind(&UdpWrapper::RunReader, this));
         t_writer_ = boost::thread(boost::bind(&UdpWrapper::RunWriter, this));
+        t_monitor_ = boost::thread(boost::bind(&UdpWrapper::RunMonitor, this));
     }
 
     return ret;
@@ -36,6 +38,7 @@ JamStatus UdpWrapper::Stop() {
         // TODO: properly handle termination
         t_reader_.join();
         t_writer_.join();
+        t_monitor_.join();
     }
 
     close(sockfd_);
@@ -48,7 +51,7 @@ void UdpWrapper::UpdateClientList(std::vector<sockaddr_in> *clients) {
     clients_ = std::vector<sockaddr_in>(*clients);
 }
 
-JamStatus UdpWrapper::SendPayload(sockaddr_in addr, Payload payload) {
+JamStatus UdpWrapper::SendPayload(Payload payload) {
     JamStatus ret = SUCCESS;
 
     if (is_ready_) {
@@ -100,9 +103,11 @@ JamStatus UdpWrapper::InitUdpSocket() {
     return ret;
 }
 
-void UdpWrapper::RunReader() {
-    DCOUT("INFO: UdpWrapper - Reader started.");
+void UdpWrapper::RunWriter() {
 
+}
+
+void UdpWrapper::RunReader() {
     sockaddr_storage clientaddr;
     socklen_t addrlen = sizeof clientaddr;
     unsigned char buffer[MAX_BUFFER_LENGTH];
@@ -124,7 +129,6 @@ void UdpWrapper::RunReader() {
     }
 }
 
-void UdpWrapper::RunWriter() {
-    DCOUT("INFO: UdpWrapper - Writer started.");
+void UdpWrapper::RunMonitor() {
 
 }

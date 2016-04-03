@@ -11,6 +11,7 @@
 
 #include "config.h"
 #include "payload.h"
+#include "concurrent_queue.h"
 
 #include <boost/thread/thread.hpp>
 
@@ -45,18 +46,21 @@ public:
 
     /**
      * Put payload to a single receiver to queue
-     * UDP socket must be init before this function can be used.
      *
-     * @param addr      address of the receiver (IPv4/port)
+     * UDP socket must be init before this function can be used.
+     * Receiver's address must be encoded in the payload.
+     *
      * @param payload   ready to encode payload
      *
      * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
-    JamStatus SendPayload(sockaddr_in addr, Payload payload);
+    JamStatus SendPayload(Payload payload);
 
     /**
      * Put payload to client list to queue
+     *
      * UDP socket must be init before this function can be used.
+     * Wrapper will use internal client list for distributing.
      *
      * @param payload   ready to encode payload
      *
@@ -65,13 +69,18 @@ public:
     JamStatus DistributePayload(Payload payload);
 
 private:
-    bool is_ready_;                     // UDP socket ready for communication
-    int sockfd_;                        // Main socket file descriptor
-    std::vector<sockaddr_in> clients_;  // Up-to-date client list
-    uint32_t uid_;                      // UID counter
+    bool is_ready_;                         // UDP socket ready for communication
+    int sockfd_;                            // Main socket file descriptor
+    std::vector<sockaddr_in> clients_;      // Up-to-date client list
+    uint32_t uid_;                          // UID counter
 
-    boost::thread t_reader_;            // Reader thread for RunReader()
-    boost::thread t_writer_;            // Writer thread for RunWriter()
+    ConcurrentQueue<Payload> out_queue_;    // Thread-safe outgoing payload queue for distributing
+    ConcurrentQueue<Payload> in_queue_;     // Thread-safe incoming payload queue for processing
+    ConcurrentQueue<Payload> ack_queue_;    // Thread-safe incoming ack queue for monitoring
+
+    boost::thread t_reader_;                // Reader thread for RunReader()
+    boost::thread t_writer_;                // Writer thread for RunWriter()
+    boost::thread t_monitor_;               // Monitor thread for RunMonitor()
 
     /**
      * Initialize listening UDP socket (bind to specific port)
@@ -89,6 +98,11 @@ private:
      * Start writer thread to distribute packets.
      */
     void RunWriter();
+
+    /**
+     * Start monitor thread to keep track of non-ack packets.
+     */
+    void RunMonitor();
 };
 
 #endif //JAM_UDP_WRAPPER_H
