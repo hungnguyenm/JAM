@@ -45,19 +45,21 @@ public:
      *
      * @param t         element to be inserted
      */
-    void Push(T const &t) {
+    void push(T const &t) {
         boost::mutex::scoped_lock lock(m_queue_);
         queue_.push(t);
         lock.unlock();
         cond_variable_.notify_all();
     }
 
+    // TODO: implement multiple push with single lock
+
     /**
      * Get element from queue
      *
      * @param t         element to be assigned value
      */
-    void Pop(T &t) {
+    void pop(T &t) {
         boost::mutex::scoped_lock lock(m_queue_);
         while (queue_.empty()) {
             cond_variable_.wait(lock);

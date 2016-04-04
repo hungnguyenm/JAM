@@ -55,7 +55,13 @@ JamStatus UdpWrapper::SendPayload(Payload payload) {
     JamStatus ret = SUCCESS;
 
     if (is_ready_) {
-
+        if (payload.GetLength() > 0) {
+            // Assign UID for payload
+            payload.SetUid(uid_++);
+            out_queue_.push(payload);
+        } else {
+            ret = UDP_INVALID_PAYLOAD_ERROR;
+        }
     } else {
         ret = UDP_NOT_INIT_ERROR;
     }
@@ -103,10 +109,6 @@ JamStatus UdpWrapper::InitUdpSocket() {
     return ret;
 }
 
-void UdpWrapper::RunWriter() {
-
-}
-
 void UdpWrapper::RunReader() {
     sockaddr_storage clientaddr;
     socklen_t addrlen = sizeof clientaddr;
@@ -120,7 +122,7 @@ void UdpWrapper::RunReader() {
                 DCOUT("INFO: UdpReader - Receive terminate message.");
                 break;
             } else {
-                // TODO: Implement process payload
+                // TODO: implement process payload
 
             }
         } else {
@@ -129,6 +131,38 @@ void UdpWrapper::RunReader() {
     }
 }
 
+void UdpWrapper::RunWriter() {
+    Payload payload;
+
+    for (; ;) {
+        out_queue_.pop(payload);
+        if (payload.GetType() == NA) {
+            DCOUT("INFO: UdpWriter - Receive terminate message.");
+            break;
+        } else {
+            DCOUT("INFO: UdpWriter - Sending payload: " + u32_to_string(payload.GetUid()));
+            if (sendto(sockfd_, payload.payload(), payload.GetLength(), 0,
+                       (sockaddr *) payload.GetAddress(), sizeof(payload.GetAddress())) >= 0) {
+                // TODO: implement monitor queue after send
+
+            } else {
+                DCOUT("ERROR: UdpWriter - Failed to send payload: " + u32_to_string(payload.GetUid()));
+
+                // TODO: implement send error handler
+            }
+        }
+    }
+}
+
 void UdpWrapper::RunMonitor() {
 
+}
+
+std::string UdpWrapper::u32_to_string(uint32_t in) {
+    std::stringstream ss;
+    ss << std::dec << in;
+    std::string str;
+    ss >> str;
+
+    return str;
 }

@@ -9,6 +9,10 @@ int main() {
 
     udpWrapper.Start();
 
+    Payload payload;
+    payload.SetType(NA);
+    udpWrapper.SendPayload(payload);
+
     udpWrapper.Stop();
 
     return 0;

@@ -14,6 +14,9 @@
 #include "concurrent_queue.h"
 
 #include <boost/thread/thread.hpp>
+#include "string.h"
+#include "sstream"
+#include "iomanip"
 
 class UdpWrapper {
 public:
@@ -103,6 +106,9 @@ private:
      * Start monitor thread to keep track of non-ack packets.
      */
     void RunMonitor();
+
+    // -- Helper function
+    std::string u32_to_string(uint32_t in);
 };
 
 #endif //JAM_UDP_WRAPPER_H

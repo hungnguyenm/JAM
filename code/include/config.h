@@ -46,8 +46,9 @@ enum JamStatus {
     UDP_START_READER_ERROR              = MK_ERROR(0x3005),
     UDP_START_WRITER_ERROR              = MK_ERROR(0x3006),
 
-    UDP_SEND_ERROR                      = MK_ERROR(0x4001),
-    UDP_DISTRIBUTE_ERROR                = MK_ERROR(0x4002)
+    UDP_INVALID_PAYLOAD_ERROR           = MK_ERROR(0x4001),
+    UDP_SEND_ERROR                      = MK_ERROR(0x4002),
+    UDP_DISTRIBUTE_ERROR                = MK_ERROR(0x4003)
 };
 
 #endif //JAM_CONFIG_H
