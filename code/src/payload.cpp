@@ -1,9 +1,10 @@
 /**
  * Payload object sent over the network via UDP wrapper.
  *
- * There are 2 different payloads:
+ * There are 3 different payloads:
  *  + Normal communication payload
  *  + ACK payload
+ *  + Self-terminate payload (bound back to terminate threads)
  *
  * @author: Hung Nguyen
  * @version 1.0 03/31/16
@@ -61,12 +62,12 @@ Payload::~Payload() {
 
 }
 
-const sockaddr_in &Payload::GetAddress() const {
-    return address_;
+sockaddr_in *Payload::GetAddress(){
+    return &address_;
 }
 
-void Payload::SetAddress(const sockaddr_in &address) {
-    Payload::address_ = address;
+void Payload::SetAddress(const sockaddr_in *address) {
+    memcpy(&address_, address, sizeof(address_));
 }
 
 EncryptOption Payload::GetEncryption() const {
@@ -244,6 +245,18 @@ JamStatus Payload::EncodeAckPayload(uint32_t uid, AckStatus ack) {
     return ret;
 }
 
+JamStatus Payload::EncodeTerminatePayload() {
+    JamStatus ret = SUCCESS;
+
+    for (int i = 0; i < QUIT_MSG_LENGTH; ++i) {
+        payload_[i] = '0';
+    }
+    length_ = QUIT_MSG_LENGTH;
+    type_ = NA;
+
+    return ret;
+}
+
 JamStatus Payload::DecodePayload() {
     JamStatus ret = SUCCESS;
     uint8_t *buffer = payload_;
@@ -289,12 +302,11 @@ JamStatus Payload::ValidateForEncode() {
     JamStatus ret = SUCCESS;
 
     // Validation logic:
-    // + UDP Port must be set to greater than MIN_PORT
     // + Message type must be set to other than ACK_MSG and NA
     // + UID must be set to greater than 0
     // + If type is Chat Message then it must contain an username length & message length > 0
 
-    if (address_.sin_port < MIN_PORT || uid_ == 0)
+    if (ntohs(address_.sin_port) < MIN_PORT)
         ret = ENCODE_VALIDATION_FAILED;
 
     switch (type_) {

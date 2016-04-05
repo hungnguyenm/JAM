@@ -1,9 +1,10 @@
 /**
  * Payload object sent over the network via UDP wrapper.
  *
- * There are 2 different payloads:
+ * There are 3 different payloads:
  *  + Normal communication payload
  *  + ACK payload
+ *  + Self-terminate payload (bound back to terminate threads)
  *
  * @author: Hung Nguyen
  * @version 1.0 03/31/16
@@ -58,9 +59,9 @@ public:
 
     ~Payload();
 
-    const sockaddr_in &GetAddress() const;
+    sockaddr_in *GetAddress();
 
-    void SetAddress(const sockaddr_in &address);
+    void SetAddress(const sockaddr_in *address);
 
     EncryptOption GetEncryption() const;
 
@@ -116,6 +117,13 @@ public:
      * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
     JamStatus EncodeAckPayload(uint32_t uid, AckStatus ack);
+
+    /**
+     * Computes byte stream self-terminate payload
+     *
+     * @return          SUCCESS on normal operation, other JamStatus errors otherwise
+     */
+    JamStatus  EncodeTerminatePayload();
 
     /**
      * Extracts private variables from byte stream payload

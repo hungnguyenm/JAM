@@ -14,9 +14,10 @@
 #include "concurrent_queue.h"
 
 #include <boost/thread/thread.hpp>
-#include "string.h"
-#include "sstream"
-#include "iomanip"
+#include <string.h>
+#include <sstream>
+#include <iomanip>
+#include <chrono>
 
 class UdpWrapper {
 public:
@@ -71,19 +72,42 @@ public:
      */
     JamStatus DistributePayload(Payload payload);
 
+    /**
+     * Convert IP address and port to sockaddr_in type
+     *
+     * @param ip        ip address or host name
+     * @param port      port
+     * @param addr      return correspond sockaddr_in
+     *
+     * @return          SUCCESS on normal operation, other JamStatus errors otherwise
+     */
+    static JamStatus GetAddressFromInfo(const char *ip, const char *port, sockaddr_in *addr);
+
 private:
-    bool is_ready_;                         // UDP socket ready for communication
-    int sockfd_;                            // Main socket file descriptor
-    std::vector<sockaddr_in> clients_;      // Up-to-date client addresses
-    uint32_t uid_;                          // UID counter
+    /**
+     * Internal monitor variable for each payload sent out.
+     *
+     * Mainly used for ack queue.
+     */
+    struct Ticket {
+        uint32_t uid;                           // Assigned UID
+        uint8_t num_retries;                    // Number of retries left
+        std::chrono::milliseconds time_sent;    // Time sent by Writer (miliseconds since epoch)
+    };
 
-    ConcurrentQueue<Payload> out_queue_;    // Thread-safe outgoing payload queue for distributing
-    ConcurrentQueue<Payload> in_queue_;     // Thread-safe incoming payload queue for processing
-    ConcurrentQueue<Payload> ack_queue_;    // Thread-safe incoming ack queue for monitoring
+    bool is_ready_;                             // UDP socket ready for communication
+    int sockfd_;                                // Main socket file descriptor
+    sockaddr_in this_addr_;                     // This client's address
+    std::vector<sockaddr_in> clients_;          // Up-to-date client addresses
+    uint32_t uid_;                              // UID counter
 
-    boost::thread t_reader_;                // Reader thread for RunReader()
-    boost::thread t_writer_;                // Writer thread for RunWriter()
-    boost::thread t_monitor_;               // Monitor thread for RunMonitor()
+    ConcurrentQueue<Payload> out_queue_;        // Thread-safe outgoing payload queue for distributing
+    ConcurrentQueue<Payload> in_queue_;         // Thread-safe incoming payload queue for processing
+    ConcurrentQueue<Ticket> ack_queue_;         // Thread-safe incoming ack queue for monitoring
+
+    boost::thread t_reader_;                    // Reader thread for RunReader()
+    boost::thread t_writer_;                    // Writer thread for RunWriter()
+    boost::thread t_monitor_;                   // Monitor thread for RunMonitor()
 
     /**
      * Initialize listening UDP socket (bind to specific port)
@@ -107,7 +131,7 @@ private:
      */
     void RunMonitor();
 
-    // -- Helper function
+    // -- Helper functions
     std::string u32_to_string(uint32_t in);
 };
 
