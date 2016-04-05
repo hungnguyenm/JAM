@@ -1,9 +1,10 @@
 /**
  * Payload object sent over the network via UDP wrapper.
  *
- * There are 2 different payloads:
+ * There are 3 different payloads:
  *  + Normal communication payload
  *  + ACK payload
+ *  + Self-terminate payload (bound back to terminate threads)
  *
  * @author: Hung Nguyen
  * @version 1.0 03/31/16
@@ -61,12 +62,12 @@ Payload::~Payload() {
 
 }
 
-const sockaddr_in &Payload::GetAddress() const {
-    return address_;
+sockaddr_in *Payload::GetAddress() {
+    return &address_;
 }
 
-void Payload::SetAddress(const sockaddr_in &address) {
-    Payload::address_ = address;
+void Payload::SetAddress(const sockaddr_in *address) {
+    memcpy(&address_, address, sizeof(address_));
 }
 
 EncryptOption Payload::GetEncryption() const {
@@ -84,7 +85,7 @@ MessageType Payload::GetType() const {
 void Payload::SetType(MessageType type) {
     type_ = type;
     if (type_ == ACK_MSG) {
-        length_ = ACK_LENGTH;
+        length_ = ACK_MSG_LENGTH;
     } else if (type_ != NA) {
         length_ = HEADER_LENGTH + username_length_ + message_length_;
     }
@@ -203,7 +204,7 @@ JamStatus Payload::EncodePayload() {
                     packu8(buffer, code_.recover);
                     break;
                 default:
-                    packu8(buffer, 0);
+                    // no encode
                     break;
             }
             packu32(buffer, username_length_);
@@ -231,7 +232,7 @@ JamStatus Payload::EncodeAckPayload(uint32_t uid, AckStatus ack) {
         type_ = ACK_MSG;
         uid_ = uid;
         ack_ = ack;
-        length_ = ACK_LENGTH;
+        length_ = ACK_MSG_LENGTH;
 
         // Computes payload
         packu8(buffer, type_);
@@ -240,6 +241,18 @@ JamStatus Payload::EncodeAckPayload(uint32_t uid, AckStatus ack) {
     } catch (...) {
         ret = ENCODE_ERROR;
     }
+
+    return ret;
+}
+
+JamStatus Payload::EncodeTerminatePayload() {
+    JamStatus ret = SUCCESS;
+
+    for (int i = 0; i < QUIT_MSG_LENGTH; ++i) {
+        payload_[i] = '0';
+    }
+    length_ = QUIT_MSG_LENGTH;
+    type_ = NA;
 
     return ret;
 }
@@ -269,11 +282,14 @@ JamStatus Payload::DecodePayload() {
                     default:
                         break;
                 }
-                username_length_ = unpacku32(buffer);
-                message_length_ = unpacku32(buffer);
-                memcpy(username_, buffer, username_length_);
-                buffer += username_length_;
-                memcpy(message_, buffer, message_length_);
+                if ((username_length_ = unpacku32(buffer)) < MAX_USER_NAME_LENGTH &&
+                    ((message_length_ = unpacku32(buffer)) < MAX_MESSAGE_LENGTH)) {
+                    memcpy(username_, buffer, username_length_);
+                    buffer += username_length_;
+                    memcpy(message_, buffer, message_length_);
+                } else {
+                    ret = DECODE_ERROR;
+                }
             }
         } catch (...) {
             ret = DECODE_ERROR;
@@ -289,13 +305,8 @@ JamStatus Payload::ValidateForEncode() {
     JamStatus ret = SUCCESS;
 
     // Validation logic:
-    // + UDP Port must be set to greater than MIN_PORT
     // + Message type must be set to other than ACK_MSG and NA
-    // + UID must be set to greater than 0
     // + If type is Chat Message then it must contain an username length & message length > 0
-
-    if (address_.sin_port < MIN_PORT || uid_ == 0)
-        ret = ENCODE_VALIDATION_FAILED;
 
     switch (type_) {
         case CHAT_MSG:

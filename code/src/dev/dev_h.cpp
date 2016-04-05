@@ -6,10 +6,19 @@ using namespace std;
 
 int main() {
     UdpWrapper udpWrapper;
-
     udpWrapper.Start();
 
-    udpWrapper.Stop();
+    sockaddr_in addr;
+    if (UdpWrapper::GetAddressFromInfo("localhost", "55056", &addr) == SUCCESS) {
+        Payload payload;
+        payload.SetType(CHAT_MSG);
+        payload.SetUsername("Hung");
+        payload.SetMessage("Test Message");
+        payload.EncodePayload();
+
+        udpWrapper.SendPayloadSelf(payload);
+    }
+    udpWrapper.Join();  // Run forever
 
     return 0;
 }

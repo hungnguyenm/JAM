@@ -10,16 +10,27 @@
 
 #define DEFAULT_PORT            "9346"  // Default UDP datagram port
 #define MIN_PORT                9000    // Port must be greater than MIN_PORT
+
 #define MAX_MESSAGE_LENGTH      100     // Maximum message length per payload
 #define MAX_USER_NAME_LENGTH    20      // Maximum displayed user name length
 #define MAX_BUFFER_LENGTH       200     // Maximum UDP socket buffer length
+
+#define NUM_UDP_RETRIES         3       // Default number of UDP resend before notify crash
 
 #define MK_ERROR(x)             (0x00000000|(x))
 
 #ifdef DEBUG
 #define DCOUT(str) do { std::cout << "DEBUG - " << str << std::endl; } while ( false )
+#define DCERR(str) do { \
+        std::cerr << "DEBUG - "; \
+        if (errno == 0) { \
+            std::cerr << str << std::endl; \
+        } else { \
+            perror(str); \
+        } } while ( false )
 #else
 #define DCOUT(str) do { } while ( false )
+#define DCERR(str) do { } while ( false )
 #endif
 
 enum EncryptOption {
@@ -46,8 +57,9 @@ enum JamStatus {
     UDP_START_READER_ERROR              = MK_ERROR(0x3005),
     UDP_START_WRITER_ERROR              = MK_ERROR(0x3006),
 
-    UDP_SEND_ERROR                      = MK_ERROR(0x4001),
-    UDP_DISTRIBUTE_ERROR                = MK_ERROR(0x4002)
+    UDP_INVALID_PAYLOAD_ERROR           = MK_ERROR(0x4001),
+    UDP_SEND_ERROR                      = MK_ERROR(0x4002),
+    UDP_DISTRIBUTE_ERROR                = MK_ERROR(0x4003)
 };
 
 #endif //JAM_CONFIG_H
