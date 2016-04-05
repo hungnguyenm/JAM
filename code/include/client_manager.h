@@ -20,8 +20,6 @@ class ClientManager {
     sockaddr_in address_;
     std::vector<sockaddr_in> client_list_;
 
-    Payload payload_;
-
     public:                    // begin public section
         ClientManager();     // constructor
         ~ClientManager();    // destructor

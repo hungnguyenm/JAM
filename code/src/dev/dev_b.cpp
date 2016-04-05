@@ -5,6 +5,5 @@ using namespace std;
 
 int main()
 {
-    ClientManager Frisky();
-    return 0;
+
 }
