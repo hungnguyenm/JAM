@@ -11,15 +11,14 @@ int main() {
     sockaddr_in addr;
     if (UdpWrapper::GetAddressFromInfo("localhost", "55056", &addr) == SUCCESS) {
         Payload payload;
-        payload.SetAddress(&addr);
         payload.SetType(CHAT_MSG);
         payload.SetUsername("Hung");
         payload.SetMessage("Test Message");
         payload.EncodePayload();
 
-        udpWrapper.SendPayload(payload);
+        udpWrapper.SendPayloadSelf(payload);
     }
-    udpWrapper.Stop();
+    udpWrapper.Join();  // Run forever
 
     return 0;
 }

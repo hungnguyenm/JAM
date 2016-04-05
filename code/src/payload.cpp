@@ -62,7 +62,7 @@ Payload::~Payload() {
 
 }
 
-sockaddr_in *Payload::GetAddress(){
+sockaddr_in *Payload::GetAddress() {
     return &address_;
 }
 
@@ -85,7 +85,7 @@ MessageType Payload::GetType() const {
 void Payload::SetType(MessageType type) {
     type_ = type;
     if (type_ == ACK_MSG) {
-        length_ = ACK_LENGTH;
+        length_ = ACK_MSG_LENGTH;
     } else if (type_ != NA) {
         length_ = HEADER_LENGTH + username_length_ + message_length_;
     }
@@ -204,7 +204,7 @@ JamStatus Payload::EncodePayload() {
                     packu8(buffer, code_.recover);
                     break;
                 default:
-                    packu8(buffer, 0);
+                    // no encode
                     break;
             }
             packu32(buffer, username_length_);
@@ -232,7 +232,7 @@ JamStatus Payload::EncodeAckPayload(uint32_t uid, AckStatus ack) {
         type_ = ACK_MSG;
         uid_ = uid;
         ack_ = ack;
-        length_ = ACK_LENGTH;
+        length_ = ACK_MSG_LENGTH;
 
         // Computes payload
         packu8(buffer, type_);
@@ -282,11 +282,14 @@ JamStatus Payload::DecodePayload() {
                     default:
                         break;
                 }
-                username_length_ = unpacku32(buffer);
-                message_length_ = unpacku32(buffer);
-                memcpy(username_, buffer, username_length_);
-                buffer += username_length_;
-                memcpy(message_, buffer, message_length_);
+                if ((username_length_ = unpacku32(buffer)) < MAX_USER_NAME_LENGTH &&
+                    ((message_length_ = unpacku32(buffer)) < MAX_MESSAGE_LENGTH)) {
+                    memcpy(username_, buffer, username_length_);
+                    buffer += username_length_;
+                    memcpy(message_, buffer, message_length_);
+                } else {
+                    ret = DECODE_ERROR;
+                }
             }
         } catch (...) {
             ret = DECODE_ERROR;
@@ -303,11 +306,7 @@ JamStatus Payload::ValidateForEncode() {
 
     // Validation logic:
     // + Message type must be set to other than ACK_MSG and NA
-    // + UID must be set to greater than 0
     // + If type is Chat Message then it must contain an username length & message length > 0
-
-    if (ntohs(address_.sin_port) < MIN_PORT)
-        ret = ENCODE_VALIDATION_FAILED;
 
     switch (type_) {
         case CHAT_MSG:

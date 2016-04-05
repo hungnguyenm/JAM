@@ -54,19 +54,73 @@ JamStatus UdpWrapper::Stop() {
     return ret;
 }
 
+void UdpWrapper::Join() {
+    if (is_ready_) {
+        t_reader_.join();
+        t_writer_.join();
+        t_monitor_.join();
+    }
+}
+
 void UdpWrapper::UpdateClientAddresses(std::vector<sockaddr_in> *clients) {
     clients_.clear();
     clients_ = std::vector<sockaddr_in>(*clients);
 }
 
-JamStatus UdpWrapper::SendPayload(Payload payload) {
+JamStatus UdpWrapper::SendPayloadSingle(Payload payload,
+                                        const sockaddr_in *addr) {
+    JamStatus ret = SUCCESS;
+
+    if (is_ready_) {
+        if (ntohs(addr->sin_port) >= MIN_PORT) {
+            if (payload.GetLength() > 0) {
+                payload.SetUid(uid_++);
+                payload.SetAddress(addr);
+                out_queue_.push(payload);
+            } else {
+                ret = UDP_INVALID_PAYLOAD_ERROR;
+            }
+        } else {
+            ret = ERROR_INVALID_PARAMETERS;
+        }
+    } else {
+        ret = UDP_NOT_INIT_ERROR;
+    }
+
+    return ret;
+}
+
+JamStatus UdpWrapper::SendPayloadSelf(Payload payload) {
     JamStatus ret = SUCCESS;
 
     if (is_ready_) {
         if (payload.GetLength() > 0) {
-            // Assign UID for payload
             payload.SetUid(uid_++);
+            payload.SetAddress(&this_addr_);
             out_queue_.push(payload);
+        } else {
+            ret = UDP_INVALID_PAYLOAD_ERROR;
+        }
+    } else {
+        ret = UDP_NOT_INIT_ERROR;
+    }
+
+    return ret;
+}
+
+JamStatus UdpWrapper::SendPayloadList(Payload payload,
+                                      std::vector<sockaddr_in> *list) {
+    JamStatus ret = SUCCESS;
+
+    if (is_ready_) {
+        // TODO: port validation
+        if (payload.GetLength() > 0) {
+            for (std::vector<sockaddr_in>::iterator it = list->begin();
+                 it != list->end(); ++it) {
+                payload.SetUid(uid_++);
+                payload.SetAddress(&(*it));
+                out_queue_.push(payload);
+            }
         } else {
             ret = UDP_INVALID_PAYLOAD_ERROR;
         }
@@ -81,7 +135,17 @@ JamStatus UdpWrapper::DistributePayload(Payload payload) {
     JamStatus ret = SUCCESS;
 
     if (is_ready_) {
-
+        // TODO: port validation
+        if (payload.GetLength() > 0) {
+            for (std::vector<sockaddr_in>::iterator it = clients_.begin();
+                 it != clients_.end(); ++it) {
+                payload.SetUid(uid_++);
+                payload.SetAddress(&(*it));
+                out_queue_.push(payload);
+            }
+        } else {
+            ret = UDP_INVALID_PAYLOAD_ERROR;
+        }
     } else {
         ret = UDP_NOT_INIT_ERROR;
     }
@@ -151,21 +215,38 @@ JamStatus UdpWrapper::InitUdpSocket() {
 void UdpWrapper::RunReader() {
     sockaddr_storage clientaddr;
     socklen_t addrlen = sizeof clientaddr;
-    unsigned char buffer[MAX_BUFFER_LENGTH];
     int size = 0;
 
+    Payload in_payload;
+    Payload ack_payload;
+
     for (; ;) {
-        if ((size = (int) recvfrom(sockfd_, buffer, MAX_BUFFER_LENGTH - 1, 0,
+        if ((size = (int) recvfrom(sockfd_, in_payload.payload(), MAX_BUFFER_LENGTH - 1, 0,
                                    (sockaddr *) &clientaddr, &addrlen)) > 0) {
             if (size == QUIT_MSG_LENGTH) {
                 DCOUT("INFO: UdpReader - Received terminate message");
                 break;
             } else {
-                // TODO: implement process payload
-
+                if (in_payload.DecodePayload() == SUCCESS) {
+                    if (in_payload.GetType() == ACK_MSG) {
+                        DCOUT("INFO: UdpReader - Received ACK message for uid = "
+                              + u32_to_string(in_payload.GetUid()));
+                        // TODO: implement ACK message process
+                    } else {
+                        DCOUT("INFO: UdpReader - Received normal payload");
+                        ack_payload.EncodeAckPayload(in_payload.GetUid(), ACK_OK);
+                        if (sendto(sockfd_, ack_payload.payload(), ack_payload.GetLength(), 0,
+                                   (sockaddr *) &clientaddr, addrlen) < 0) {
+                            DCERR("ERROR: UdpReader - Failed to send ACK payload");
+                        }
+                        in_queue_.push(in_payload);
+                    }
+                } else {
+                    DCERR("ERROR: UdpReader - Failed to decode payload");
+                }
             }
         } else {
-            DCOUT("WARNING: UdpReader - Error receiving packet");
+            DCERR("ERROR: UdpReader - Failed to receive packet");
         }
     }
 }
@@ -202,7 +283,7 @@ void UdpWrapper::RunWriter() {
 }
 
 void UdpWrapper::RunMonitor() {
-
+    // TODO: implement monitor thread
 }
 
 std::string UdpWrapper::u32_to_string(uint32_t in) {

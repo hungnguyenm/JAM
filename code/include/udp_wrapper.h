@@ -41,6 +41,8 @@ public:
      */
     JamStatus Stop();
 
+    void Join();
+
     /**
      * Update internal client addresses
      *
@@ -54,19 +56,44 @@ public:
      * UDP socket must be init before this function can be used.
      * Receiver's address must be encoded in the payload.
      *
-     * @param payload   ready to encode payload
+     * @param payload   encoded payload
      *
      * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
-    JamStatus SendPayload(Payload payload);
+    JamStatus SendPayloadSingle(Payload payload, const sockaddr_in *addr);
 
     /**
-     * Put payload to client list to queue
+     * Put payload to self to queue
+     *
+     * UDP socket must be init before this function can be used.
+     * Address will be encoded by UdpWrapper.
+     *
+     * @param payload   encoded payload (to ensure caller validate encoding)
+     *
+     * @return          SUCCESS on normal operation, other JamStatus errors otherwise
+     */
+    JamStatus SendPayloadSelf(Payload payload);
+
+    /**
+     * Put payload to list of clients to queue
+     *
+     * UDP socket must be init before this function can be used.
+     * Address will be encoded by UdpWrapper.
+     *
+     * @param payload   encoded payload (to ensure caller validate encoding)
+     * @param list      list of receivers' addresses
+     *
+     * @return          SUCCESS on normal operation, other JamStatus errors otherwise
+     */
+    JamStatus SendPayloadList(Payload payload, std::vector<sockaddr_in> *list);
+
+    /**
+     * Put payload to all known clients to queue
      *
      * UDP socket must be init before this function can be used.
      * Wrapper will use internal client list for distributing.
      *
-     * @param payload   ready to encode payload
+     * @param payload   encoded payload (to ensure caller validate encoding)
      *
      * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */

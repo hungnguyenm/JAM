@@ -134,7 +134,7 @@ public:
 
 private:
     enum {
-        ACK_LENGTH = 5,             // byte stream length for ACK message
+        ACK_MSG_LENGTH = 5,         // byte stream length for ACK message
         HEADER_LENGTH = 18          // header byte stream length for normal message
     };
 
