@@ -40,6 +40,7 @@ JamStatus UdpWrapper::Stop() {
 
         // Signal to stop reader/writer threads
         Payload terminate_payload;
+        terminate_payload.SetUid(uid_++);
         terminate_payload.SetAddress(&this_addr_);
         terminate_payload.EncodeTerminatePayload();
         out_queue_.push(terminate_payload);
@@ -231,7 +232,7 @@ void UdpWrapper::RunReader() {
                     if (in_payload.GetType() == ACK_MSG) {
                         DCOUT("INFO: UdpReader - Received ACK message for uid = "
                               + u32_to_string(in_payload.GetUid()));
-                        // TODO: implement ACK message process
+                        ack_tickets_.erase(in_payload.GetUid());
                     } else {
                         DCOUT("INFO: UdpReader - Received normal payload");
                         ack_payload.EncodeAckPayload(in_payload.GetUid(), ACK_OK);
@@ -257,7 +258,11 @@ void UdpWrapper::RunWriter() {
     for (; ;) {
         out_queue_.pop(payload);
         if (payload.GetType() == NA && payload.GetLength() == QUIT_MSG_LENGTH) {
+            // Send self-terminate payload and add terminate flag into ack_tickets_
             DCOUT("INFO: UdpWriter - Received terminate message");
+            ack_tickets_.insert(payload.GetUid(), NUM_UDP_TERMINATE_RETRIES,
+                                std::chrono::duration_cast<std::chrono::milliseconds>
+                                        (std::chrono::system_clock::now().time_since_epoch()));
             if (sendto(sockfd_, payload.payload(), payload.GetLength(), 0,
                        (sockaddr *) payload.GetAddress(), sizeof(sockaddr_in)) < 0) {
                 DCERR("ERROR: UdpWriter - Failed to send terminate payload");
@@ -267,12 +272,9 @@ void UdpWrapper::RunWriter() {
             DCOUT("INFO: UdpWriter - Sending payload uid = " + u32_to_string(payload.GetUid()));
             if (sendto(sockfd_, payload.payload(), payload.GetLength(), 0,
                        (sockaddr *) payload.GetAddress(), sizeof(sockaddr_in)) >= 0) {
-                Ticket ticket;
-                ticket.uid = payload.GetUid();
-                ticket.num_retries = NUM_UDP_RETRIES;
-                ticket.time_sent = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        std::chrono::system_clock::now().time_since_epoch());
-                ack_queue_.push(ticket);
+                ack_tickets_.insert(payload.GetUid(), NUM_UDP_RETRIES,
+                                    std::chrono::duration_cast<std::chrono::milliseconds>
+                                            (std::chrono::system_clock::now().time_since_epoch()));
             } else {
                 DCERR("ERROR: UdpWriter - Failed to send payload");
 
@@ -283,7 +285,11 @@ void UdpWrapper::RunWriter() {
 }
 
 void UdpWrapper::RunMonitor() {
-    // TODO: implement monitor thread
+    for (; ;) {
+        if (!ack_tickets_.is_empty()) {
+
+        }
+    }
 }
 
 std::string UdpWrapper::u32_to_string(uint32_t in) {

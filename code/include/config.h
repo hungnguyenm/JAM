@@ -16,6 +16,7 @@
 #define MAX_BUFFER_LENGTH       200     // Maximum UDP socket buffer length
 
 #define NUM_UDP_RETRIES         3       // Default number of UDP resend before notify crash
+#define ACK_MONITOR_INTERVAL    1000    // Ack check interval in miliseconds
 
 #define MK_ERROR(x)             (0x00000000|(x))
 
