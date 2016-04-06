@@ -69,6 +69,22 @@ public:
     };
 
     /**
+     * Get all elements in the list
+     *
+     * @return          a vector of tuples of element's key and values
+     */
+    const std::vector<std::tuple<K, V...>> get_all() {
+        boost::mutex::scoped_lock lock(m_tickets_);
+        std::vector<std::tuple<K, V...>> ret;
+        for(auto const &item : tickets_) {
+            ret.push_back(std::make_tuple(item.first,
+                                          std::get<0>(item.second),
+                                          std::get<1>(item.second)));
+        }
+        return ret;
+    };
+
+    /**
      * Insert element into list if no element with the same key exists
      *
      * @param key       element key

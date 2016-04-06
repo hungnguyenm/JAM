@@ -29,15 +29,23 @@ set(DEV_H_SOURCES src/dev/dev_h.cpp src/payload.cpp src/udp_wrapper.cpp)
 add_executable(jam-dev_h_1 ${DEV_H_HEADERS} ${DEV_H_SOURCES})
 add_executable(jam-dev_h_2 ${DEV_H_HEADERS} ${DEV_H_SOURCES})
 
-set(DEV_C_SOURCES src/dev/dev_c.cpp src/user_handler.cpp src/callable.cpp include/payload.h src/payload.cpp include/callable.h include/user_handler.h)
+set(DEV_C_SOURCES src/dev/dev_c.cpp src/user_handler.cpp src/callable.cpp include/payload.h
+        src/payload.cpp include/callable.h include/user_handler.h)
 add_executable(jam-dev_c ${DEV_C_SOURCES})
 
 # Test files
 set(TEST_CLIENNT_MANAGER_SOURCES test/test_client_manager.cpp src/client_manager.cpp)
 add_executable(test-client_manager ${TEST_CLIENNT_MANAGER_SOURCES})
 
+set(TEST_UDP_WRAPPER_HEADERS include/config.h include/concurrent_queue.h
+        include/concurrent_ticket.h include/payload.h include/udp_wrapper.h)
+set(TEST_UDP_WRAPPER_SOURCES test/test_udp_wrapper.cpp src/payload.cpp src/udp_wrapper.cpp)
+add_executable(test-udp_wrapper ${TEST_UDP_WRAPPER_HEADERS} ${TEST_UDP_WRAPPER_SOURCES})
+
 if(Boost_FOUND)
     target_link_libraries(jam-dev_h_1 ${Boost_LIBRARIES})
     target_link_libraries(jam-dev_h_2 ${Boost_LIBRARIES})
     target_link_libraries(jam-dev_c ${Boost_LIBRARIES})
+
+    target_link_libraries(test-udp_wrapper ${Boost_LIBRARIES})
 endif()
