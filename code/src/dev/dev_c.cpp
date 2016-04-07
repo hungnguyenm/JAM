@@ -4,22 +4,25 @@
 //
 
 #include "../../include/user_handler.h"
-#include "../../include/payload.h"
+#include "../../include/stream_communicator.h"
 
 int main(int argc, char* argv[])    {
     UserHandler test;
     std::cout << "Creating a pthread" << std::endl;
     boost::thread t = test.run_on_thread();
 
-    int fd = test.get_read_pipe();
+    int fd;
 
-//    Payload payload;
-//    payload.SetType(MessageType::CHAT_MSG);
-//    payload.SetUsername("bob");
-//    payload.SetMessage("Hi");
-//    payload.EncodePayload();
-//
-//    write(fd, payload.payload(), payload.GetLength());
+    fd = test.get_read_pipe();
+    std::cout << fd << std::endl;
+
+    std::cout << StreamCommunicator::ListenForData(fd) << std::endl;
+
+    fd  = test.get_write_pipe();
+
+
+    StreamCommunicator::SendData(fd, "Bob");
+    StreamCommunicator::SendData(fd, "Hello");
 
     t.join();
     return 0;
