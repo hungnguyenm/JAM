@@ -24,8 +24,9 @@ add_executable(jam-dev_b ${DEV_B_SOURCES})
 
 # Executables depend on BOOST:
 set(DEV_H_HEADERS include/config.h include/concurrent_queue.h include/concurrent_ticket.h
-        include/payload.h include/udp_wrapper.h)
-set(DEV_H_SOURCES src/dev/dev_h.cpp src/payload.cpp src/udp_wrapper.cpp)
+        include/payload.h include/udp_wrapper.h include/user_handler.h include/module_coordinator.h)
+set(DEV_H_SOURCES src/dev/dev_h.cpp src/payload.cpp src/udp_wrapper.cpp src/user_handler.cpp
+        src/module_coordinator.cpp)
 add_executable(jam-dev_h_1 ${DEV_H_HEADERS} ${DEV_H_SOURCES})
 add_executable(jam-dev_h_2 ${DEV_H_HEADERS} ${DEV_H_SOURCES})
 

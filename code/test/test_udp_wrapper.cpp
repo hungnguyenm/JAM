@@ -24,8 +24,10 @@ int main() {
         payload.EncodePayload();
 
         udpWrapper.SendPayloadSelf(payload);
+
+        udpWrapper.SendPayloadSingle(payload, &addr);
     }
-    udpWrapper.Join();
+    udpWrapper.Join();      // Run forever
 
     return 0;
 }
