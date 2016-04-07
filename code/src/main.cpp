@@ -3,7 +3,7 @@
 using namespace std;
 
 const char *username;
-const char *serverip;
+const char *serveraddr;
 const char *serverport;
 
 int main(int argc, char *argv[])
@@ -16,9 +16,9 @@ int main(int argc, char *argv[])
         jam.StartAsLeader(username);
     } else if (argc == 4) {
         username = argv[1];
-        serverip = argv[2];
+        serveraddr = argv[2];
         serverport = argv[3];
-        jam.StartAsClient(username, serverip, serverport);
+        jam.StartAsClient(username, serveraddr, serverport);
     } else {
         cerr << "Invalid arguments!" << endl;
         exit(1);

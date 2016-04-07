@@ -29,9 +29,11 @@ public:
     /**
      * Initialize UDP socket and start listening
      *
+     * @param port      port to bind
+     *
      * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
-    JamStatus Start();
+    JamStatus Start(const char *port);
 
     // TODO: implement start as client
 
@@ -109,7 +111,7 @@ public:
      *
      * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
-    static JamStatus GetAddressFromInfo(const char *ip, const char *port, sockaddr_in *addr);
+    static JamStatus GetAddressFromInfo(const char *addr, const char *port, sockaddr_in *sockaddr);
 
 private:
     enum {
@@ -137,9 +139,11 @@ private:
     /**
      * Initialize listening UDP socket (bind to specific port)
      *
+     * @param port      port to bind
+     *
      * @returns         SUCCESS if bind normally, other JamStatus errors otherwise
      */
-    JamStatus InitUdpSocket();
+    JamStatus InitUdpSocket(const char *port);
 
     /**
      * Start reader thread to listen for incoming packets.

@@ -20,8 +20,8 @@ UdpWrapper::~UdpWrapper() {
         close(sockfd_);
 }
 
-JamStatus UdpWrapper::Start() {
-    JamStatus ret = InitUdpSocket();
+JamStatus UdpWrapper::Start(const char *port) {
+    JamStatus ret = InitUdpSocket(port);
 
     if (ret == SUCCESS) {
         // Start all task threads
@@ -158,9 +158,9 @@ JamStatus UdpWrapper::DistributePayload(Payload payload) {
     return ret;
 }
 
-JamStatus UdpWrapper::GetAddressFromInfo(const char *ip,
+JamStatus UdpWrapper::GetAddressFromInfo(const char *addr,
                                          const char *port,
-                                         sockaddr_in *addr) {
+                                         sockaddr_in *sockaddr) {
     JamStatus ret = SUCCESS;
 
     if (strtol(port, NULL, 0) > MIN_PORT) {
@@ -171,8 +171,8 @@ JamStatus UdpWrapper::GetAddressFromInfo(const char *ip,
         hints.ai_socktype = SOCK_DGRAM;     // UDP stream sockets
         hints.ai_flags = AI_PASSIVE;        // Fill IP automatically
 
-        if (getaddrinfo(ip, port, &hints, &servinfo) == 0) {
-            memcpy(addr, (sockaddr_in *) servinfo->ai_addr, servinfo->ai_addrlen);
+        if (getaddrinfo(addr, port, &hints, &servinfo) == 0) {
+            memcpy(sockaddr, (sockaddr_in *) servinfo->ai_addr, servinfo->ai_addrlen);
             freeaddrinfo(servinfo);
         } else {
             DCERR("ERROR: UdpWrapper - Failed to get address");
@@ -185,7 +185,7 @@ JamStatus UdpWrapper::GetAddressFromInfo(const char *ip,
     return ret;
 }
 
-JamStatus UdpWrapper::InitUdpSocket() {
+JamStatus UdpWrapper::InitUdpSocket(const char *port) {
     JamStatus ret = SUCCESS;
     addrinfo hints, *servinfo;
 
@@ -194,7 +194,7 @@ JamStatus UdpWrapper::InitUdpSocket() {
     hints.ai_socktype = SOCK_DGRAM;     // UDP stream sockets
     hints.ai_flags = AI_PASSIVE;        // Fill IP automatically
 
-    if (getaddrinfo(NULL, DEFAULT_PORT, &hints, &servinfo) == 0) {
+    if (getaddrinfo(NULL, port, &hints, &servinfo) == 0) {
         if ((sockfd_ = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) >= 0) {
             memcpy(&this_addr_, (sockaddr_in *) servinfo->ai_addr, servinfo->ai_addrlen);
             if (bind(sockfd_, servinfo->ai_addr, servinfo->ai_addrlen) == 0) {

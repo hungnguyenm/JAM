@@ -7,27 +7,47 @@
 
 #include <iostream>
 
+#include <ifaddrs.h>
+#include <arpa/inet.h>
+
 #include "../include/udp_wrapper.h"
 
 using namespace std;
 
 int main() {
     UdpWrapper udpWrapper;
-    udpWrapper.Start();
+    uint32_t port;
+    // udpWrapper.Start(&port);
 
-    sockaddr_in addr;
-    if (UdpWrapper::GetAddressFromInfo("localhost", "55056", &addr) == SUCCESS) {
-        Payload payload;
-        payload.SetType(CHAT_MSG);
-        payload.SetUsername("Hung");
-        payload.SetMessage("Test Message");
-        payload.EncodePayload();
+    // Testing ip address
+    struct ifaddrs *ifap, *ifa;
+    struct sockaddr_in *sa;
+    char *iaddr;
 
-        udpWrapper.SendPayloadSelf(payload);
-
-        udpWrapper.SendPayloadSingle(payload, &addr);
+    getifaddrs (&ifap);
+    for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr->sa_family==AF_INET) {
+            sa = (struct sockaddr_in *) ifa->ifa_addr;
+            iaddr = inet_ntoa(sa->sin_addr);
+            printf("Interface: %s\tAddress: %s\n", ifa->ifa_name, iaddr);
+        }
     }
-    udpWrapper.Join();      // Run forever
+
+    freeifaddrs(ifap);
+
+//    sockaddr_in addr;
+//    if (UdpWrapper::GetAddressFromInfo("localhost", "55056", &addr) == SUCCESS) {
+//        Payload payload;
+//        payload.SetType(CHAT_MSG);
+//        payload.SetUsername("Hung");
+//        payload.SetMessage("Test Message");
+//        payload.EncodePayload();
+//
+//        udpWrapper.SendPayloadSelf(payload);
+//
+//        udpWrapper.SendPayloadSingle(payload, &addr);
+//    }
+//    udpWrapper.Join();      // Run forever
 
     return 0;
 }

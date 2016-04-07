@@ -33,12 +33,22 @@ public:
      * Join group by connecting to server address. If server doesn't respond then JAM returns error.
      *
      * @param username  user's name
-     * @param ip        server's ip
+     * @param addr      server's address
      * @param port      server's port
      */
     void StartAsClient(const char *username,
-                            const char *ip,
+                            const char *addr,
                             const char *port);
+
+private:
+    /**
+     * Construct string of ip address and port for network interfaces
+     *
+     * @param port      bind UDP port
+     *
+     * @return          ip:port string
+     */
+    std::string GetInterfaceAddress(const char *port);
 };
 
 #endif //JAM_JAM_H
