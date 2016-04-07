@@ -76,10 +76,8 @@ public:
     const std::vector<std::tuple<K, V...>> get_all() {
         boost::mutex::scoped_lock lock(m_tickets_);
         std::vector<std::tuple<K, V...>> ret;
-        for(auto const &item : tickets_) {
-            ret.push_back(std::make_tuple(item.first,
-                                          std::get<0>(item.second),
-                                          std::get<1>(item.second)));
+        for (auto const &item : tickets_) {
+            ret.push_back(std::tuple_cat(std::make_tuple(item.first), item.second));
         }
         return ret;
     };

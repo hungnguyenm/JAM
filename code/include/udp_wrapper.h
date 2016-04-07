@@ -116,17 +116,6 @@ private:
         NUM_UDP_TERMINATE_RETRIES = 10              // Terminate flag for monitor thread
     };
 
-    /**
-     * Internal monitor variable for each payload sent out.
-     *
-     * Mainly used for ack queue.
-     */
-    struct Ticket {
-        uint32_t uid;                               // Assigned UID
-        uint8_t num_retries;                        // Number of retries left
-        std::chrono::milliseconds time_sent;        // Time sent by Writer (miliseconds since epoch)
-    };
-
     bool is_ready_;                                 // UDP socket ready for communication
     int sockfd_;                                    // Main socket file descriptor
     sockaddr_in this_addr_;                         // This client's address
@@ -135,8 +124,11 @@ private:
 
     ConcurrentQueue<Payload> out_queue_;            // Thread-safe outgoing payload queue for distributing
     ConcurrentQueue<Payload> in_queue_;             // Thread-safe incoming payload queue for processing
+    // TODO: optimize monitor algorithm to reduce payload overhead
     ConcurrentTicket<uint32_t, uint8_t,
-            std::chrono::milliseconds> ack_tickets_;// Thread-safe outgoing payload ticket monitoring
+            std::chrono::milliseconds,
+            Payload> ack_tickets_;                  // Thread-safe outgoing payload ticket monitoring
+    ConcurrentQueue<sockaddr_in> crash_queue;       // Thread-safe crash notification queue
 
     boost::thread t_reader_;                        // Reader thread for RunReader()
     boost::thread t_writer_;                        // Writer thread for RunWriter()
@@ -166,6 +158,11 @@ private:
 
     // -- Helper functions
     std::string u32_to_string(uint32_t in);
+
+    bool already_received(std::deque<std::tuple<in_addr_t, in_port_t, uint32_t>> *queue,
+                          in_addr_t ip,
+                          in_port_t port,
+                          uint32_t uid);
 };
 
 #endif //JAM_UDP_WRAPPER_H
