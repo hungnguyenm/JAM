@@ -8,6 +8,8 @@
 
 #include "../include/udp_wrapper.h"
 
+using namespace std::chrono;
+
 
 UdpWrapper::UdpWrapper()
         : is_ready_(false), uid_(0) {
@@ -18,8 +20,8 @@ UdpWrapper::~UdpWrapper() {
         close(sockfd_);
 }
 
-JamStatus UdpWrapper::Start() {
-    JamStatus ret = InitUdpSocket();
+JamStatus UdpWrapper::Start(const char *port) {
+    JamStatus ret = InitUdpSocket(port);
 
     if (ret == SUCCESS) {
         // Start all task threads
@@ -40,13 +42,18 @@ JamStatus UdpWrapper::Stop() {
 
         // Signal to stop reader/writer threads
         Payload terminate_payload;
+        terminate_payload.SetUid(uid_++);
         terminate_payload.SetAddress(&this_addr_);
         terminate_payload.EncodeTerminatePayload();
         out_queue_.push(terminate_payload);
 
-        t_reader_.join();
-        t_writer_.join();
-        t_monitor_.join();
+        if (t_reader_.try_join_for(boost::chrono::seconds(TERMINATE_WAIT)) &&
+            t_writer_.try_join_for(boost::chrono::seconds(TERMINATE_WAIT)) &&
+            t_monitor_.try_join_for(boost::chrono::seconds(TERMINATE_WAIT))) {
+            DCOUT("INFO: UdpWrapper - Stopped");
+        } else {
+            DCOUT("INFO: UdpWrapper - Threads are still running; exit anyway");
+        }
     }
 
     close(sockfd_);
@@ -115,10 +122,9 @@ JamStatus UdpWrapper::SendPayloadList(Payload payload,
     if (is_ready_) {
         // TODO: port validation
         if (payload.GetLength() > 0) {
-            for (std::vector<sockaddr_in>::iterator it = list->begin();
-                 it != list->end(); ++it) {
+            for (sockaddr_in addr : *list) {
                 payload.SetUid(uid_++);
-                payload.SetAddress(&(*it));
+                payload.SetAddress(&addr);
                 out_queue_.push(payload);
             }
         } else {
@@ -137,10 +143,9 @@ JamStatus UdpWrapper::DistributePayload(Payload payload) {
     if (is_ready_) {
         // TODO: port validation
         if (payload.GetLength() > 0) {
-            for (std::vector<sockaddr_in>::iterator it = clients_.begin();
-                 it != clients_.end(); ++it) {
+            for (sockaddr_in addr : clients_) {
                 payload.SetUid(uid_++);
-                payload.SetAddress(&(*it));
+                payload.SetAddress(&addr);
                 out_queue_.push(payload);
             }
         } else {
@@ -153,9 +158,9 @@ JamStatus UdpWrapper::DistributePayload(Payload payload) {
     return ret;
 }
 
-JamStatus UdpWrapper::GetAddressFromInfo(const char *ip,
+JamStatus UdpWrapper::GetAddressFromInfo(const char *addr,
                                          const char *port,
-                                         sockaddr_in *addr) {
+                                         sockaddr_in *sockaddr) {
     JamStatus ret = SUCCESS;
 
     if (strtol(port, NULL, 0) > MIN_PORT) {
@@ -166,8 +171,8 @@ JamStatus UdpWrapper::GetAddressFromInfo(const char *ip,
         hints.ai_socktype = SOCK_DGRAM;     // UDP stream sockets
         hints.ai_flags = AI_PASSIVE;        // Fill IP automatically
 
-        if (getaddrinfo(ip, port, &hints, &servinfo) == 0) {
-            memcpy(addr, (sockaddr_in *) servinfo->ai_addr, servinfo->ai_addrlen);
+        if (getaddrinfo(addr, port, &hints, &servinfo) == 0) {
+            memcpy(sockaddr, (sockaddr_in *) servinfo->ai_addr, servinfo->ai_addrlen);
             freeaddrinfo(servinfo);
         } else {
             DCERR("ERROR: UdpWrapper - Failed to get address");
@@ -180,7 +185,7 @@ JamStatus UdpWrapper::GetAddressFromInfo(const char *ip,
     return ret;
 }
 
-JamStatus UdpWrapper::InitUdpSocket() {
+JamStatus UdpWrapper::InitUdpSocket(const char *port) {
     JamStatus ret = SUCCESS;
     addrinfo hints, *servinfo;
 
@@ -189,7 +194,7 @@ JamStatus UdpWrapper::InitUdpSocket() {
     hints.ai_socktype = SOCK_DGRAM;     // UDP stream sockets
     hints.ai_flags = AI_PASSIVE;        // Fill IP automatically
 
-    if (getaddrinfo(NULL, DEFAULT_PORT, &hints, &servinfo) == 0) {
+    if (getaddrinfo(NULL, port, &hints, &servinfo) == 0) {
         if ((sockfd_ = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) >= 0) {
             memcpy(&this_addr_, (sockaddr_in *) servinfo->ai_addr, servinfo->ai_addrlen);
             if (bind(sockfd_, servinfo->ai_addr, servinfo->ai_addrlen) == 0) {
@@ -220,18 +225,20 @@ void UdpWrapper::RunReader() {
     Payload in_payload;
     Payload ack_payload;
 
+    // TODO: optimize duplicate monitor algorithm
+    std::deque<std::tuple<uint32_t, uint16_t, uint32_t>> receive_queue;
+
     for (; ;) {
         if ((size = (int) recvfrom(sockfd_, in_payload.payload(), MAX_BUFFER_LENGTH - 1, 0,
                                    (sockaddr *) &clientaddr, &addrlen)) > 0) {
             if (size == QUIT_MSG_LENGTH) {
-                DCOUT("INFO: UdpReader - Received terminate message");
-                break;
+                goto exit;
             } else {
                 if (in_payload.DecodePayload() == SUCCESS) {
                     if (in_payload.GetType() == ACK_MSG) {
                         DCOUT("INFO: UdpReader - Received ACK message for uid = "
                               + u32_to_string(in_payload.GetUid()));
-                        // TODO: implement ACK message process
+                        ack_tickets_.erase(in_payload.GetUid());
                     } else {
                         DCOUT("INFO: UdpReader - Received normal payload");
                         ack_payload.EncodeAckPayload(in_payload.GetUid(), ACK_OK);
@@ -239,7 +246,15 @@ void UdpWrapper::RunReader() {
                                    (sockaddr *) &clientaddr, addrlen) < 0) {
                             DCERR("ERROR: UdpReader - Failed to send ACK payload");
                         }
-                        in_queue_.push(in_payload);
+                        if (already_received(&receive_queue,
+                                             ((sockaddr_in *) &clientaddr)->sin_addr.s_addr,
+                                             ((sockaddr_in *) &clientaddr)->sin_port,
+                                             in_payload.GetUid())) {
+                            DCOUT("INFO: UdpReader - Duplicate payload occurred");
+                        } else {
+                            in_payload.SetAddress((sockaddr_in *) &clientaddr);
+                            in_queue_.push(in_payload);
+                        }
                     }
                 } else {
                     DCERR("ERROR: UdpReader - Failed to decode payload");
@@ -249,6 +264,8 @@ void UdpWrapper::RunReader() {
             DCERR("ERROR: UdpReader - Failed to receive packet");
         }
     }
+    exit:
+    DCOUT("INFO: UdpReader - Received terminate message");
 }
 
 void UdpWrapper::RunWriter() {
@@ -257,7 +274,12 @@ void UdpWrapper::RunWriter() {
     for (; ;) {
         out_queue_.pop(payload);
         if (payload.GetType() == NA && payload.GetLength() == QUIT_MSG_LENGTH) {
+            // Send self-terminate payload and add terminate flag into ack_tickets_
             DCOUT("INFO: UdpWriter - Received terminate message");
+            ack_tickets_.insert(payload.GetUid(), NUM_UDP_TERMINATE_RETRIES,
+                                std::chrono::duration_cast<std::chrono::milliseconds>
+                                        (std::chrono::system_clock::now().time_since_epoch()),
+                                payload);
             if (sendto(sockfd_, payload.payload(), payload.GetLength(), 0,
                        (sockaddr *) payload.GetAddress(), sizeof(sockaddr_in)) < 0) {
                 DCERR("ERROR: UdpWriter - Failed to send terminate payload");
@@ -267,14 +289,12 @@ void UdpWrapper::RunWriter() {
             DCOUT("INFO: UdpWriter - Sending payload uid = " + u32_to_string(payload.GetUid()));
             if (sendto(sockfd_, payload.payload(), payload.GetLength(), 0,
                        (sockaddr *) payload.GetAddress(), sizeof(sockaddr_in)) >= 0) {
-                Ticket ticket;
-                ticket.uid = payload.GetUid();
-                ticket.num_retries = NUM_UDP_RETRIES;
-                ticket.time_sent = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        std::chrono::system_clock::now().time_since_epoch());
-                ack_queue_.push(ticket);
+                ack_tickets_.insert(payload.GetUid(), (uint8_t) NUM_UDP_RETRIES,
+                                    duration_cast<milliseconds>(system_clock::now().time_since_epoch()),
+                                    payload);
             } else {
-                DCERR("ERROR: UdpWriter - Failed to send payload");
+                DCERR(std::string("ERROR: UdpWriter - Failed to send payload uid = " +
+                                  u32_to_string(payload.GetUid())).c_str());
 
                 // TODO: implement send error handler
             }
@@ -283,7 +303,42 @@ void UdpWrapper::RunWriter() {
 }
 
 void UdpWrapper::RunMonitor() {
-    // TODO: implement monitor thread
+    for (; ;) {
+        if (!ack_tickets_.is_empty()) {
+            milliseconds current_time = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+            milliseconds timeout = milliseconds(UDP_TIMEOUT);
+            auto tickets = ack_tickets_.get_all();
+            for (auto ticket : tickets) {
+                if (std::get<1>(ticket) != NUM_UDP_TERMINATE_RETRIES) {
+                    errno = 0;
+                    uint32_t uid = std::get<0>(ticket);
+                    uint8_t num_retries = std::get<1>(ticket);
+                    milliseconds elapsed = current_time - std::get<2>(ticket);
+                    Payload payload = std::get<3>(ticket);
+                    milliseconds max_time = (NUM_UDP_RETRIES - num_retries + 1) * timeout;
+                    if (elapsed >= max_time) {
+                        // Handle timeout
+                        if (num_retries > 0) {
+                            DCERR(std::string("WARNING: UdpMonitor - Retrying for payload uid = " +
+                                              u32_to_string(uid)).c_str());
+                            out_queue_.push(payload);
+                            ack_tickets_.insert_or_assign(uid, --num_retries, std::get<2>(ticket), payload);
+                        } else {
+                            DCERR(std::string("ERROR: UdpMonitor - Timeout for payload uid = " +
+                                              u32_to_string(uid)).c_str());
+                            crash_queue.push(*payload.GetAddress());
+                            ack_tickets_.erase(uid);
+                        }
+                    }
+                } else {
+                    goto exit;
+                }
+            }
+        }
+        boost::this_thread::sleep(boost::posix_time::seconds(ACK_MONITOR_INTERVAL));
+    }
+    exit:
+    DCOUT("INFO: UdpMonitor - Received terminate message");
 }
 
 std::string UdpWrapper::u32_to_string(uint32_t in) {
@@ -293,4 +348,21 @@ std::string UdpWrapper::u32_to_string(uint32_t in) {
     ss >> str;
 
     return str;
+}
+
+bool UdpWrapper::already_received(std::deque<std::tuple<in_addr_t, in_port_t, uint32_t>> *queue,
+                                  in_addr_t ip,
+                                  in_port_t port,
+                                  uint32_t uid) {
+    for (auto log : *queue) {
+        if (std::get<0>(log) == ip && std::get<1>(log) == port && std::get<2>(log) == uid) {
+            return true;
+        }
+    }
+
+    // Entry is not exists in the log
+    (*queue).push_front(std::make_tuple(ip, port, uid));
+    if ((*queue).size() > UDP_RECEIVER_QUEUE_SIZE)
+        (*queue).pop_back();
+    return false;
 }

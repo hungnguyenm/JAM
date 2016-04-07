@@ -1,24 +1,12 @@
-#include <iostream>
-
-#include "../../include/udp_wrapper.h"
+#include "../../include/jam.h"
 
 using namespace std;
 
 int main() {
-    UdpWrapper udpWrapper;
-    udpWrapper.Start();
+    const char *username = "Hung";
 
-    sockaddr_in addr;
-    if (UdpWrapper::GetAddressFromInfo("localhost", "55056", &addr) == SUCCESS) {
-        Payload payload;
-        payload.SetType(CHAT_MSG);
-        payload.SetUsername("Hung");
-        payload.SetMessage("Test Message");
-        payload.EncodePayload();
-
-        udpWrapper.SendPayloadSelf(payload);
-    }
-    udpWrapper.Join();  // Run forever
+    JAM jam;
+    jam.StartAsLeader(username);
 
     return 0;
 }

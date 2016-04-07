@@ -12,6 +12,7 @@
 #include "config.h"
 #include "payload.h"
 #include "concurrent_queue.h"
+#include "concurrent_ticket.h"
 
 #include <boost/thread/thread.hpp>
 #include <string.h>
@@ -28,9 +29,11 @@ public:
     /**
      * Initialize UDP socket and start listening
      *
+     * @param port      port to bind
+     *
      * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
-    JamStatus Start();
+    JamStatus Start(const char *port);
 
     // TODO: implement start as client
 
@@ -108,40 +111,39 @@ public:
      *
      * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
-    static JamStatus GetAddressFromInfo(const char *ip, const char *port, sockaddr_in *addr);
+    static JamStatus GetAddressFromInfo(const char *addr, const char *port, sockaddr_in *sockaddr);
 
 private:
-    /**
-     * Internal monitor variable for each payload sent out.
-     *
-     * Mainly used for ack queue.
-     */
-    struct Ticket {
-        uint32_t uid;                           // Assigned UID
-        uint8_t num_retries;                    // Number of retries left
-        std::chrono::milliseconds time_sent;    // Time sent by Writer (miliseconds since epoch)
+    enum {
+        NUM_UDP_TERMINATE_RETRIES = 10              // Terminate flag for monitor thread
     };
 
-    bool is_ready_;                             // UDP socket ready for communication
-    int sockfd_;                                // Main socket file descriptor
-    sockaddr_in this_addr_;                     // This client's address
-    std::vector<sockaddr_in> clients_;          // Up-to-date client addresses
-    uint32_t uid_;                              // UID counter
+    bool is_ready_;                                 // UDP socket ready for communication
+    int sockfd_;                                    // Main socket file descriptor
+    sockaddr_in this_addr_;                         // This client's address
+    std::vector<sockaddr_in> clients_;              // Up-to-date client addresses
+    uint32_t uid_;                                  // UID counter
 
-    ConcurrentQueue<Payload> out_queue_;        // Thread-safe outgoing payload queue for distributing
-    ConcurrentQueue<Payload> in_queue_;         // Thread-safe incoming payload queue for processing
-    ConcurrentQueue<Ticket> ack_queue_;         // Thread-safe incoming ack queue for monitoring
+    ConcurrentQueue<Payload> out_queue_;            // Thread-safe outgoing payload queue for distributing
+    ConcurrentQueue<Payload> in_queue_;             // Thread-safe incoming payload queue for processing
+    // TODO: optimize monitor algorithm to reduce payload overhead
+    ConcurrentTicket<uint32_t, uint8_t,
+            std::chrono::milliseconds,
+            Payload> ack_tickets_;                  // Thread-safe outgoing payload ticket monitoring
+    ConcurrentQueue<sockaddr_in> crash_queue;       // Thread-safe crash notification queue
 
-    boost::thread t_reader_;                    // Reader thread for RunReader()
-    boost::thread t_writer_;                    // Writer thread for RunWriter()
-    boost::thread t_monitor_;                   // Monitor thread for RunMonitor()
+    boost::thread t_reader_;                        // Reader thread for RunReader()
+    boost::thread t_writer_;                        // Writer thread for RunWriter()
+    boost::thread t_monitor_;                       // Monitor thread for RunMonitor()
 
     /**
      * Initialize listening UDP socket (bind to specific port)
      *
+     * @param port      port to bind
+     *
      * @returns         SUCCESS if bind normally, other JamStatus errors otherwise
      */
-    JamStatus InitUdpSocket();
+    JamStatus InitUdpSocket(const char *port);
 
     /**
      * Start reader thread to listen for incoming packets.
@@ -160,6 +162,11 @@ private:
 
     // -- Helper functions
     std::string u32_to_string(uint32_t in);
+
+    bool already_received(std::deque<std::tuple<in_addr_t, in_port_t, uint32_t>> *queue,
+                          in_addr_t ip,
+                          in_port_t port,
+                          uint32_t uid);
 };
 
 #endif //JAM_UDP_WRAPPER_H
