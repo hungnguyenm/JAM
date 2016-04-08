@@ -11,11 +11,13 @@
 
 using namespace std;
 #include "../include/client_manager.h"
+#include "../include/client_info.h"
+
 
 // constructor of ClientManager,
-ClientManager::ClientManager(ClientInfo client)
+ClientManager::ClientManager(sockaddr_in client)
 {
-    client_list_.push_back(client);
+    client_list_.push_back(ClientInfo(client));
 }
 
 ClientManager::~ClientManager()                 // destructor, just an example
@@ -33,13 +35,15 @@ vector<ClientInfo> ClientManager::GetHigherOrderClients(sockaddr_in client) {
 
 vector<ClientInfo> ClientManager::GetHigherOrderClients(ClientInfo client) {
     int i;
+    vector<ClientInfo> higher_order_clients;
     if (client_list_.size() > 0) {
         for (i=0; i<client_list_.size(); i++) {
             if (client < client_list_[i]) {
-                return std::vector<client_list_.begin() + i, client_list_.end()>;
+                higher_order_clients.push_back(client_list_[i]);
             }
         }
     }
+    return higher_order_clients;
 }
 
 void ClientManager::HandleNotification() {
@@ -62,7 +66,8 @@ void ClientManager::AddClient(sockaddr_in client) {
 
 void ClientManager::AddClient(ClientInfo client){
     client_list_.push_back(client);
-    sort(client_list_.begin(), client_list_.end());
+    //TODO: sort doesnt work
+//    sort(client_list_.begin(), client_list_.end());
 }
 
 void ClientManager::RemoveClient(sockaddr_in client) {
@@ -83,7 +88,7 @@ void ClientManager::RemoveClient(ClientInfo client) {
 void ClientManager::PrintClients() {
     if (client_list_.size() >0) {
         for (int i=0; i< client_list_.size(); i++) {
-            printf("BOBO");
+            printf("BOBO\n");
         }
     }
 }

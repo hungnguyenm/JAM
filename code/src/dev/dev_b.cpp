@@ -1,7 +1,9 @@
+#include "../../include/client_info.h"
 #include "../../include/client_manager.h"
 #include <arpa/inet.h>
 #include <cstring>
 #include <cstdio>
+#include <iostream>
 
 int main(){
     struct sockaddr_in myaddr;
@@ -24,17 +26,36 @@ int main(){
     myaddr1.sin_port = htons(151);
     inet_aton("193.159.170.137", &myaddr1.sin_addr);
 
-    ClientInfo cl = ClientInfo(myaddr);
-    ClientInfo cl1 = ClientInfo(myaddr1);
+//    ClientInfo cl = ClientInfo(myaddr);
+//    ClientInfo cl1 = ClientInfo(myaddr1);
+//
+//    printf("%d\n", cl < cl1);
 
-    printf("%d\n", cl < cl1);
-
-    ClientManager cm = ClientManager(cl);
-
-    cm.AddClient(cl1);
+    ClientManager cm = ClientManager(myaddr);
 
     cm.PrintClients();
 
+    cm.AddClient(myaddr1);
+
+    cm.PrintClients();
+
+//    cm.GetHigherOrderClients(myaddr);
+//    cm.RemoveClient(myaddr1);
+
+    cm.PrintClients();
+
+    std::vector<ClientInfo> all_clients = cm.GetAllClients();
+
+    for (int i=0; i<all_clients.size(); i++) {
+        printf("%d", all_clients[i].GetSockAddress().sin_addr);
+    }
+
+
+    std::vector<ClientInfo> higher_order_clients = cm.GetHigherOrderClients(myaddr1);
+
+    for (int i=0; i<higher_order_clients.size(); i++) {
+        printf("%d", higher_order_clients[i].GetSockAddress().sin_addr);
+    }
 
     return 0;
 

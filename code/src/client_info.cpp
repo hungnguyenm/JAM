@@ -36,6 +36,19 @@ bool ClientInfo::operator<(const ClientInfo& other) {
 #undef CMP
 }
 
+bool ClientInfo::operator==(const ClientInfo& other) {
+#define CMP(a, b) return a == b ? true : false;
+
+    CMP(client_.sin_family, other.client_.sin_family);
+
+    CMP(ntohl(client_.sin_addr.s_addr), ntohl(other.client_.sin_addr.s_addr));
+    CMP(ntohs(client_.sin_port), ntohs(other.client_.sin_port));
+
+#undef CMP
+}
+
+
+
 sockaddr_in ClientInfo::GetSockAddress(){
     return client_;
 }

@@ -5,8 +5,8 @@
 #ifndef JAM_CLIENTMANAGER_H
 #define JAM_CLIENTMANAGER_H
 
-#include "client_info.h"
 #include <vector>
+#include "client_info.h"
 
 ///* Data Structs */
 //struct client {
@@ -19,7 +19,7 @@
 
 class ClientManager {
     public:                    // begin public section
-        ClientManager(ClientInfo client);     // constructor
+        ClientManager(sockaddr_in client);     // constructor
         ~ClientManager();    // destructor
         std::vector<ClientInfo> GetAllClients(); //return a list of all current clients
         std::vector<ClientInfo> GetHigherOrderClients(sockaddr_in client); //return a list of higher order clients for election

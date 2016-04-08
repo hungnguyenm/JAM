@@ -5,8 +5,6 @@
 #ifndef JAM_CLIENT_INFO_H
 #define JAM_CLIENT_INFO_H
 
-#endif //JAM_CLIENT_INFO_H
-
 #include <netinet/in.h>
 
 
@@ -14,6 +12,7 @@ class ClientInfo {
 public:
     ClientInfo(sockaddr_in client);
     bool operator<(const ClientInfo& other);
+    bool operator==(const ClientInfo& other);
     sockaddr_in GetSockAddress();
 
 private:
@@ -21,3 +20,5 @@ private:
     int ip_address_[4];
     int port_;
 };
+
+#endif //JAM_CLIENT_INFO_H
