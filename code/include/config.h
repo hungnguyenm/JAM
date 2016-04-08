@@ -15,6 +15,8 @@
 #define MAX_USER_NAME_LENGTH    20      // Maximum displayed user name length
 #define MAX_BUFFER_LENGTH       200     // Maximum UDP socket buffer length
 
+#define MAX_CLIENT_BUFFER       100     // Maximum client list encoded length
+
 #define UDP_RECEIVER_QUEUE_SIZE 100     // Number of payload receiving kept track by receiver to prevent duplicate
 #define NUM_UDP_RETRIES         3       // Default number of UDP resend before notify crash
 #define UDP_TIMEOUT             5000    // Timeout before trying resend UDP payload in miliseconds
@@ -62,7 +64,10 @@ enum JamStatus {
 
     UDP_INVALID_PAYLOAD_ERROR           = MK_ERROR(0x4001),
     UDP_SEND_ERROR                      = MK_ERROR(0x4002),
-    UDP_DISTRIBUTE_ERROR                = MK_ERROR(0x4003)
+    UDP_DISTRIBUTE_ERROR                = MK_ERROR(0x4003),
+
+    CLIENT_EXCEED_MAXIMUM               = MK_ERROR(0x5001),
+    BUFFER_INVALID_LENGTH               = MK_ERROR(0x5002),
 };
 
 #endif //JAM_CONFIG_H

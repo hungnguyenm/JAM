@@ -1,5 +1,7 @@
 #include "../../include/client_info.h"
 #include "../../include/client_manager.h"
+#include "../../include/payload.h"
+
 #include <arpa/inet.h>
 #include <cstring>
 #include <cstdio>
@@ -37,10 +39,11 @@ int main(){
 
     cm.AddClient(myaddr1);
 
+    std::cout << "Size: " << sizeof myaddr1 << std::endl;
     cm.PrintClients();
 
-//    cm.GetHigherOrderClients(myaddr);
-//    cm.RemoveClient(myaddr1);
+//  cm.GetHigherOrderClients(myaddr);
+//  cm.RemoveClient(myaddr1);
 
     cm.PrintClients();
 

@@ -19,8 +19,9 @@ endif()
 set(SOURCE_FILES src/main.cpp)
 add_executable(jam-main ${SOURCE_FILES})
 
-set(DEV_B_SOURCES src/dev/dev_b.cpp src/client_manager.cpp src/client_info.cpp)
-add_executable(jam-dev_b ${DEV_B_SOURCES})
+set(DEV_B_HEADERS include/client_info.h include/client_manager.h include/payload.h include/config.h)
+set(DEV_B_SOURCES src/dev/dev_b.cpp src/client_manager.cpp src/client_info.cpp src/payload.cpp)
+add_executable(jam-dev_b ${DEV_B_HEADERS} ${DEV_B_SOURCES})
 
 # Executables depend on BOOST:
 set(DEV_H_HEADERS include/config.h include/concurrent_queue.h include/concurrent_ticket.h
