@@ -88,7 +88,7 @@ void ClientManager::RemoveClient(ClientInfo client) {
 void ClientManager::PrintClients() {
     if (client_list_.size() >0) {
         for (int i=0; i< client_list_.size(); i++) {
-            printf("BOBO\n");
+            printf("%s\n", inet_ntoa(client_list_[i].GetSockAddress().sin_addr));
         }
     }
 }

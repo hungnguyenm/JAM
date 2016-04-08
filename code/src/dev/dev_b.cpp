@@ -46,15 +46,16 @@ int main(){
 
     std::vector<ClientInfo> all_clients = cm.GetAllClients();
 
+    printf("All Clients: ");
     for (int i=0; i<all_clients.size(); i++) {
-        printf("%d", all_clients[i].GetSockAddress().sin_addr);
+        printf("%s\n", inet_ntoa(all_clients[i].GetSockAddress().sin_addr));
     }
 
 
     std::vector<ClientInfo> higher_order_clients = cm.GetHigherOrderClients(myaddr1);
-
+    printf("Higher Order Clients: ");
     for (int i=0; i<higher_order_clients.size(); i++) {
-        printf("%d", higher_order_clients[i].GetSockAddress().sin_addr);
+        printf("%s\n", inet_ntoa(higher_order_clients[i].GetSockAddress().sin_addr));
     }
 
     return 0;
