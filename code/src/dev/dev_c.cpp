@@ -21,8 +21,7 @@ int main(int argc, char* argv[])    {
     fd  = test.get_write_pipe();
 
 
-    StreamCommunicator::SendData(fd, "Bob");
-    StreamCommunicator::SendData(fd, "Hello");
+    StreamCommunicator::SendMessage(fd, "Bob", "Hello");
 
     t.join();
     return 0;
