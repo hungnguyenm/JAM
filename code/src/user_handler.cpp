@@ -2,15 +2,16 @@
 // Created by Krzysztof Jordan on 4/2/16.
 //
 
+#include "../include/stream_communicator.h"
 #include "../include/user_handler.h"
-#include "../include/payload.h"
 
 UserHandler::UserHandler() {
     FD_ZERO(&activeFdSet_);
     FD_SET(STDIN_FILENO, &activeFdSet_);
 
-    pipe(fd_);
-    FD_SET(fd_[0], &activeFdSet_);
+    pipe(incomingFd_);
+    pipe(outgoingFd_);
+    FD_SET(incomingFd_[0], &activeFdSet_);
 }
 
 UserHandler::~UserHandler() {
@@ -22,21 +23,26 @@ boost::thread UserHandler::run_on_thread() {
 }
 
 int UserHandler::get_read_pipe() {
-    return fd_[1];
+    return outgoingFd_[0];
+}
+
+int UserHandler::get_write_pipe() {
+    return incomingFd_[1];
 }
 
 void UserHandler::operator()() {
+    std::string data;
+
     while(true) {
-        if(select(FD_SETSIZE, &activeFdSet_, NULL, NULL, NULL) < 0) {
-            std::cerr << "Select has failed" << std::endl;
+        readFdSet_ = activeFdSet_;
+
+        if(select(FD_SETSIZE, &readFdSet_, NULL, NULL, NULL) < 0) {
+            DCERR("Select has failed");
             exit(EXIT_FAILURE);
         }
 
-        std::string data;
-        Payload payload;
-
         // Figure out which fd has been set
-        if(FD_ISSET(STDIN_FILENO, &activeFdSet_)) {
+        if(FD_ISSET(STDIN_FILENO, &readFdSet_)) {
             if(std::cin.eof()) {
                 // ctrl+d has been input
                 break;
@@ -45,34 +51,25 @@ void UserHandler::operator()() {
             // grab the input from the command line and write it to the pipe
             getline(std::cin, data);
 
-            payload.SetType(MessageType::CHAT_MSG);
-            payload.SetMessage(data);
 
-            if(payload.EncodePayload() == JamStatus::SUCCESS) {
-                write(fd_[0], payload.payload(), payload.GetLength());
-                std::cout << "Sent " << data << std::endl;
-            } else {
-                std::cerr << "Error encoding local message payload" << std::endl;
+            JamStatus status = StreamCommunicator::SendData(outgoingFd_[1], data);
+            if(status != JamStatus::SUCCESS) {
+                DCERR("Failed sending a message");
             }
 
-        } else if(FD_ISSET(fd_[0], &activeFdSet_)) {
-            // grab the input from the pipe  and decode it
-            int received = read(fd_[0], payload.payload(), payload.GetLength());
-            std::cout << "Got " << received << std::endl;
-            payload.DecodePayload();
+        } else if(FD_ISSET(incomingFd_[0], &readFdSet_)) {
+            std::string username = StreamCommunicator::ListenForData(incomingFd_[0]);
+            std::string message = StreamCommunicator::ListenForData(incomingFd_[0]);
 
-            if(payload.DecodePayload() != JamStatus::SUCCESS) {
-                std::cerr << "Error decoding piped payload" << std::endl;
-            } else if(payload.GetType() == MessageType::CHAT_MSG){
-                PrintMessage(payload.GetUsername(), payload.GetMessage());
-            } else {
-                std::cerr << "Unrecognized message " << payload.GetType() << std::endl;
-            }
+            PrintMessage(username, message);
         }
     }
 
-    // Clean up client side of the pipe
-    close(fd_[0]);
+    // Clean up the pipes
+    close(incomingFd_[0]);
+    close(incomingFd_[1]);
+    close(outgoingFd_[0]);
+    close(outgoingFd_[1]);
 }
 
 void UserHandler::PrintMessage(const std::string& sender, const std::string& message) {

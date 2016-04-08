@@ -21,9 +21,14 @@ public:
 
     boost::thread run_on_thread();
     int get_read_pipe();
+    int get_write_pipe();
+
 private:
     fd_set activeFdSet_;
-    int fd_[2];
+    fd_set readFdSet_;
+
+    int incomingFd_[2];
+    int outgoingFd_[2];
 
     // Helper functions
     void PrintMessage(const std::string& sender, const std::string& message);

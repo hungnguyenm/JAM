@@ -19,7 +19,7 @@ endif()
 set(SOURCE_FILES src/main.cpp)
 add_executable(jam-main ${SOURCE_FILES})
 
-set(DEV_B_SOURCES src/dev/dev_b.cpp src/client_manager.cpp src/client_info.cpp)
+set(DEV_B_SOURCES src/dev/dev_b.cpp src/client_manager.cpp include/LeaderManager.cpp include/LeaderManager.h)
 add_executable(jam-dev_b ${DEV_B_SOURCES})
 
 # Executables depend on BOOST:
