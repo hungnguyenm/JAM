@@ -11,8 +11,9 @@
 using namespace std::chrono;
 
 
-UdpWrapper::UdpWrapper()
+UdpWrapper::UdpWrapper(CentralQueues *queues)
         : is_ready_(false), uid_(0) {
+    queues_ = queues;
 }
 
 UdpWrapper::~UdpWrapper() {
@@ -253,7 +254,7 @@ void UdpWrapper::RunReader() {
                             DCOUT("INFO: UdpReader - Duplicate payload occurred");
                         } else {
                             in_payload.SetAddress((sockaddr_in *) &clientaddr);
-                            in_queue_.push(in_payload);
+                            (*queues_).push(CentralQueues::QueueType::UDP_IN, in_payload);
                         }
                     }
                 } else {
@@ -326,7 +327,7 @@ void UdpWrapper::RunMonitor() {
                         } else {
                             DCERR(std::string("ERROR: UdpMonitor - Timeout for payload uid = " +
                                               u32_to_string(uid)).c_str());
-                            crash_queue.push(*payload.GetAddress());
+                            (*queues_).push(CentralQueues::QueueType::UDP_CRASH, *payload.GetAddress());
                             ack_tickets_.erase(uid);
                         }
                     }

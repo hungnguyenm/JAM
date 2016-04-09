@@ -16,38 +16,21 @@ using namespace std;
 
 int main() {
     UdpWrapper udpWrapper;
-    uint32_t port;
-    // udpWrapper.Start(&port);
+    udpWrapper.Start(DEFAULT_PORT);
+    sockaddr_in addr;
 
-    // Testing ip address
-    struct ifaddrs *ifap, *ifa;
-    struct sockaddr_in *sa;
-    char *iaddr;
+    if (UdpWrapper::GetAddressFromInfo("localhost", "55056", &addr) == SUCCESS) {
+        Payload payload;
+        payload.SetType(CHAT_MSG);
+        payload.SetUsername("Hung");
+        payload.SetMessage("Test Message");
+        payload.EncodePayload();
 
-    getifaddrs (&ifap);
-    for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-        if (ifa->ifa_addr->sa_family==AF_INET) {
-            sa = (struct sockaddr_in *) ifa->ifa_addr;
-            iaddr = inet_ntoa(sa->sin_addr);
-            printf("Interface: %s\tAddress: %s\n", ifa->ifa_name, iaddr);
-        }
+        udpWrapper.SendPayloadSelf(payload);
+
+        udpWrapper.SendPayloadSingle(payload, &addr);
     }
-
-    freeifaddrs(ifap);
-
-//    sockaddr_in addr;
-//    if (UdpWrapper::GetAddressFromInfo("localhost", "55056", &addr) == SUCCESS) {
-//        Payload payload;
-//        payload.SetType(CHAT_MSG);
-//        payload.SetUsername("Hung");
-//        payload.SetMessage("Test Message");
-//        payload.EncodePayload();
-//
-//        udpWrapper.SendPayloadSelf(payload);
-//
-//        udpWrapper.SendPayloadSingle(payload, &addr);
-//    }
-//    udpWrapper.Join();      // Run forever
+    udpWrapper.Join();      // Run forever
 
     return 0;
 }

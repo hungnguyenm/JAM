@@ -22,6 +22,8 @@
 #define UDP_TIMEOUT             5000    // Timeout before trying resend UDP payload in miliseconds
 #define ACK_MONITOR_INTERVAL    1       // Ack check interval in seconds
 
+#define JAM_CENTRAL_TIMEOUT     1000    // Timeout for main jam waiting internal communication in miliseconds
+
 #define TERMINATE_WAIT          2       // Waiting time for each thread to terminate in seconds
 
 #define MK_ERROR(x)             (0x00000000|(x))

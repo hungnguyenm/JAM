@@ -2,7 +2,7 @@
  * JAM class - Module Coordinator acts as the link between all internal modules.
  * It functions as the single point of contact of JAM.
  *
- * @author: Hung Nguyen, Krzysztof Jordan, Bipeen Acharya
+ * @author: Hung Nguyen
  * @version 1.0 04/07/16
  */
 
@@ -13,8 +13,9 @@
 
 using namespace std;
 
-JAM::JAM() {
-
+JAM::JAM()
+        : udpWrapper_(&queues_),
+          userHandler_(&queues_) {
 }
 
 JAM::~JAM() {
@@ -26,18 +27,14 @@ void JAM::StartAsLeader(const char *username) {
     cout << username << " is starting a new chat group!" << endl;
 
     // Start UDP Wrapper
-    UdpWrapper udpWrapper;
-    if (udpWrapper.Start(DEFAULT_PORT) == SUCCESS) {
+    if (udpWrapper_.Start(DEFAULT_PORT) == SUCCESS) {
         cout << "Succeeded, listening on" << GetInterfaceAddress(DEFAULT_PORT) << ". Current users:" << endl;
     } else {
         cerr << "Failed to start new chat group!" << endl;
         exit(1);
     }
 
-    // TODO: change this line
-    udpWrapper.Join();
-
-    std::cout << "Bye." << std::endl;
+    Main();
 }
 
 void JAM::StartAsClient(const char *username,
@@ -48,6 +45,27 @@ void JAM::StartAsClient(const char *username,
 
     // Start UDP Wrapper
 
+    Main();
+}
+
+void JAM::Main() {
+    // Infinite loop to monitor central communication
+    for (; ;) {
+        if (queues_.wait_for_data(JAM_CENTRAL_TIMEOUT)) {
+            if (queues_.is_terminate())
+                break;          // Only exit loop if receive terminate signal
+
+            // Go through each queue and handle data if available
+            bool has_data = false;
+            do {
+
+            } while (has_data);
+        }
+    }
+
+    DCOUT("INFO: JAM - Received terminate signal");
+    udpWrapper_.Stop();
+
     std::cout << "Bye." << std::endl;
 }
 
@@ -56,7 +74,7 @@ string JAM::GetInterfaceAddress(const char *port) {
     ifaddrs *ifap, *ifa;
     sockaddr_in *sa;                // Only print IPv4
     char *name, *addr;
-    const char* sep = "";
+    const char *sep = "";
 
     getifaddrs(&ifap);
     for (ifa = ifap; ifa; ifa = ifa->ifa_next) {

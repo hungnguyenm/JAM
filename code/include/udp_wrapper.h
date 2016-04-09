@@ -13,6 +13,7 @@
 #include "payload.h"
 #include "concurrent_queue.h"
 #include "concurrent_ticket.h"
+#include "central_queues.h"
 
 #include <boost/thread/thread.hpp>
 #include <string.h>
@@ -22,7 +23,7 @@
 
 class UdpWrapper {
 public:
-    UdpWrapper();
+    UdpWrapper(CentralQueues *queues);
 
     ~UdpWrapper();
 
@@ -118,6 +119,8 @@ private:
         NUM_UDP_TERMINATE_RETRIES = 10              // Terminate flag for monitor thread
     };
 
+    CentralQueues *queues_;                         // Central queues for inter-communication
+
     bool is_ready_;                                 // UDP socket ready for communication
     int sockfd_;                                    // Main socket file descriptor
     sockaddr_in this_addr_;                         // This client's address
@@ -125,12 +128,10 @@ private:
     uint32_t uid_;                                  // UID counter
 
     ConcurrentQueue<Payload> out_queue_;            // Thread-safe outgoing payload queue for distributing
-    ConcurrentQueue<Payload> in_queue_;             // Thread-safe incoming payload queue for processing
     // TODO: optimize monitor algorithm to reduce payload overhead
     ConcurrentTicket<uint32_t, uint8_t,
             std::chrono::milliseconds,
             Payload> ack_tickets_;                  // Thread-safe outgoing payload ticket monitoring
-    ConcurrentQueue<sockaddr_in> crash_queue;       // Thread-safe crash notification queue
 
     boost::thread t_reader_;                        // Reader thread for RunReader()
     boost::thread t_writer_;                        // Writer thread for RunWriter()

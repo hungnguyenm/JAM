@@ -2,7 +2,7 @@
  * JAM class - Module Coordinator acts as the link between all internal modules.
  * It functions as the single point of contact of JAM.
  *
- * @author: Hung Nguyen, Krzysztof Jordan, Bipeen Acharya
+ * @author: Hung Nguyen
  * @version 1.0 04/07/16
  */
 
@@ -37,10 +37,19 @@ public:
      * @param port      server's port
      */
     void StartAsClient(const char *username,
-                            const char *addr,
-                            const char *port);
+                       const char *addr,
+                       const char *port);
+
+    /**
+     * Main running loop
+     */
+    void Main();
 
 private:
+    CentralQueues queues_;
+    UdpWrapper udpWrapper_;
+    UserHandler userHandler_;
+
     /**
      * Construct string of ip address and port for network interfaces
      *

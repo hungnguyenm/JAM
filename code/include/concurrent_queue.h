@@ -55,6 +55,24 @@ public:
     // TODO: implement multiple push with single lock
 
     /**
+     * Get element from queue if not empty (no wait)
+     *
+     * @param t         element to be assigned value
+     *
+     * @return          TRUE if has data returned, FALSE otherwise
+     */
+    bool try_pop(T &t) {
+        boost::mutex::scoped_lock lock(m_queue_);
+        if (queue_.empty()) {
+            return false;
+        }
+
+        t = queue_.front();
+        queue_.pop();
+        return true;
+    }
+
+    /**
      * Get element from queue
      *
      * @param t         element to be assigned value

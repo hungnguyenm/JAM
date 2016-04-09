@@ -11,19 +11,25 @@
 #include <unistd.h>
 
 #include "callable.h"
+#include "central_queues.h"
 
 class UserHandler : public Callable {
 public:
-    UserHandler();
+    UserHandler(CentralQueues *queues);
+
     ~UserHandler();
 
     void operator()();
 
     boost::thread run_on_thread();
+
     int get_read_pipe();
+
     int get_write_pipe();
 
 private:
+    CentralQueues *queues_;                         // Central queues for inter-communication
+
     fd_set activeFdSet_;
     fd_set readFdSet_;
 
@@ -31,7 +37,7 @@ private:
     int outgoingFd_[2];
 
     // Helper functions
-    void PrintMessage(const std::string& sender, const std::string& message);
+    void PrintMessage(const std::string &sender, const std::string &message);
 };
 
 #endif //JAM_USER_HANDLER_H
