@@ -59,7 +59,7 @@ void UserHandler::HandleInput() {
             getline(std::cin, data);
 
             Payload payload;
-            payload.SetType(MessageType::LOCAL_MSG);
+            payload.SetType(MessageType::CHAT_MSG);
             payload.SetMessage(data);
             queues_->push(CentralQueues::QueueType::USER_OUT, payload);
 

@@ -34,6 +34,9 @@ void JAM::StartAsLeader(const char *username) {
         exit(1);
     }
 
+    // Start User Handler
+    userHandler_.Start();
+
     Main();
 }
 
@@ -44,6 +47,9 @@ void JAM::StartAsClient(const char *username,
     cout << username << " is joining a chat group at " << addr << ":" << port << "!" << endl;
 
     // Start UDP Wrapper
+
+    // Start User Handler
+    userHandler_.Start();
 
     Main();
 }
