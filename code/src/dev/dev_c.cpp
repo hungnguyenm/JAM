@@ -7,21 +7,16 @@
 #include "../../include/stream_communicator.h"
 
 int main(int argc, char* argv[])    {
-    UserHandler test;
+    CentralQueues queues;
+
+    UserHandler test(&queues);
     std::cout << "Creating a pthread" << std::endl;
     boost::thread t = test.run_on_thread();
 
     int fd;
 
-    fd = test.get_read_pipe();
-    std::cout << fd << std::endl;
-
-    std::cout << StreamCommunicator::ListenForData(fd) << std::endl;
-
-    fd  = test.get_write_pipe();
-
-
-    StreamCommunicator::SendMessage(fd, "Bob", "Hello");
+//    fd  = test.get_write_pipe();
+//    StreamCommunicator::SendMessage(fd, "Bob", "Hello");
 
     t.join();
     return 0;

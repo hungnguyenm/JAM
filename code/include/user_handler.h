@@ -17,13 +17,9 @@ class UserHandler : public Callable {
 public:
     UserHandler(CentralQueues *queues);
 
-    ~UserHandler();
-
     void operator()();
 
     boost::thread run_on_thread();
-
-    int get_read_pipe();
 
     int get_write_pipe();
 
@@ -34,7 +30,6 @@ private:
     fd_set readFdSet_;
 
     int incomingFd_[2];
-    int outgoingFd_[2];
 
     // Helper functions
     void PrintMessage(const std::string &sender, const std::string &message);

@@ -20,7 +20,7 @@ set(SOURCE_FILES src/main.cpp)
 add_executable(jam-main ${SOURCE_FILES})
 
 set(DEV_B_HEADERS include/client_info.h include/client_manager.h include/payload.h include/config.h)
-set(DEV_B_SOURCES src/dev/dev_b.cpp src/client_manager.cpp src/client_info.cpp src/payload.cpp)
+set(DEV_B_SOURCES src/dev/dev_b.cpp src/client_manager.cpp src/client_info.cpp src/payload.cpp src/leader_manager.cpp include/leader_manager.h)
 add_executable(jam-dev_b ${DEV_B_HEADERS} ${DEV_B_SOURCES})
 
 # Executables depend on BOOST:
@@ -32,8 +32,8 @@ set(DEV_H_SOURCES src/dev/dev_h.cpp src/payload.cpp src/central_queues.cpp
 add_executable(jam-dev_h_1 ${DEV_H_HEADERS} ${DEV_H_SOURCES})
 add_executable(jam-dev_h_2 ${DEV_H_HEADERS} ${DEV_H_SOURCES})
 
-set(DEV_C_SOURCES src/dev/dev_c.cpp src/user_handler.cpp src/callable.cpp include/payload.h
-        src/payload.cpp include/callable.h include/user_handler.h)
+set(DEV_C_SOURCES src/dev/dev_c.cpp src/user_handler.cpp src/callable.cpp src/payload.cpp
+        src/central_queues.cpp)
 add_executable(jam-dev_c ${DEV_C_SOURCES})
 
 # Test files

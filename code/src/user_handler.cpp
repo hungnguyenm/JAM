@@ -5,27 +5,18 @@
 #include "../include/stream_communicator.h"
 #include "../include/user_handler.h"
 
-UserHandler::UserHandler(CentralQueues *queues) {
-    queues_ = queues;
-
+UserHandler::UserHandler(CentralQueues *queues) :
+    queues_(queues)
+{
     FD_ZERO(&activeFdSet_);
     FD_SET(STDIN_FILENO, &activeFdSet_);
 
     pipe(incomingFd_);
-    pipe(outgoingFd_);
     FD_SET(incomingFd_[0], &activeFdSet_);
-}
-
-UserHandler::~UserHandler() {
-
 }
 
 boost::thread UserHandler::run_on_thread() {
     return boost::thread(*this);
-}
-
-int UserHandler::get_read_pipe() {
-    return outgoingFd_[0];
 }
 
 int UserHandler::get_write_pipe() {
@@ -47,17 +38,17 @@ void UserHandler::operator()() {
         if (FD_ISSET(STDIN_FILENO, &readFdSet_)) {
             if (std::cin.eof()) {
                 // ctrl+d has been input
+                queues_->signal_terminate();
                 break;
             }
 
             // grab the input from the command line and write it to the pipe
             getline(std::cin, data);
 
-
-            JamStatus status = StreamCommunicator::SendData(outgoingFd_[1], data);
-            if (status != JamStatus::SUCCESS) {
-                DCERR("Failed sending a message");
-            }
+            Payload payload;
+            payload.SetType(MessageType::LOCAL_MSG);
+            payload.SetMessage(data);
+            queues_->push(CentralQueues::QueueType::USER_OUT, payload);
 
         } else if (FD_ISSET(incomingFd_[0], &readFdSet_)) {
             std::string username = StreamCommunicator::ListenForData(incomingFd_[0]);
@@ -70,8 +61,6 @@ void UserHandler::operator()() {
     // Clean up the pipes
     close(incomingFd_[0]);
     close(incomingFd_[1]);
-    close(outgoingFd_[0]);
-    close(outgoingFd_[1]);
 }
 
 void UserHandler::PrintMessage(const std::string &sender, const std::string &message) {
