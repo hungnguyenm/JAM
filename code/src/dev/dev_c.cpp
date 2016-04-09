@@ -11,13 +11,13 @@ int main(int argc, char* argv[])    {
 
     UserHandler test(&queues);
     std::cout << "Creating a pthread" << std::endl;
-    boost::thread t = test.run_on_thread();
+    test.Start();
 
     int fd;
 
-//    fd  = test.get_write_pipe();
-//    StreamCommunicator::SendMessage(fd, "Bob", "Hello");
+    fd  = test.get_write_pipe();
+    StreamCommunicator::SendMessage(fd, "Bob", "Hello");
 
-    t.join();
+    test.WaitOnEnd();
     return 0;
 }

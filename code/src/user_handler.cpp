@@ -15,15 +15,28 @@ UserHandler::UserHandler(CentralQueues *queues) :
     FD_SET(incomingFd_[0], &activeFdSet_);
 }
 
-boost::thread UserHandler::run_on_thread() {
-    return boost::thread(*this);
+
+UserHandler::~UserHandler() {
+    FD_ZERO(&activeFdSet_);
+
+    // Clean up the pipes
+    close(incomingFd_[0]);
+    close(incomingFd_[1]);
+}
+
+void UserHandler::Start() {
+    t_run_ = boost::thread(boost::bind(&UserHandler::HandleInput, this));
 }
 
 int UserHandler::get_write_pipe() {
     return incomingFd_[1];
 }
 
-void UserHandler::operator()() {
+void UserHandler::WaitOnEnd() {
+    t_run_.join();
+}
+
+void UserHandler::HandleInput() {
     std::string data;
 
     while (true) {
@@ -57,10 +70,6 @@ void UserHandler::operator()() {
             PrintMessage(username, message);
         }
     }
-
-    // Clean up the pipes
-    close(incomingFd_[0]);
-    close(incomingFd_[1]);
 }
 
 void UserHandler::PrintMessage(const std::string &sender, const std::string &message) {
