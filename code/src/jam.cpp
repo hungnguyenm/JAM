@@ -26,9 +26,20 @@ void JAM::StartAsLeader(const char *username) {
     // INFO
     cout << username << " is starting a new chat group!" << endl;
 
+    // Detect interface address
+    sockaddr_in servaddr;
+    if (GetInterfaceAddress(DEFAULT_INTERFACE, DEFAULT_PORT, &servaddr)) {
+        clientManager_.AddClient(servaddr);
+    } else {
+        cerr << "Failed to detect network interface!" << endl;
+        exit(1);
+    }
+
     // Start UDP Wrapper
     if (udpWrapper_.Start(DEFAULT_PORT) == SUCCESS) {
-        cout << "Succeeded, listening on" << GetInterfaceAddress(DEFAULT_PORT) << ". Current users:" << endl;
+        cout << "Succeeded, listening on" << GetInterfaceAddressStr(DEFAULT_INTERFACE, DEFAULT_PORT) <<
+                ". Current users:" << endl;
+        clientManager_.PrintClients();
     } else {
         cerr << "Failed to start new chat group!" << endl;
         exit(1);
@@ -36,6 +47,9 @@ void JAM::StartAsLeader(const char *username) {
 
     // Start User Handler
     userHandler_.Start();
+
+    // Start-up completed
+    cout << "Waiting for others to join..." << endl;
 
     Main();
 }
@@ -75,7 +89,7 @@ void JAM::Main() {
     std::cout << "Bye." << std::endl;
 }
 
-string JAM::GetInterfaceAddress(const char *port) {
+string JAM::GetInterfaceAddressStr(const char *port) {
     stringstream ss;
     ifaddrs *ifap, *ifa;
     sockaddr_in *sa;                // Only print IPv4
@@ -96,5 +110,47 @@ string JAM::GetInterfaceAddress(const char *port) {
     }
 
     return ss.str();
+}
+
+string JAM::GetInterfaceAddressStr(const char *interface, const char *port) {
+    stringstream ss;
+    ifaddrs *ifap, *ifa;
+    sockaddr_in *sa;                // Only print IPv4
+    char *name, *addr;
+    const char *sep = "";
+
+    getifaddrs(&ifap);
+    for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr->sa_family == AF_INET) {
+            name = ifa->ifa_name;
+            if (strcmp(name, interface) == 0) {     // Only select this interface
+                sa = (sockaddr_in *) ifa->ifa_addr;
+                addr = inet_ntoa(sa->sin_addr);
+                ss << sep << " (" << (const char *) name << ")" << (const char *) addr << ":" << port;
+                sep = ",";
+            }
+        }
+    }
+
+    return ss.str();
+}
+
+bool JAM::GetInterfaceAddress(const char *interface, const char *port, sockaddr_in *addr) {
+    bool ret = false;
+    ifaddrs *ifap, *ifa;
+    char *name;
+
+    getifaddrs(&ifap);
+    for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr->sa_family == AF_INET) {
+            name = ifa->ifa_name;
+            if (strcmp(name, interface) == 0) {     // Only select this interface
+                ret = true;
+                memcpy(addr, ifa->ifa_addr, sizeof(sockaddr_in));
+            }
+        }
+    }
+
+    return ret;
 }
 

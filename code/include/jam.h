@@ -11,6 +11,7 @@
 
 #include "udp_wrapper.h"
 #include "user_handler.h"
+#include "client_manager.h"
 
 class JAM {
 public:
@@ -49,6 +50,7 @@ private:
     CentralQueues queues_;
     UdpWrapper udpWrapper_;
     UserHandler userHandler_;
+    ClientManager clientManager_;
 
     /**
      * Construct string of ip address and port for network interfaces
@@ -57,7 +59,28 @@ private:
      *
      * @return          ip:port string
      */
-    std::string GetInterfaceAddress(const char *port);
+    std::string GetInterfaceAddressStr(const char *port);
+
+    /**
+     * Construct string of ip address and port for a specific network interface
+     *
+     * @param interface only select this specific interface
+     * @param port      bind UDP port
+     *
+     * @return          ip:port string
+     */
+    std::string GetInterfaceAddressStr(const char *interface, const char *port);
+
+    /**
+     * Construct sockaddr_in of ip address and port for a specific network interface
+     *
+     * @param interface only select this specific interface
+     * @param port      bind UDP port
+     * @param addr      returned sockaddr_in
+     *
+     * @return          TRUE if detected; FALSE otherwise
+     */
+    bool GetInterfaceAddress(const char *interface, const char *port, sockaddr_in *addr);
 };
 
 #endif //JAM_JAM_H

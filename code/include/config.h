@@ -8,6 +8,7 @@
 #ifndef JAM_CONFIG_H
 #define JAM_CONFIG_H
 
+#define DEFAULT_INTERFACE       "en0"   // Default UDP interface
 #define DEFAULT_PORT            "9346"  // Default UDP datagram port
 #define MIN_PORT                9000    // Port must be greater than MIN_PORT
 
