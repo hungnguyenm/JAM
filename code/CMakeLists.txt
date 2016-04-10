@@ -20,7 +20,7 @@ set(SOURCE_FILES src/main.cpp)
 add_executable(jam-main ${SOURCE_FILES})
 
 set(DEV_B_HEADERS include/client_info.h include/client_manager.h include/payload.h include/config.h)
-set(DEV_B_SOURCES src/dev/dev_b.cpp src/client_manager.cpp src/client_info.cpp src/payload.cpp src/leader_manager.cpp include/leader_manager.h)
+set(DEV_B_SOURCES src/dev/dev_b.cpp src/client_manager.cpp src/client_info.cpp src/payload.cpp src/leader_manager.cpp include/leader_manager.h src/serializer_helper.cpp include/serializer_helper.h)
 add_executable(jam-dev_b ${DEV_B_HEADERS} ${DEV_B_SOURCES})
 
 # Executables depend on BOOST:
