@@ -84,6 +84,18 @@ public:
 
     void SetOrder(int32_t order);
 
+    Status GetStatus() const;
+
+    void SetStatus(Status status);
+
+    ElectionCommand GetElectionCommand() const;
+
+    void SetElectionCommand(ElectionCommand command);
+
+    RecoverCommand GetRecoverCommand() const;
+
+    void SetRecoverCommand(RecoverCommand command);
+
     std::size_t GetLength() const;
 
     void SetLength(uint32_t length);
@@ -132,6 +144,8 @@ public:
      * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
     JamStatus DecodePayload();
+
+    void clear();
 
 private:
     enum {

@@ -73,10 +73,39 @@ void JAM::StartAsClient(const char *user_name,
     }
 
     // Initiate hand-shake
+    Payload payload;
+    payload.SetType(STATUS_MSG);
+    payload.SetStatus(CLIENT_JOIN);
+    payload.SetUsername(user_name);
 
+    sockaddr_in addr;
+    if (udpWrapper_.GetAddressFromInfo(serv_addr, serv_port, &addr) == SUCCESS) {
+        udpWrapper_.SendPayloadSingle(payload, &addr);
+    } else {
+        cerr << "Invalid server address!" << endl;
+        exit(1);
+    }
+
+    if (queues_.wait_for_data(JOIN_TIMEOUT)) {
+        // Only check incoming UDP queue
+        if (queues_.try_pop_udp_in(payload)) {
+            // TODO: handle hand-shake payload
+            goto next;
+        }
+
+        // UDP timeout for hand-shake or crashed
+        udpWrapper_.Stop();
+        cout << "Sorry, no chat is active on " << serv_addr << ":" <<
+        serv_port << ", try again later." << endl;
+        cout << "Bye." << endl;
+        exit(0);
+    }
+
+    next:
     // Start User Handler
     userHandler_.Start();
 
+    // Start-up completed
     Main();
 }
 
@@ -98,7 +127,7 @@ void JAM::Main() {
     DCOUT("INFO: JAM - Received terminate signal");
     udpWrapper_.Stop();
 
-    std::cout << "Bye." << std::endl;
+    cout << "Bye." << endl;
 }
 
 string JAM::GetInterfaceAddressStr(const char *port) {

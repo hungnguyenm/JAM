@@ -61,12 +61,11 @@ bool CentralQueues::wait_for_data(uint32_t time) {
         cond_variable_.timed_wait(lock, boost::posix_time::milliseconds(time));
     }
 
-    QueueParam data;
-    if (user_out_queue_.try_pop(boost::get<Payload>(data)))
+    if (!user_out_queue_.is_empty())
         return true;
-    if (udp_in_queue_.try_pop(boost::get<Payload>(data)))
+    if (!udp_in_queue_.is_empty())
         return true;
-    if (udp_crash_queue.try_pop(boost::get<sockaddr_in>(data)))
+    if (!udp_crash_queue.is_empty())
         return true;
 
     // If no queue has new data and exit flag set to FALSE then return FALSE

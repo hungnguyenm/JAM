@@ -15,7 +15,10 @@
 using namespace std;
 
 Payload::Payload()
-        : type_(NA) {
+        : type_(NA),
+          order_(0),
+          username_length_(0),
+          message_length_(0) {
 }
 
 Payload::Payload(uint32_t uid, AckStatus ack) {
@@ -113,6 +116,30 @@ int32_t Payload::GetOrder() const {
 
 void Payload::SetOrder(int32_t order) {
     order_ = order;
+}
+
+Status Payload::GetStatus() const {
+    return code_.status;
+}
+
+void Payload::SetStatus(Status status) {
+    code_.status = status;
+}
+
+ElectionCommand Payload::GetElectionCommand() const {
+    return code_.election;
+}
+
+void Payload::SetElectionCommand(ElectionCommand command) {
+    code_.election = command;
+}
+
+RecoverCommand Payload::GetRecoverCommand() const {
+    return code_.recover;
+}
+
+void Payload::SetRecoverCommand(RecoverCommand command) {
+    code_.recover = command;
 }
 
 size_t Payload::GetLength() const {
@@ -331,6 +358,14 @@ JamStatus Payload::ValidateForDecode() {
 
     // TODO: implement decoding validation algorithm
     return ret;
+}
+
+void Payload::clear() {
+    type_ = NA;
+    uid_ = 0;
+    order_ = 0;
+    username_length_ = 0;
+    message_length_ = 0;
 }
 
 uint32_t Payload::packu8(uint8_t *&buf, uint8_t i) {
