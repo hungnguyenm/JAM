@@ -22,13 +22,15 @@ JAM::~JAM() {
 
 }
 
-void JAM::StartAsLeader(const char *username) {
+void JAM::StartAsLeader(const char *user_name,
+                        const char *user_interface,
+                        const char *user_port) {
     // INFO
-    cout << username << " is starting a new chat group!" << endl;
+    cout << user_name << " is starting a new chat group!" << endl;
 
     // Detect interface address
     sockaddr_in servaddr;
-    if (GetInterfaceAddress(DEFAULT_INTERFACE, DEFAULT_PORT, &servaddr)) {
+    if (GetInterfaceAddress(user_interface, user_port, &servaddr)) {
         clientManager_.AddClient(servaddr);
     } else {
         cerr << "Failed to detect network interface!" << endl;
@@ -36,8 +38,8 @@ void JAM::StartAsLeader(const char *username) {
     }
 
     // Start UDP Wrapper
-    if (udpWrapper_.Start(DEFAULT_PORT) == SUCCESS) {
-        cout << "Succeeded, listening on" << GetInterfaceAddressStr(DEFAULT_INTERFACE, DEFAULT_PORT) <<
+    if (udpWrapper_.Start(user_port) == SUCCESS) {
+        cout << "Succeeded, listening on" << GetInterfaceAddressStr(user_interface, user_port) <<
                 ". Current users:" << endl;
         clientManager_.PrintClients();
     } else {
@@ -54,13 +56,23 @@ void JAM::StartAsLeader(const char *username) {
     Main();
 }
 
-void JAM::StartAsClient(const char *username,
-                        const char *addr,
-                        const char *port) {
+void JAM::StartAsClient(const char *user_name,
+                        const char *user_interface,
+                        const char *user_port,
+                        const char *serv_addr,
+                        const char *serv_port) {
     // INFO
-    cout << username << " is joining a chat group at " << addr << ":" << port << "!" << endl;
+    cout << user_name << " is joining a chat group at " << serv_addr << ":" << serv_port << "!" << endl;
 
     // Start UDP Wrapper
+    if (udpWrapper_.Start(user_port) == SUCCESS) {
+        cout << "Listening on" << GetInterfaceAddressStr(user_interface, user_port) << endl;
+    } else {
+        cerr << "Failed to start UDP service!" << endl;
+        exit(1);
+    }
+
+    // Initiate hand-shake
 
     // Start User Handler
     userHandler_.Start();

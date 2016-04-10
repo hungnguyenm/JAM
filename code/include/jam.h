@@ -24,20 +24,28 @@ public:
      *
      * Assume new group, start listening to incoming packets.
      *
-     * @param username  user's name
+     * @param username          user's name
+     * @param user_interface    user's selected interface
+     * @param bindport          user's port
      */
-    void StartAsLeader(const char *username);
+    void StartAsLeader(const char *user_name,
+                       const char *user_interface,
+                       const char *user_port);
 
     /**
      * Start JAM as a client
      *
      * Join group by connecting to server address. If server doesn't respond then JAM returns error.
      *
-     * @param username  user's name
-     * @param addr      server's address
-     * @param port      server's port
+     * @param username          user's name
+     * @param user_interface    user's selected interface
+     * @param user_port         user's port
+     * @param serv_addr         server's address
+     * @param serv_port         server's port
      */
-    void StartAsClient(const char *username,
+    void StartAsClient(const char *user_name,
+                       const char *user_interface,
+                       const char *user_port,
                        const char *addr,
                        const char *port);
 

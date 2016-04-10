@@ -10,6 +10,7 @@
 
 #define DEFAULT_INTERFACE       "en0"   // Default UDP interface
 #define DEFAULT_PORT            "9346"  // Default UDP datagram port
+#define DEFAULT_PORT_DEBUG      "9347"  // Default UDP datagram port for debugging
 #define MIN_PORT                9000    // Port must be greater than MIN_PORT
 
 #define MAX_MESSAGE_LENGTH      100     // Maximum message length per payload
