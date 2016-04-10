@@ -15,10 +15,14 @@ public:
     bool operator==(const ClientInfo& other);
     sockaddr_in GetSockAddress();
 
+    bool is_leader();
+    void set_leader(bool val);
 private:
     sockaddr_in client_;
     int ip_address_[4];
     int port_;
+
+    bool isLeader_;
 };
 
 #endif //JAM_CLIENT_INFO_H

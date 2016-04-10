@@ -53,4 +53,12 @@ sockaddr_in ClientInfo::GetSockAddress(){
     return client_;
 }
 
+bool ClientInfo::is_leader() {
+    return isLeader_;
+}
+
+void ClientInfo::set_leader(bool val) {
+    isLeader_ = val;
+}
+
 
