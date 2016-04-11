@@ -34,6 +34,8 @@ int main(){
     cm.AddClient(myaddr, myname, true);
     cm.AddClient(myaddr1, myname1, false);
 
+    std::cout << "Print single cleint " << cm.PrintSingleClientIP(myaddr).c_str() << std::endl;
+
     printf("Added clients:\n");
 
     std::cout << "Size: \n " << sizeof myaddr1 << std::endl;

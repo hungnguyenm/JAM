@@ -21,15 +21,21 @@ ClientManager::~ClientManager()                 // destructor
 
 }
 
+void ClientManager::SetSelfAddress(sockaddr_in addr) {
+    self_addr_ = addr;
+}
+
 vector<ClientInfo> ClientManager::GetAllClients() {
     return client_list_;
 }
 
-std::vector<sockaddr_in> ClientManager::GetAllClientSockAddress() {
+std::vector<sockaddr_in> ClientManager::GetAllClientSockAddressWithoutMe() {
     std::vector<sockaddr_in> vectorOfSockAddress;
     if (client_list_.size() > 0) {
         for (int i = 0; i < client_list_.size(); i++) {
-            vectorOfSockAddress.push_back(client_list_[i].GetSockAddress());
+            if (client_list_[i].GetSockAddress().sin_addr.s_addr != self_addr_.sin_addr.s_addr) {
+                vectorOfSockAddress.push_back(client_list_[i].GetSockAddress());
+            }
         }
     }
     return vectorOfSockAddress;
@@ -75,6 +81,19 @@ void ClientManager::AddClient(ClientInfo client) {
 //void ClientManager::RemoveClient(sockaddr_in client) {
 //    RemoveClient(ClientInfo(client));
 //}
+
+std::string ClientManager::PrintSingleClientIP(sockaddr_in client){
+    std::string client_ip_information;
+    int port;
+    char ipstr[INET_ADDRSTRLEN];
+
+    inet_ntop(AF_INET, &(client.sin_addr), ipstr, sizeof ipstr);
+    port = ntohs(client.sin_port);
+    client_ip_information += ipstr;
+    client_ip_information += ":";
+    client_ip_information += std::to_string(port);
+    return client_ip_information;
+}
 
 void ClientManager::RemoveClient(ClientInfo client) {
     int i;

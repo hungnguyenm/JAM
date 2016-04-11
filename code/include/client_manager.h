@@ -17,9 +17,11 @@ public:                    // begin public section
 
     ~ClientManager();    // destructor
 
+    void SetSelfAddress(sockaddr_in addr);
+
     std::vector<ClientInfo> GetAllClients(); //return a list of all current clients
 
-    std::vector<sockaddr_in> GetAllClientSockAddress();
+    std::vector<sockaddr_in> GetAllClientSockAddressWithoutMe();
 
     std::vector<ClientInfo> GetHigherOrderClients(
             sockaddr_in client); //return a list of higher order clients for election
@@ -31,6 +33,8 @@ public:                    // begin public section
     void AddClient(sockaddr_in client, const std::string &username, bool isLeader);
 
     void AddClient(ClientInfo client);
+
+    std::string PrintSingleClientIP(sockaddr_in client);
 
     void RemoveClient(sockaddr_in client);
 
@@ -53,6 +57,9 @@ private:
     enum {
         ENCODED_CLIENT_LENGTH = 6
     };
+
+    sockaddr_in self_addr_;
+    sockaddr_in loopback_addr_;
 
     uint8_t encoded_data_[MAX_CLIENT_BUFFER];
     uint32_t encoded_data_size_;
