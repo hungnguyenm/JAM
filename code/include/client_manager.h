@@ -51,7 +51,7 @@ private:
         ENCODED_CLIENT_LENGTH = 6
     };
 
-    uint8_t* encoded_data_;
+    uint8_t encoded_data_[MAX_CLIENT_BUFFER];
     uint32_t encoded_data_size_;
     std::vector<ClientInfo> client_list_;
 

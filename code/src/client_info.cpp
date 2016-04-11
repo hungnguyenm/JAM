@@ -70,8 +70,10 @@ uint32_t ClientInfo::GetPacketSize() {
     return L;
 }
 
-JamStatus ClientInfo::EncodeClientInBuffer(ClientInfo client, uint8_t *buffer) {
+JamStatus ClientInfo::EncodeClientInBuffer(ClientInfo client, uint8_t *in) {
     JamStatus ret;
+
+    uint8_t *buffer = in;
 
     std::string username = client.get_username();
     uint32_t username_length_ = (uint32_t) username.size() + 1;
