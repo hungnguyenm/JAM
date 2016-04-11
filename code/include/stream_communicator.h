@@ -27,8 +27,6 @@ public:
     }
     inline static JamStatus SendData(int fd, const std::string& data)
     {
-        DCOUT(std::string("Sending on ") + std::to_string(fd) + " with data: " + data);
-
         uint32_t dataLength = htonl(data.size());
 
         ssize_t n = write(fd, &dataLength, sizeof(uint32_t));
@@ -52,7 +50,6 @@ public:
 
     inline static std::string ListenForData(int fd)
     {
-        DCOUT(std::string("Listening on ") + std::to_string(fd));
         uint32_t dataLength;
 
         read(fd, &dataLength, sizeof(uint32_t));
@@ -67,8 +64,6 @@ public:
         if(receivedLength != dataLength) {
             DCERR("Did not receive the expected data");
         }
-
-        DCOUT(std::string("Received from ") + std::to_string(fd) + " and length " + std::to_string(dataLength) + " data: " + receivedData);
 
         return receivedData;
     }

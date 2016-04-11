@@ -63,7 +63,7 @@ private:
     sockaddr_in self_addr_;
     sockaddr_in loopback_addr_;
 
-    uint8_t encoded_data_[MAX_CLIENT_BUFFER];
+    uint8_t encoded_data_[MAX_CLIENT_BUFFER_LENGTH];
     uint32_t encoded_data_size_;
     std::vector<ClientInfo> client_list_;
 

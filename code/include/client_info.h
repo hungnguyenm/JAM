@@ -19,7 +19,7 @@ public:
     sockaddr_in GetSockAddress();
     static uint32_t GetPacketSize();
 
-    static JamStatus EncodeClientInBuffer(ClientInfo client, uint8_t *in);
+    static uint32_t EncodeClientInBuffer(ClientInfo client, uint8_t *&buffer);
 
     std::string get_username();
     bool is_leader();

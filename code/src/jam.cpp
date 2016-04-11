@@ -7,6 +7,7 @@
  */
 
 #include "../include/jam.h"
+#include "../include/stream_communicator.h"
 
 #include <ifaddrs.h>
 #include <arpa/inet.h>
@@ -34,6 +35,7 @@ void JAM::StartAsLeader(const char *user_name,
     if (GetInterfaceAddress(user_interface, user_port, &servaddr)) {
         // Add creator as leader
         clientManager_.AddClient(servaddr, user_name, true);
+        clientManager_.SetSelfAddress(servaddr);
     } else {
         cerr << "Failed to detect network interface!" << endl;
         exit(1);
@@ -67,9 +69,18 @@ void JAM::StartAsClient(const char *user_name,
     cout << user_name << " is joining a chat group at " << serv_addr << ":" << serv_port << "!" << endl;
     user_name_ = user_name;
 
+    // Detect interface address
+    sockaddr_in client_addr;
+    if (GetInterfaceAddress(user_interface, user_port, &client_addr)) {
+        clientManager_.SetSelfAddress(client_addr);
+    } else {
+        cerr << "Failed to detect network interface!" << endl;
+        exit(1);
+    }
+
     // Start UDP Wrapper
     if (udpWrapper_.Start(user_port) == SUCCESS) {
-        cout << "Listening on" << GetInterfaceAddressStr(user_interface, user_port) << endl;
+        cout << "Listening on " << clientManager_.PrintSingleClientIP(client_addr) << endl;
     } else {
         cerr << "Failed to start UDP service!" << endl;
         exit(1);
@@ -83,7 +94,13 @@ void JAM::StartAsClient(const char *user_name,
 
     sockaddr_in addr;
     if (udpWrapper_.GetAddressFromInfo(serv_addr, serv_port, &addr) == SUCCESS) {
-        udpWrapper_.SendPayloadSingle(payload, &addr);
+        if (payload.EncodePayload() == SUCCESS) {
+            udpWrapper_.SendPayloadSingle(payload, &addr);
+        } else {
+            cerr << "Internal error! Exiting..." << endl;
+            exit(1);
+        }
+
     } else {
         cerr << "Invalid server address!" << endl;
         exit(1);
@@ -94,7 +111,7 @@ void JAM::StartAsClient(const char *user_name,
         if (queues_.try_pop_udp_in(payload)) {
             if (payload.GetType() == STATUS_MSG && payload.GetStatus() == JOIN_ACK) {
                 if (clientManager_.DecodeBufferToClientList((uint8_t *) payload.GetMessage().c_str(),
-                                                        payload.GetMessageLength()) == SUCCESS) {
+                                                            payload.GetMessageLength()) == SUCCESS) {
                     goto next;
                 } else {
                     cerr << "Failed to hand-shake with server!" << endl;
@@ -126,6 +143,7 @@ void JAM::StartAsClient(const char *user_name,
 void JAM::Main() {
     Payload payload;
     sockaddr_in addr;
+    vector<sockaddr_in> list;
 
     // Infinite loop to monitor central communication
     for (; ;) {
@@ -145,6 +163,7 @@ void JAM::Main() {
                     if (payload.EncodePayload() == SUCCESS) {
                         vector<sockaddr_in> list = clientManager_.GetAllClientSockAddress();
                         udpWrapper_.SendPayloadList(payload, &list);
+                        // udpWrapper_.SendPayloadSelf(payload);
                     }
                 }
 
@@ -158,8 +177,31 @@ void JAM::Main() {
                     has_data = true;
                     switch (payload.GetType()) {
                         case CHAT_MSG:
+                            StreamCommunicator::SendMessage(userHandler_.get_write_pipe(),
+                                                            payload.GetUsername(),
+                                                            payload.GetMessage());
                             break;
                         case STATUS_MSG:
+                            switch (payload.GetStatus()) {
+                                case CLIENT_JOIN:
+                                    addr = *payload.GetAddress();
+                                    cout << "NOTICE " << payload.GetUsername() << " joined on " <<
+                                            clientManager_.PrintSingleClientIP(addr) << endl;
+                                    clientManager_.AddClient(addr, payload.GetUsername(), false);
+                                    clientManager_.PrintClients();
+                                    // Rebuild payload to acknowledge
+                                    payload.clear();
+                                    payload.SetType(STATUS_MSG);
+                                    payload.SetStatus(JOIN_ACK);
+                                    payload.SetMessage(clientManager_.GetPayload(),
+                                                       clientManager_.GetPayloadSize());
+
+                                    list = clientManager_.GetAllClientSockAddressWithoutMe();
+                                    udpWrapper_.SendPayloadList(payload, &list);
+                                    break;
+                                default:
+                                    break;
+                            }
                             break;
                         case ELECTION_MSG:
                             break;
@@ -237,6 +279,7 @@ bool JAM::GetInterfaceAddress(const char *interface, const char *port, sockaddr_
             if (strcmp(name, interface) == 0) {     // Only select this interface
                 ret = true;
                 memcpy(addr, ifa->ifa_addr, sizeof(sockaddr_in));
+                addr->sin_port = (in_port_t) htons(atoi(port));
             }
         }
     }

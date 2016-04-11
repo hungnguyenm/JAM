@@ -48,13 +48,6 @@ public:
     void Join();
 
     /**
-     * Update internal client addresses
-     *
-     * @param clients   list of client sockaddr_in
-     */
-    void UpdateClientAddresses(std::vector<sockaddr_in> *clients);
-
-    /**
      * Put payload to a single receiver to queue
      *
      * UDP socket must be init before this function can be used.
@@ -92,18 +85,6 @@ public:
     JamStatus SendPayloadList(Payload payload, std::vector<sockaddr_in> *list);
 
     /**
-     * Put payload to all known clients to queue
-     *
-     * UDP socket must be init before this function can be used.
-     * Wrapper will use internal client list for distributing.
-     *
-     * @param payload   encoded payload (to ensure caller validate encoding)
-     *
-     * @return          SUCCESS on normal operation, other JamStatus errors otherwise
-     */
-    JamStatus DistributePayload(Payload payload);
-
-    /**
      * Convert IP address and port to sockaddr_in type
      *
      * @param ip        ip address or host name
@@ -124,7 +105,6 @@ private:
     bool is_ready_;                                 // UDP socket ready for communication
     int sockfd_;                                    // Main socket file descriptor
     sockaddr_in this_addr_;                         // This client's address
-    std::vector<sockaddr_in> clients_;              // Up-to-date client addresses
     uint32_t uid_;                                  // UID counter
 
     ConcurrentQueue<Payload> out_queue_;            // Thread-safe outgoing payload queue for distributing

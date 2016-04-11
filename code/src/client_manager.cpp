@@ -124,14 +124,16 @@ void ClientManager::RemoveAllClients() {
 JamStatus ClientManager::EncodeClientList() {
     JamStatus ret = SUCCESS;
 
-    uint32_t L = ClientInfo::GetPacketSize();
-    uint32_t target = L * client_list_.size();
-
-    encoded_data_size_ = target;
+    uint8_t *buffer = encoded_data_;
+    encoded_data_size_ = 0;
 
     for (int i = 0; i < client_list_.size(); i++) {
-        ClientInfo::EncodeClientInBuffer(client_list_[i], encoded_data_ + i * L);
+        encoded_data_size_ += ClientInfo::EncodeClientInBuffer(client_list_[i], buffer);
     }
+
+    if (encoded_data_size_ > MAX_CLIENT_BUFFER_LENGTH)
+        ret = CLIENT_BUFFER_INVALID_LENGTH;
+
     return ret;
 }
 
@@ -141,31 +143,32 @@ JamStatus ClientManager::DecodeBufferToClientList(uint8_t *payload, uint32_t len
     uint8_t *buffer = payload;
     encoded_data_size_ = length;
 
-    uint32_t username_length_;
-    sockaddr_in myaddr;
+    uint32_t username_length;
+    sockaddr_in addr;
     std::string username;
 
-    uint32_t L = ClientInfo::GetPacketSize();
-
-    if (length % L != 0) {
-        ret = BUFFER_INVALID_LENGTH;
+    if (length > MAX_CLIENT_BUFFER_LENGTH) {
+        ret = CLIENT_BUFFER_INVALID_LENGTH;
     } else {
-        for (int i = 0; i < length; i += L) {
-            username_length_ = SerializerHelper::unpacku32(buffer);
-            if (username_length_ < MAX_USER_NAME_LENGTH) {
-                memcpy((void *) username.c_str(), buffer, username_length_);
-                buffer += username_length_;
+        RemoveAllClients();
+
+        uint32_t count = 0;
+        while (count < encoded_data_size_) {
+            username_length = SerializerHelper::unpacku32(buffer);
+            if (username_length < MAX_USER_NAME_LENGTH) {
+                memcpy((void *) username.c_str(), buffer, username_length);
+                buffer += username_length;
             }
 
-            myaddr.sin_family = AF_INET;
-            myaddr.sin_addr.s_addr = SerializerHelper::unpacku32(buffer);
-            myaddr.sin_port = SerializerHelper::unpacku16(buffer);
+            addr.sin_family = AF_INET;
+            addr.sin_addr.s_addr = SerializerHelper::unpacku32(buffer);
+            addr.sin_port = SerializerHelper::unpacku16(buffer);
 
             bool isLeader = SerializerHelper::unpacku8(buffer);
-            client_list_.push_back(ClientInfo(myaddr, username, isLeader));
+            client_list_.push_back(ClientInfo(addr, username, isLeader));
+            count += 4 + username_length + 4 + 2 + 1;
         }
     }
-
 
     return ret;
 }

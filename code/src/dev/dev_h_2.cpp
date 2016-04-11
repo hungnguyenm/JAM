@@ -3,7 +3,7 @@
 using namespace std;
 
 int main() {
-    const char *user_name = "JAM";
+    const char *user_name = "Alice";
     const char *user_interface = DEFAULT_INTERFACE;
     const char *user_port = DEFAULT_PORT_DEBUG;
     const char *serv_addr = "127.0.0.1";

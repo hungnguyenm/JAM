@@ -167,7 +167,7 @@ JamStatus Payload::SetUsername(string username) {
     JamStatus ret = SUCCESS;
 
     if (username.size() < MAX_USER_NAME_LENGTH) {
-        username_length_ = (uint32_t) username.size() + 1;
+        username_length_ = (uint32_t) username.size();
         uint32_t i = 0;
         for (i = 0; i < username_length_; ++i) {
             username_[i] = (uint8_t) username[i];
@@ -189,12 +189,26 @@ JamStatus Payload::SetMessage(string message) {
     JamStatus ret = SUCCESS;
 
     if (message.size() < MAX_MESSAGE_LENGTH) {
-        message_length_ = (uint32_t) message.size() + 1;
+        message_length_ = (uint32_t) message.size();
         uint32_t i = 0;
         for (i = 0; i < message_length_; ++i) {
             message_[i] = (uint8_t) message[i];
         }
         message_[i] = '\0';
+        length_ = HEADER_LENGTH + username_length_ + message_length_;
+    } else {
+        ret = ERROR_INVALID_PARAMETERS;
+    }
+
+    return ret;
+};
+
+JamStatus Payload::SetMessage(uint8_t *in, uint32_t length) {
+    JamStatus ret = SUCCESS;
+
+    if (length < MAX_MESSAGE_LENGTH) {
+        message_length_ = length;
+        memcpy(message_, in, length);
         length_ = HEADER_LENGTH + username_length_ + message_length_;
     } else {
         ret = ERROR_INVALID_PARAMETERS;

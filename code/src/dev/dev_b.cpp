@@ -67,19 +67,12 @@ int main(){
     std::cout << "Encoded clients:" << std::endl;
 
     cm.PrintClients();
-    cm.DecodeBufferToClientList(cm.GetPayload(), cm.GetPayloadSize());
-
-    cm.PrintClients();
-
-//    jm = cm.DecodeClientList(pld, len);
 
     std::cout << "All Clients after Decode: \n" << std::endl;
 
-    all_clients = cm.GetAllClients();
+    cm.DecodeBufferToClientList(cm.GetPayload(), cm.GetPayloadSize());
 
-    for (int i=0; i<all_clients.size(); i++) {
-        printf("%s\n", inet_ntoa(all_clients[i].GetSockAddress().sin_addr));
-    }
+    cm.PrintClients();
 
     return 0;
 }

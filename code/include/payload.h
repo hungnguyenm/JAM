@@ -112,6 +112,8 @@ public:
 
     JamStatus SetMessage(std::string message);
 
+    JamStatus SetMessage(uint8_t *in, uint32_t length);
+
     const uint8_t *payload() const;
 
     uint8_t *payload();

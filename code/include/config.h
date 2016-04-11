@@ -8,28 +8,28 @@
 #ifndef JAM_CONFIG_H
 #define JAM_CONFIG_H
 
-#define DEFAULT_INTERFACE       "en0"   // Default UDP interface
-#define DEFAULT_PORT            "9346"  // Default UDP datagram port
-#define DEFAULT_PORT_DEBUG      "9347"  // Default UDP datagram port for debugging
-#define MIN_PORT                9000    // Port must be greater than MIN_PORT
+#define DEFAULT_INTERFACE           "en0"   // Default UDP interface
+#define DEFAULT_PORT                "9346"  // Default UDP datagram port
+#define DEFAULT_PORT_DEBUG          "9347"  // Default UDP datagram port for debugging
+#define MIN_PORT                    9000    // Port must be greater than MIN_PORT
 
-#define MAX_MESSAGE_LENGTH      100     // Maximum message length per payload
-#define MAX_USER_NAME_LENGTH    20      // Maximum displayed user name length
-#define MAX_BUFFER_LENGTH       200     // Maximum UDP socket buffer length
+#define MAX_MESSAGE_LENGTH          100     // Maximum message length per payload
+#define MAX_USER_NAME_LENGTH        20      // Maximum displayed user name length
+#define MAX_BUFFER_LENGTH           200     // Maximum UDP socket buffer length
 
-#define MAX_CLIENT_BUFFER       100     // Maximum client list encoded length
+#define MAX_CLIENT_BUFFER_LENGTH    100     // Maximum client list encoded length
 
-#define UDP_RECEIVER_QUEUE_SIZE 100     // Number of payload receiving kept track by receiver to prevent duplicate
-#define NUM_UDP_RETRIES         3       // Default number of UDP resend before notify crash
-#define UDP_TIMEOUT             2000    // Timeout before trying resend UDP payload in miliseconds
-#define ACK_MONITOR_INTERVAL    1       // Ack check interval in seconds
+#define UDP_RECEIVER_QUEUE_SIZE     100     // Number of payload receiving kept track by receiver to prevent duplicate
+#define NUM_UDP_RETRIES             3       // Default number of UDP resend before notify crash
+#define UDP_TIMEOUT                 2000    // Timeout before trying resend UDP payload in miliseconds
+#define ACK_MONITOR_INTERVAL        1       // Ack check interval in seconds
 
-#define JAM_CENTRAL_TIMEOUT     1000    // Timeout for main jam waiting internal communication in miliseconds
-#define JOIN_TIMEOUT            10000   // Timeout to join chat group in miliseconds
+#define JAM_CENTRAL_TIMEOUT         1000    // Timeout for main jam waiting internal communication in miliseconds
+#define JOIN_TIMEOUT                10000   // Timeout to join chat group in miliseconds
 
-#define TERMINATE_WAIT          2       // Waiting time for each thread to terminate in seconds
+#define TERMINATE_WAIT              2       // Waiting time for each thread to terminate in seconds
 
-#define MK_ERROR(x)             (0x00000000|(x))
+#define MK_ERROR(x)                 (0x00000000|(x))
 
 #ifdef DEBUG
 #define DCOUT(str) do { std::cout << "DEBUG - " << str << std::endl; } while ( false )
@@ -72,7 +72,7 @@ enum JamStatus {
     UDP_DISTRIBUTE_ERROR                = MK_ERROR(0x4003),
 
     CLIENT_EXCEED_MAXIMUM               = MK_ERROR(0x5001),
-    BUFFER_INVALID_LENGTH               = MK_ERROR(0x5002),
+    CLIENT_BUFFER_INVALID_LENGTH        = MK_ERROR(0x5002),
 };
 
 #endif //JAM_CONFIG_H

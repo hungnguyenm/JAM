@@ -70,22 +70,20 @@ uint32_t ClientInfo::GetPacketSize() {
     return L;
 }
 
-JamStatus ClientInfo::EncodeClientInBuffer(ClientInfo client, uint8_t *in) {
-    JamStatus ret;
-
-    uint8_t *buffer = in;
+uint32_t ClientInfo::EncodeClientInBuffer(ClientInfo client, uint8_t *&buffer) {
+    uint32_t size = 0;
 
     std::string username = client.get_username();
-    uint32_t username_length_ = (uint32_t) username.size() + 1;
+    uint32_t username_length_ = (uint32_t) username.size();
 
-    SerializerHelper::packu32(buffer, username_length_);
+    size += SerializerHelper::packu32(buffer, username_length_);
     memcpy(buffer, username.c_str(), username_length_);
     buffer += username_length_;
+    size += username_length_;
 
-    SerializerHelper::packu32(buffer, client.GetSockAddress().sin_addr.s_addr);
-    SerializerHelper::packu16(buffer, client.GetSockAddress().sin_port);
-    SerializerHelper::packu8(buffer, client.is_leader());
-    ret = SUCCESS;
+    size += SerializerHelper::packu32(buffer, client.GetSockAddress().sin_addr.s_addr);
+    size += SerializerHelper::packu16(buffer, client.GetSockAddress().sin_port);
+    size += SerializerHelper::packu8(buffer, client.is_leader() ? (uint8_t) 1 : (uint8_t) 0);
 
-    return ret;
+    return size;
 }
