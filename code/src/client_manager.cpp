@@ -32,6 +32,7 @@ std::vector<sockaddr_in> ClientManager::GetAllClientSockAddress() {
             vectorOfSockAddress.push_back(client_list_[i].GetSockAddress());
         }
     }
+    return vectorOfSockAddress;
 }
 
 vector<ClientInfo> ClientManager::GetHigherOrderClients(ClientInfo client) {
@@ -62,15 +63,12 @@ void ClientManager::HandleCrashClient() {
 
 void ClientManager::AddClient(sockaddr_in client, const std::string &username, bool isLeader) {
     AddClient(ClientInfo(client, username, isLeader));
-
 }
 
 void ClientManager::AddClient(ClientInfo client) {
     client_list_.push_back(client);
     //TODO: sort doesnt work
-    printf("Got here debug!\n");
     EncodeClientList();
-    printf("Got here debug!\n");
 //    sort(client_list_.begin(), client_list_.end());
 }
 
@@ -104,7 +102,6 @@ JamStatus ClientManager::EncodeClientList() {
     for (int i = 0; i < client_list_.size(); i++) {
         ClientInfo::EncodeClientInBuffer(client_list_[i], encoded_data_ + i * L);
     }
-
     return ret;
 }
 
