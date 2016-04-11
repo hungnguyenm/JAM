@@ -55,6 +55,7 @@ public:
     void Main();
 
 private:
+    const char *user_name_;
     CentralQueues queues_;
     UdpWrapper udpWrapper_;
     UserHandler userHandler_;

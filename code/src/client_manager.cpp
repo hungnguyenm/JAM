@@ -25,6 +25,15 @@ vector<ClientInfo> ClientManager::GetAllClients() {
     return client_list_;
 }
 
+std::vector<sockaddr_in> ClientManager::GetAllClientSockAddress() {
+    std::vector<sockaddr_in> vectorOfSockAddress;
+    if (client_list_.size() > 0) {
+        for (int i = 0; i < client_list_.size(); i++) {
+            vectorOfSockAddress.push_back(client_list_[i].GetSockAddress());
+        }
+    }
+}
+
 vector<ClientInfo> ClientManager::GetHigherOrderClients(ClientInfo client) {
     int i;
     vector<ClientInfo> higher_order_clients;
@@ -131,17 +140,7 @@ JamStatus ClientManager::DecodeBufferToClientList(uint8_t *payload, uint32_t len
     }
 
 
-
     return ret;
-}
-
-std::vector<sockaddr_in> ClientManager::ReturnClientSockAddress() {
-    std::vector<sockaddr_in> vectorOfSockAddress;
-    if (client_list_.size() > 0) {
-        for (int i = 0; i < client_list_.size(); i++) {
-            vectorOfSockAddress.push_back(client_list_[i].GetSockAddress());
-        }
-    }
 }
 
 void ClientManager::PrintClients() {

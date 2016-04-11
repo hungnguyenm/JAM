@@ -16,14 +16,19 @@ public:                    // begin public section
     ClientManager();
 
     ~ClientManager();    // destructor
+
     std::vector<ClientInfo> GetAllClients(); //return a list of all current clients
+
+    std::vector<sockaddr_in> GetAllClientSockAddress();
+
     std::vector<ClientInfo> GetHigherOrderClients(
             sockaddr_in client); //return a list of higher order clients for election
+
     std::vector<ClientInfo> GetHigherOrderClients(ClientInfo client);
 
     void HandleNotification(); //status update
 
-    void AddClient(sockaddr_in client, const std::string& username, bool isLeader);
+    void AddClient(sockaddr_in client, const std::string &username, bool isLeader);
 
     void AddClient(ClientInfo client);
 
@@ -38,11 +43,9 @@ public:                    // begin public section
 
     JamStatus DecodeBufferToClientList(uint8_t *payload, uint32_t length);
 
-    std::vector<sockaddr_in> ReturnClientSockAddress();
-
     void PrintClients();
 
-    uint8_t* GetPayload();
+    uint8_t *GetPayload();
 
     uint32_t GetPayloadSize();
 

@@ -27,11 +27,13 @@ void JAM::StartAsLeader(const char *user_name,
                         const char *user_port) {
     // INFO
     cout << user_name << " is starting a new chat group!" << endl;
+    user_name_ = user_name;
 
     // Detect interface address
     sockaddr_in servaddr;
     if (GetInterfaceAddress(user_interface, user_port, &servaddr)) {
-        // clientManager_.AddClient(servaddr);
+        // Add creator as leader
+        clientManager_.AddClient(servaddr, user_name, true);
     } else {
         cerr << "Failed to detect network interface!" << endl;
         exit(1);
@@ -40,7 +42,7 @@ void JAM::StartAsLeader(const char *user_name,
     // Start UDP Wrapper
     if (udpWrapper_.Start(user_port) == SUCCESS) {
         cout << "Succeeded, listening on" << GetInterfaceAddressStr(user_interface, user_port) <<
-                ". Current users:" << endl;
+        ". Current users:" << endl;
         clientManager_.PrintClients();
     } else {
         cerr << "Failed to start new chat group!" << endl;
@@ -63,6 +65,7 @@ void JAM::StartAsClient(const char *user_name,
                         const char *serv_port) {
     // INFO
     cout << user_name << " is joining a chat group at " << serv_addr << ":" << serv_port << "!" << endl;
+    user_name_ = user_name;
 
     // Start UDP Wrapper
     if (udpWrapper_.Start(user_port) == SUCCESS) {
@@ -89,8 +92,16 @@ void JAM::StartAsClient(const char *user_name,
     if (queues_.wait_for_data(JOIN_TIMEOUT)) {
         // Only check incoming UDP queue
         if (queues_.try_pop_udp_in(payload)) {
-            // TODO: handle hand-shake payload
-            goto next;
+            if (payload.GetType() == STATUS_MSG && payload.GetStatus() == JOIN_ACK) {
+                if (clientManager_.DecodeBufferToClientList((uint8_t *) payload.GetMessage().c_str(),
+                                                        payload.GetMessageLength()) == SUCCESS) {
+                    goto next;
+                } else {
+                    cerr << "Failed to hand-shake with server!" << endl;
+                    exit(1);
+                }
+
+            }
         }
 
         // UDP timeout for hand-shake or crashed
@@ -113,6 +124,9 @@ void JAM::StartAsClient(const char *user_name,
 }
 
 void JAM::Main() {
+    Payload payload;
+    sockaddr_in addr;
+
     // Infinite loop to monitor central communication
     for (; ;) {
         if (queues_.wait_for_data(JAM_CENTRAL_TIMEOUT)) {
@@ -122,7 +136,39 @@ void JAM::Main() {
             // Go through each queue and handle data if available
             bool has_data = false;
             do {
+                if (queues_.try_pop_user_out(payload)) {
+                    // TODO: handle ordering here
+                    // Has data in user_out_queue, need to package the payload
+                    has_data = true;
+                    payload.SetType(CHAT_MSG);
+                    payload.SetUsername(user_name_);
+                    if (payload.EncodePayload() == SUCCESS) {
+                        vector<sockaddr_in> list = clientManager_.GetAllClientSockAddress();
+                        udpWrapper_.SendPayloadList(payload, &list);
+                    }
+                }
 
+                if (queues_.try_pop_udp_crash(addr)) {
+                    // TODO: implement notification to all modules
+                    has_data = true;
+                }
+
+                if (queues_.try_pop_udp_in(payload)) {
+                    // TODO: implement handler for all types of payload
+                    has_data = true;
+                    switch (payload.GetType()) {
+                        case CHAT_MSG:
+                            break;
+                        case STATUS_MSG:
+                            break;
+                        case ELECTION_MSG:
+                            break;
+                        case RECOVER_MSG:
+                            break;
+                        default:
+                            break;
+                    }
+                }
             } while (has_data);
         }
     }
