@@ -41,6 +41,16 @@ std::vector<sockaddr_in> ClientManager::GetAllClientSockAddressWithoutMe() {
     return vectorOfSockAddress;
 }
 
+std::vector<sockaddr_in> ClientManager::GetAllClientSockAddress() {
+    std::vector<sockaddr_in> vectorOfSockAddress;
+    if (client_list_.size() > 0) {
+        for (int i = 0; i < client_list_.size(); i++) {
+            vectorOfSockAddress.push_back(client_list_[i].GetSockAddress());
+        }
+    }
+    return vectorOfSockAddress;
+}
+
 vector<ClientInfo> ClientManager::GetHigherOrderClients(ClientInfo client) {
     int i;
     vector<ClientInfo> higher_order_clients;

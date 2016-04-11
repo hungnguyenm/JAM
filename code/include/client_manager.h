@@ -23,6 +23,8 @@ public:                    // begin public section
 
     std::vector<sockaddr_in> GetAllClientSockAddressWithoutMe();
 
+    std::vector<sockaddr_in> GetAllClientSockAddress();
+
     std::vector<ClientInfo> GetHigherOrderClients(
             sockaddr_in client); //return a list of higher order clients for election
 
@@ -34,7 +36,7 @@ public:                    // begin public section
 
     void AddClient(ClientInfo client);
 
-    std::string PrintSingleClientIP(sockaddr_in client);
+    static std::string PrintSingleClientIP(sockaddr_in client);
 
     void RemoveClient(sockaddr_in client);
 
