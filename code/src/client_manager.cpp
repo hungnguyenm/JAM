@@ -118,7 +118,7 @@ JamStatus ClientManager::DecodeBufferToClientList(uint8_t *payload, uint32_t len
         for (int i = 0; i < length; i += L) {
             username_length_ = SerializerHelper::unpacku32(encoded_data_);
             if (username_length_ < MAX_USER_NAME_LENGTH) {
-                memcpy(username, encoded_data_, username_length_);
+                memcpy((void *)username.c_str(), encoded_data_, username_length_);
                 encoded_data_ += username_length_;
             }
 
