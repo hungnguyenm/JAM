@@ -64,6 +64,13 @@ int main(){
 
     JamStatus jm = cm.EncodeClientList();
 
+    std::cout << "Encoded clients:" << std::endl;
+
+    cm.PrintClients();
+    cm.DecodeBufferToClientList(cm.GetPayload(), cm.GetPayloadSize());
+
+    cm.PrintClients();
+
 //    jm = cm.DecodeClientList(pld, len);
 
     std::cout << "All Clients after Decode: \n" << std::endl;

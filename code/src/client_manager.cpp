@@ -174,7 +174,7 @@ void ClientManager::PrintClients() {
     if (client_list_.size() > 0) {
         for (int i = 0; i < client_list_.size(); i++) {
             printf("%s ", client_list_[i].get_username().c_str());
-            printf("%s.%d", inet_ntoa(client_list_[i].GetSockAddress().sin_addr), ntohs(client_list_[i].GetSockAddress().sin_port));
+            printf("%s:%d", inet_ntoa(client_list_[i].GetSockAddress().sin_addr), ntohs(client_list_[i].GetSockAddress().sin_port));
             if (client_list_[i].is_leader()) {
                 printf(" (Leader)\n");
             } else {

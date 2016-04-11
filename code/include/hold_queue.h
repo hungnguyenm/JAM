@@ -10,3 +10,5 @@
 class HoldQueue{
 public:                    // begin public section
     HoldQueue();
+    ~HoldQueue();
+
