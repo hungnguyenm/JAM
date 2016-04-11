@@ -6,7 +6,7 @@ int main() {
     const char *user_name = "JAM";
     const char *user_interface = DEFAULT_INTERFACE;
     const char *user_port = DEFAULT_PORT_DEBUG;
-    const char *serv_addr = "192.168.1.8";
+    const char *serv_addr = "127.0.0.1";
     const char *serv_port = DEFAULT_PORT;
 
 

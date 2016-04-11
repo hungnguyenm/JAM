@@ -233,7 +233,7 @@ void UdpWrapper::RunReader() {
         if ((size = (int) recvfrom(sockfd_, in_payload.payload(), MAX_BUFFER_LENGTH - 1, 0,
                                    (sockaddr *) &clientaddr, &addrlen)) > 0) {
             if (size == QUIT_MSG_LENGTH) {
-                goto exit;
+                break; // Exit out of the loop
             } else {
                 if (in_payload.DecodePayload() == SUCCESS) {
                     if (in_payload.GetType() == ACK_MSG) {
@@ -265,7 +265,6 @@ void UdpWrapper::RunReader() {
             DCERR("ERROR: UdpReader - Failed to receive packet");
         }
     }
-    exit:
     DCOUT("INFO: UdpReader - Received terminate message");
 }
 
