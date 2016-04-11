@@ -146,8 +146,8 @@ JamStatus ClientManager::DecodeBufferToClientList(uint8_t *payload, uint32_t len
 void ClientManager::PrintClients() {
     if (client_list_.size() > 0) {
         for (int i = 0; i < client_list_.size(); i++) {
-            printf("%s\n", client_list_[i].get_username().c_str());
-            printf("%s\n", inet_ntoa(client_list_[i].GetSockAddress().sin_addr));
+            printf("%s ", client_list_[i].get_username().c_str());
+            printf("%s ", inet_ntoa(client_list_[i].GetSockAddress().sin_addr));
             printf("%c\n", client_list_[i].is_leader());
         }
     }

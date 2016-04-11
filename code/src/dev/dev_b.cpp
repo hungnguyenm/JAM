@@ -56,7 +56,7 @@ int main(){
 //    }
 
     std::cout << "Removed Clients" << std::endl;
-    cm.RemoveAllClients();
+    //cm.RemoveAllClients();
 
     cm.PrintClients();
 
