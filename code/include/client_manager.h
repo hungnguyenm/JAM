@@ -13,7 +13,6 @@
 
 class ClientManager {
 public:                    // begin public section
-    ClientManager(sockaddr_in client);     // constructor
     ClientManager();
 
     ~ClientManager();    // destructor
@@ -24,7 +23,7 @@ public:                    // begin public section
 
     void HandleNotification(); //status update
 
-    void AddClient(sockaddr_in client);
+    void AddClient(sockaddr_in client, const std::string& username, bool isLeader);
 
     void AddClient(ClientInfo client);
 
@@ -32,30 +31,30 @@ public:                    // begin public section
 
     void RemoveClient(ClientInfo client);
 
-    JamStatus EncodeClientList(uint8_t *payload, uint32_t *length);
 
-    JamStatus DecodeClientList(uint8_t *payload, uint32_t length);
+    void RemoveAllClients();
+
+    JamStatus EncodeClientList();
+
+    JamStatus DecodeBufferToClientList(uint8_t *payload, uint32_t length);
 
     void PrintClients();
+
+    uint8_t* GetPayload();
+
+    uint32_t GetPayloadSize();
 
 private:
     enum {
         ENCODED_CLIENT_LENGTH = 6
     };
 
+    uint8_t* encoded_data_;
+    uint32_t encoded_data_size_;
     std::vector<ClientInfo> client_list_;
 
     void HandleNewClient(); //deals with new clients joining the chat
     void HandleCrashClient(); //deals with existing clients crashing
-
-    uint32_t packu32(uint8_t *&buf, uint32_t i);
-
-    uint16_t packu16(uint8_t *&buf, uint16_t i);
-
-    uint32_t unpacku32(uint8_t *&buf);
-
-    uint16_t unpacku16(uint8_t *&buf);
-
 };
 
 

@@ -9,43 +9,29 @@
 
 int main(){
     struct sockaddr_in myaddr;
+    struct sockaddr_in myaddr1;
 
-    int s;
-
-    memset(&myaddr, 0, sizeof(myaddr));
+    std::string myname = "Bipeen";
     myaddr.sin_family = AF_INET;
     myaddr.sin_port = htons(3490);
     myaddr.sin_port = htons(151);
     inet_aton("194.158.169.137", &myaddr.sin_addr);
 
-    struct sockaddr_in myaddr1;
-
-    int s1;
-
-    memset(&myaddr1, 0, sizeof(myaddr1));
+    std::string myname1 = "Chris";
     myaddr1.sin_family = AF_INET;
     myaddr1.sin_port = htons(3490);
     myaddr1.sin_port = htons(151);
     inet_aton("193.159.170.137", &myaddr1.sin_addr);
 
-//    ClientInfo cl = ClientInfo(myaddr);
-//    ClientInfo cl1 = ClientInfo(myaddr1);
-//
-//    printf("%d\n", cl < cl1);
-
-    ClientManager cm = ClientManager(myaddr);
-
+    ClientManager cm = ClientManager();
     cm.PrintClients();
-
-    cm.AddClient(myaddr1);
+    cm.AddClient(myaddr, myname, false);
+    cm.AddClient(myaddr1, myname1, false);
 
     std::cout << "Size: " << sizeof myaddr1 << std::endl;
-    cm.PrintClients();
 
 //  cm.GetHigherOrderClients(myaddr);
 //  cm.RemoveClient(myaddr1);
-
-    cm.PrintClients();
 
     std::vector<ClientInfo> all_clients = cm.GetAllClients();
 
@@ -61,6 +47,22 @@ int main(){
         printf("%s\n", inet_ntoa(higher_order_clients[i].GetSockAddress().sin_addr));
     }
 
-    return 0;
+    std::cout << "Removed Clients" << std::endl;
+    cm.RemoveAllClients();
 
+    cm.PrintClients();
+
+    JamStatus jm = cm.EncodeClientList();
+
+//    jm = cm.DecodeClientList(pld, len);
+
+    std::cout << "All Clients after Decode: \n" << std::endl;
+
+    all_clients = cm.GetAllClients();
+
+    for (int i=0; i<all_clients.size(); i++) {
+        printf("%s\n", inet_ntoa(all_clients[i].GetSockAddress().sin_addr));
+    }
+
+    return 0;
 }

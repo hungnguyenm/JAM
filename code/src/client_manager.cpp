@@ -7,23 +7,17 @@
 
 #include <arpa/inet.h>
 #include <algorithm>
+#include <cstring>
 
 #include "../include/client_manager.h"
 
 using namespace std;
 
-
-// constructor of ClientManager,
-ClientManager::ClientManager(sockaddr_in client) {
-    client_list_.push_back(ClientInfo(client));
-}
-
-
 ClientManager::ClientManager() {
 
 }
 
-ClientManager::~ClientManager()                 // destructor, just an example
+ClientManager::~ClientManager()                 // destructor
 {
 
 }
@@ -32,9 +26,9 @@ vector<ClientInfo> ClientManager::GetAllClients() {
     return client_list_;
 }
 
-vector<ClientInfo> ClientManager::GetHigherOrderClients(sockaddr_in client) {
-    return GetHigherOrderClients(ClientInfo(client));
-}
+//vector<ClientInfo> ClientManager::GetHigherOrderClients(sockaddr_in client) {
+//    return GetHigherOrderClients(ClientInfo(client));
+//}
 
 vector<ClientInfo> ClientManager::GetHigherOrderClients(ClientInfo client) {
     int i;
@@ -62,8 +56,8 @@ void ClientManager::HandleCrashClient() {
 
 }
 
-void ClientManager::AddClient(sockaddr_in client) {
-    AddClient(ClientInfo(client));
+void ClientManager::AddClient(sockaddr_in client, const std::string& username, bool isLeader) {
+    AddClient(ClientInfo(client, username, isLeader));
 
 }
 
@@ -73,9 +67,9 @@ void ClientManager::AddClient(ClientInfo client) {
 //    sort(client_list_.begin(), client_list_.end());
 }
 
-void ClientManager::RemoveClient(sockaddr_in client) {
-    RemoveClient(ClientInfo(client));
-}
+//void ClientManager::RemoveClient(sockaddr_in client) {
+//    RemoveClient(ClientInfo(client));
+//}
 
 void ClientManager::RemoveClient(ClientInfo client) {
     int i;
@@ -88,39 +82,57 @@ void ClientManager::RemoveClient(ClientInfo client) {
     }
 }
 
-JamStatus ClientManager::EncodeClientList(uint8_t *payload, uint32_t *length){
-    uint8_t *buffer = payload;
-    *length = 0;
-    JamStatus ret;
-
-    if (client_list_.size() * ENCODED_CLIENT_LENGTH > CLIENT_EXCEED_MAXIMUM) {
-        ret = CLIENT_EXCEED_MAXIMUM;
-    } else {
-        if (client_list_.size() > 0) {
-            for (int i = 0; i < client_list_.size(); i++) {
-                *length += packu32(buffer, client_list_[i].GetSockAddress().sin_addr.s_addr);
-                *length += packu16(buffer, client_list_[i].GetSockAddress().sin_port);
-            }
-        }
-        ret = SUCCESS;
-    }
-    return ret;
+void ClientManager::RemoveAllClients() {
+    client_list_.clear();
 }
 
-JamStatus ClientManager::DecodeClientList(uint8_t *payload, uint32_t length){
+JamStatus ClientManager::EncodeClientList() {
+    uint32_t L = ClientInfo::GetPacketSize();
+    uint32_t target = L*client_list_.size();
+
+    if (encoded_data_ == nullptr) {
+        encoded_data_ = new uint8_t[target];
+    } else if (encoded_data_size_ != target) {
+        delete(encoded_data_);
+        encoded_data_ = new uint8_t[target];
+    }
+    encoded_data_size_ = target;
+
+    for (int i=0; i<client_list_.size(); i++) {
+        ClientInfo::EncodeClientInBuffer(client_list_[i], &encoded_data_[i*L]);
+    }
+}
+
+JamStatus ClientManager::DecodeBufferToClientList(uint8_t *payload, uint32_t length) {
+    if(encoded_data_ != nullptr) {
+        delete (encoded_data_);
+    }
+    encoded_data_ = payload;
+    encoded_data_size_ = length;
+
     JamStatus ret;
-    uint8_t *buffer = payload;
-
+    uint32_t username_length_;
     sockaddr_in myaddr;
+    std::string username;
 
-    if (length % 6 != 0) {
+    uint32_t L = ClientInfo::GetPacketSize();
+
+    if (length % L != 0) {
         ret = BUFFER_INVALID_LENGTH;
     } else {
-        for (int i=0; i<length; i+=ENCODED_CLIENT_LENGTH) {
+        for (int i = 0; i < length; i += L) {
+            username_length_ = SerializerHelper::unpacku32(encoded_data_);
+            if (username_length_ < MAX_USER_NAME_LENGTH) {
+                memcpy(username, encoded_data_, username_length_);
+                encoded_data_ += username_length_;
+            }
+
             myaddr.sin_family = AF_INET;
-            myaddr.sin_addr.s_addr = unpacku32(buffer);
-            myaddr.sin_port = unpacku16(buffer);
-            client_list_.push_back(ClientInfo(myaddr));
+            myaddr.sin_addr.s_addr = SerializerHelper::unpacku32(encoded_data_);
+            myaddr.sin_port = SerializerHelper::unpacku16(encoded_data_);
+
+            bool isLeader = SerializerHelper::unpacku8(encoded_data_);
+            client_list_.push_back(ClientInfo(myaddr, username, isLeader));
         }
         ret = SUCCESS;
     }
@@ -135,38 +147,10 @@ void ClientManager::PrintClients() {
     }
 }
 
-uint32_t ClientManager::packu32(uint8_t *&buf, uint32_t i) {
-    uint32_t n = htonl(i);
-    *buf++ = n >> 24;
-    *buf++ = n >> 16;
-    *buf++ = n >> 8;
-    *buf++ = n;
-    return 4;
+uint8_t* ClientManager::GetPayload() {
+    return encoded_data_;
 }
 
-uint16_t ClientManager::packu16(uint8_t *&buf, uint16_t i) {
-    uint16_t n = htons(i);
-    *buf++ = n >> 8;
-    *buf++ = n;
-    return 2;
+uint32_t ClientManager::GetPayloadSize() {
+    return encoded_data_size_;
 }
-
-uint32_t ClientManager::unpacku32(uint8_t *&buf) {
-    uint32_t ui = ((uint32_t) buf[0] << 24) |
-                  ((uint32_t) buf[1] << 16) |
-                  ((uint32_t) buf[2] << 8) |
-                  buf[3];
-    buf += 4;
-    uint32_t un = ntohl(ui);
-    return un;
-}
-
-
-uint16_t ClientManager::unpacku16(uint8_t *&buf) {
-    uint16_t ui = ((uint32_t) buf[2] << 8) |
-                  buf[3];
-    buf += 2;
-    uint16_t un = ntohs(ui);
-    return un;
-}
-

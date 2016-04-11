@@ -58,3 +58,19 @@ uint32_t SerializerHelper::unpacku32(uint8_t *&buf) {
     uint32_t un = ntohl(ui);
     return un;
 }
+
+uint16_t SerializerHelper::packu16(uint8_t *&buf, uint16_t i) {
+    uint16_t n = htons(i);
+    *buf++ = n >> 8;
+    *buf++ = n;
+    return 2;
+}
+
+
+uint16_t SerializerHelper::unpacku16(uint8_t *&buf) {
+    uint16_t ui = ((uint32_t) buf[2] << 8) |
+                  buf[3];
+    buf += 2;
+    uint16_t un = ntohs(ui);
+    return un;
+}

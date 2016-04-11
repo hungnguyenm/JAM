@@ -20,6 +20,10 @@ public:
     static int32_t unpacki32(uint8_t *&buf);
 
     static uint32_t unpacku32(uint8_t *&buf);
+
+    static uint16_t packu16(uint8_t *&buf, uint16_t i);
+
+    static uint16_t unpacku16(uint8_t *&buf);
 };
 
 
