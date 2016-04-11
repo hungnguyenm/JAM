@@ -68,8 +68,7 @@ uint16_t SerializerHelper::packu16(uint8_t *&buf, uint16_t i) {
 
 
 uint16_t SerializerHelper::unpacku16(uint8_t *&buf) {
-    uint16_t ui = ((uint32_t) buf[2] << 8) |
-                  buf[3];
+    uint16_t ui = ((uint16_t) buf[0] << 8) | buf[1];
     buf += 2;
     uint16_t un = ntohs(ui);
     return un;

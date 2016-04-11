@@ -145,7 +145,7 @@ JamStatus ClientManager::DecodeBufferToClientList(uint8_t *payload, uint32_t len
 
     uint32_t username_length;
     sockaddr_in addr;
-    std::string username;
+    char username[MAX_USER_NAME_LENGTH];
 
     if (length > MAX_CLIENT_BUFFER_LENGTH) {
         ret = CLIENT_BUFFER_INVALID_LENGTH;
@@ -156,7 +156,8 @@ JamStatus ClientManager::DecodeBufferToClientList(uint8_t *payload, uint32_t len
         while (count < encoded_data_size_) {
             username_length = SerializerHelper::unpacku32(buffer);
             if (username_length < MAX_USER_NAME_LENGTH) {
-                memcpy((void *) username.c_str(), buffer, username_length);
+                memcpy(username, buffer, username_length);
+                username[username_length] = '\0';
                 buffer += username_length;
             }
 
