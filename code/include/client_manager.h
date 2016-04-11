@@ -38,6 +38,8 @@ public:                    // begin public section
 
     JamStatus DecodeBufferToClientList(uint8_t *payload, uint32_t length);
 
+    std::vector<sockaddr_in> ReturnClientSockAddress();
+
     void PrintClients();
 
     uint8_t* GetPayload();

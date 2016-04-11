@@ -59,7 +59,9 @@ void ClientManager::AddClient(sockaddr_in client, const std::string &username, b
 void ClientManager::AddClient(ClientInfo client) {
     client_list_.push_back(client);
     //TODO: sort doesnt work
+    printf("Got here debug!\n");
     EncodeClientList();
+    printf("Got here debug!\n");
 //    sort(client_list_.begin(), client_list_.end());
 }
 
@@ -88,12 +90,17 @@ JamStatus ClientManager::EncodeClientList() {
 
     JamStatus ret;
 
+    printf("Debug inside encodeclientlist \n");
+
     if (encoded_data_ == nullptr) {
         encoded_data_ = new uint8_t[target];
     } else if (encoded_data_size_ != target) {
         delete (encoded_data_);
         encoded_data_ = new uint8_t[target];
     }
+
+    printf("Debug inside encodeclientlist \n");
+
     encoded_data_size_ = target;
 
     for (int i = 0; i < client_list_.size(); i++) {
@@ -141,6 +148,15 @@ JamStatus ClientManager::DecodeBufferToClientList(uint8_t *payload, uint32_t len
     return ret;
 }
 
+std::vector<sockaddr_in> ClientManager::ReturnClientSockAddress() {
+    std::vector<sockaddr_in> vectorOfSockAddress;
+    if (client_list_.size() > 0) {
+        for (int i = 0; i < client_list_.size(); i++) {
+            vectorOfSockAddress.push_back(client_list_[i].GetSockAddress());
+        }
+    }
+}
+
 void ClientManager::PrintClients() {
     if (client_list_.size() > 0) {
         for (int i = 0; i < client_list_.size(); i++) {
@@ -151,7 +167,7 @@ void ClientManager::PrintClients() {
     }
 }
 
-uint8_t *ClientManager::GetPayload() {
+uint8_t* ClientManager::GetPayload() {
     return encoded_data_;
 }
 

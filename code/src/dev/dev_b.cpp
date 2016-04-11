@@ -17,19 +17,24 @@ int main(){
     std::string myname = "Bipeen";
     myaddr.sin_family = AF_INET;
     myaddr.sin_port = htons(3490);
-    myaddr.sin_port = htons(151);
     inet_aton("194.158.169.137", &myaddr.sin_addr);
 
     std::string myname1 = "Chris";
     myaddr1.sin_family = AF_INET;
     myaddr1.sin_port = htons(3490);
-    myaddr1.sin_port = htons(151);
     inet_aton("193.159.170.137", &myaddr1.sin_addr);
 
     ClientManager cm = ClientManager();
+    printf("Printing clients:\n");
+
     cm.PrintClients();
+
+    printf("Finished Printing clients:\n");
+
     cm.AddClient(myaddr, myname, false);
     cm.AddClient(myaddr1, myname1, false);
+
+    printf("Added clients:\n");
 
     std::cout << "Size: \n " << sizeof myaddr1 << std::endl;
 

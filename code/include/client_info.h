@@ -20,7 +20,6 @@ public:
     static uint32_t GetPacketSize();
 
     static JamStatus EncodeClientInBuffer(ClientInfo client, uint8_t *buffer);
-    static JamStatus DecodeBufferToClient(uint8_t *buffer, uint32_t length);
 
     std::string get_username();
     bool is_leader();
