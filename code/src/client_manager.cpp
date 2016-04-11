@@ -33,7 +33,8 @@ std::vector<sockaddr_in> ClientManager::GetAllClientSockAddressWithoutMe() {
     std::vector<sockaddr_in> vectorOfSockAddress;
     if (client_list_.size() > 0) {
         for (int i = 0; i < client_list_.size(); i++) {
-            if (client_list_[i].GetSockAddress().sin_addr.s_addr != self_addr_.sin_addr.s_addr) {
+            if (client_list_[i].GetSockAddress().sin_addr.s_addr != self_addr_.sin_addr.s_addr &&
+                    client_list_[i].GetSockAddress().sin_port != self_addr_.sin_port) {
                 vectorOfSockAddress.push_back(client_list_[i].GetSockAddress());
             }
         }
