@@ -31,7 +31,7 @@ int main(){
 
     printf("Finished Printing clients:\n");
 
-    cm.AddClient(myaddr, myname, false);
+    cm.AddClient(myaddr, myname, true);
     cm.AddClient(myaddr1, myname1, false);
 
     printf("Added clients:\n");
