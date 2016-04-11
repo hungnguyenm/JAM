@@ -6,7 +6,6 @@
 #include <vector>
 
 #include <arpa/inet.h>
-#include <algorithm>
 #include <cstring>
 
 #include "../include/client_manager.h"
@@ -25,10 +24,6 @@ ClientManager::~ClientManager()                 // destructor
 vector<ClientInfo> ClientManager::GetAllClients() {
     return client_list_;
 }
-
-//vector<ClientInfo> ClientManager::GetHigherOrderClients(sockaddr_in client) {
-//    return GetHigherOrderClients(ClientInfo(client));
-//}
 
 vector<ClientInfo> ClientManager::GetHigherOrderClients(ClientInfo client) {
     int i;
@@ -56,7 +51,7 @@ void ClientManager::HandleCrashClient() {
 
 }
 
-void ClientManager::AddClient(sockaddr_in client, const std::string& username, bool isLeader) {
+void ClientManager::AddClient(sockaddr_in client, const std::string &username, bool isLeader) {
     AddClient(ClientInfo(client, username, isLeader));
 
 }
@@ -88,23 +83,23 @@ void ClientManager::RemoveAllClients() {
 
 JamStatus ClientManager::EncodeClientList() {
     uint32_t L = ClientInfo::GetPacketSize();
-    uint32_t target = L*client_list_.size();
+    uint32_t target = L * client_list_.size();
 
     if (encoded_data_ == nullptr) {
         encoded_data_ = new uint8_t[target];
     } else if (encoded_data_size_ != target) {
-        delete(encoded_data_);
+        delete (encoded_data_);
         encoded_data_ = new uint8_t[target];
     }
     encoded_data_size_ = target;
 
-    for (int i=0; i<client_list_.size(); i++) {
-        ClientInfo::EncodeClientInBuffer(client_list_[i], &encoded_data_[i*L]);
+    for (int i = 0; i < client_list_.size(); i++) {
+        ClientInfo::EncodeClientInBuffer(client_list_[i], &encoded_data_[i * L]);
     }
 }
 
 JamStatus ClientManager::DecodeBufferToClientList(uint8_t *payload, uint32_t length) {
-    if(encoded_data_ != nullptr) {
+    if (encoded_data_ != nullptr) {
         delete (encoded_data_);
     }
     encoded_data_ = payload;
@@ -147,7 +142,7 @@ void ClientManager::PrintClients() {
     }
 }
 
-uint8_t* ClientManager::GetPayload() {
+uint8_t *ClientManager::GetPayload() {
     return encoded_data_;
 }
 

@@ -31,7 +31,7 @@ void JAM::StartAsLeader(const char *user_name,
     // Detect interface address
     sockaddr_in servaddr;
     if (GetInterfaceAddress(user_interface, user_port, &servaddr)) {
-        clientManager_.AddClient(servaddr);
+        // clientManager_.AddClient(servaddr);
     } else {
         cerr << "Failed to detect network interface!" << endl;
         exit(1);
@@ -106,6 +106,9 @@ void JAM::StartAsClient(const char *user_name,
     userHandler_.Start();
 
     // Start-up completed
+    cout << "Succeeded. Current users:" << endl;
+    clientManager_.PrintClients();
+
     Main();
 }
 

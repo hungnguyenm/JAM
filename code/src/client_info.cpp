@@ -65,7 +65,7 @@ void ClientInfo::set_leader(bool val) {
 
 uint32_t ClientInfo::GetPacketSize() {
     //Sum of sizes of username, ip_address, port, boolean(isLeader)
-    uint32_t L = (sizeof(uint32_t) + MAX_USER_NAME_LENGTH + sizeof(uint32_t) + sizeof(uint16_t) + sizeof (uint8_t));
+    uint32_t L = (sizeof(uint32_t) + MAX_USER_NAME_LENGTH + sizeof(uint32_t) + sizeof(uint16_t) + sizeof(uint8_t));
     return L;
 }
 
