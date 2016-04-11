@@ -59,6 +59,7 @@ void ClientManager::AddClient(sockaddr_in client, const std::string &username, b
 void ClientManager::AddClient(ClientInfo client) {
     client_list_.push_back(client);
     //TODO: sort doesnt work
+    EncodeClientList();
 //    sort(client_list_.begin(), client_list_.end());
 }
 
@@ -85,6 +86,8 @@ JamStatus ClientManager::EncodeClientList() {
     uint32_t L = ClientInfo::GetPacketSize();
     uint32_t target = L * client_list_.size();
 
+    JamStatus ret;
+
     if (encoded_data_ == nullptr) {
         encoded_data_ = new uint8_t[target];
     } else if (encoded_data_size_ != target) {
@@ -96,6 +99,10 @@ JamStatus ClientManager::EncodeClientList() {
     for (int i = 0; i < client_list_.size(); i++) {
         ClientInfo::EncodeClientInBuffer(client_list_[i], &encoded_data_[i * L]);
     }
+
+    ret = SUCCESS;
+    return ret;
+
 }
 
 JamStatus ClientManager::DecodeBufferToClientList(uint8_t *payload, uint32_t length) {
@@ -137,7 +144,9 @@ JamStatus ClientManager::DecodeBufferToClientList(uint8_t *payload, uint32_t len
 void ClientManager::PrintClients() {
     if (client_list_.size() > 0) {
         for (int i = 0; i < client_list_.size(); i++) {
+            printf("%s\n", client_list_[i].get_username().c_str());
             printf("%s\n", inet_ntoa(client_list_[i].GetSockAddress().sin_addr));
+            printf("%c\n", client_list_[i].is_leader());
         }
     }
 }

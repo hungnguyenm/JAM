@@ -33,6 +33,7 @@ bool ClientInfo::operator<(const ClientInfo &other) {
     CMP(ntohl(client_.sin_addr.s_addr), ntohl(other.client_.sin_addr.s_addr));
     CMP(ntohs(client_.sin_port), ntohs(other.client_.sin_port));
 
+    return false;
 #undef CMP
 }
 

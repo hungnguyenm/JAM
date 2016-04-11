@@ -11,6 +11,9 @@ int main(){
     struct sockaddr_in myaddr;
     struct sockaddr_in myaddr1;
 
+    memset(&myaddr, 0, sizeof myaddr);
+    memset(&myaddr1, 0, sizeof myaddr1);
+
     std::string myname = "Bipeen";
     myaddr.sin_family = AF_INET;
     myaddr.sin_port = htons(3490);
@@ -28,7 +31,7 @@ int main(){
     cm.AddClient(myaddr, myname, false);
     cm.AddClient(myaddr1, myname1, false);
 
-    std::cout << "Size: " << sizeof myaddr1 << std::endl;
+    std::cout << "Size: \n " << sizeof myaddr1 << std::endl;
 
 //  cm.GetHigherOrderClients(myaddr);
 //  cm.RemoveClient(myaddr1);
@@ -41,11 +44,11 @@ int main(){
     }
 
 
-    std::vector<ClientInfo> higher_order_clients = cm.GetHigherOrderClients(myaddr1);
-    printf("Higher Order Clients: ");
-    for (int i=0; i<higher_order_clients.size(); i++) {
-        printf("%s\n", inet_ntoa(higher_order_clients[i].GetSockAddress().sin_addr));
-    }
+//    std::vector<ClientInfo> higher_order_clients = cm.GetHigherOrderClients(myaddr1);
+//    printf("Higher Order Clients: ");
+//    for (int i=0; i<higher_order_clients.size(); i++) {
+//        printf("%s\n", inet_ntoa(higher_order_clients[i].GetSockAddress().sin_addr));
+//    }
 
     std::cout << "Removed Clients" << std::endl;
     cm.RemoveAllClients();
