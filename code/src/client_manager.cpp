@@ -75,34 +75,42 @@ void ClientManager::HandleNewClient() {
 
 void ClientManager::HandleCrashClient() {
 
-
 }
 
-void ClientManager::AddClient(sockaddr_in client, const std::string &username, bool isLeader) {
-    AddClient(ClientInfo(client, username, isLeader));
+bool ClientManager::AddClient(sockaddr_in client, const std::string &username, bool isLeader) {
+    bool ret = AddClient(ClientInfo(client, username, isLeader));
+    return ret;
 }
 
-void ClientManager::AddClient(ClientInfo client) {
+bool ClientManager::AddClient(ClientInfo client) {
+    for (int i = 0; i < client_list_.size(); i++) {
+        if (client_list_[i] == client) {
+            return false;
+        }
+    }
     client_list_.push_back(client);
     // TODO: implement sort
 
     EncodeClientList();
+    return true;
 }
 
-void ClientManager::RemoveClient(sockaddr_in client) {
-    RemoveClient(ClientInfo(client));
-
+std::string ClientManager::RemoveClient(sockaddr_in client) {
+    return RemoveClient(ClientInfo(client));
 }
 
-void ClientManager::RemoveClient(ClientInfo client) {
+std::string ClientManager::RemoveClient(ClientInfo client) {
     int i;
+    std::string crash_username;
     for (i = 0; i < client_list_.size(); i++) {
         if (client_list_[i] == client) {
+            crash_username = client_list_[i].get_username();
             client_list_.erase(client_list_.begin() + i);
             break;
         }
     }
     EncodeClientList();
+    return crash_username;
 
 }
 

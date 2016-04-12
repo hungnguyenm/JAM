@@ -32,15 +32,15 @@ public:                    // begin public section
 
     void HandleNotification(); //status update
 
-    void AddClient(sockaddr_in client, const std::string &username, bool isLeader);
+    bool AddClient(sockaddr_in client, const std::string &username, bool isLeader);
 
-    void AddClient(ClientInfo client);
+    bool AddClient(ClientInfo client);
 
     static std::string PrintSingleClientIP(sockaddr_in client);
 
-    void RemoveClient(sockaddr_in client);
+    std::string RemoveClient(sockaddr_in client);
 
-    void RemoveClient(ClientInfo client);
+    std::string RemoveClient(ClientInfo client);
 
 
     void RemoveAllClients();
@@ -61,6 +61,7 @@ private:
     };
 
     sockaddr_in self_addr_;
+    std::string self_username_;
     sockaddr_in loopback_addr_;
 
     uint8_t encoded_data_[MAX_CLIENT_BUFFER_LENGTH];
