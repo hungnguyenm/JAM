@@ -49,14 +49,15 @@ void UserHandler::HandleInput() {
 
         // Figure out which fd has been set
         if (FD_ISSET(STDIN_FILENO, &readFdSet_)) {
+
+            // grab the input from the command line and write it to the pipe
+            getline(std::cin, data);
+
             if (std::cin.eof()) {
                 // ctrl+d has been input
                 queues_->signal_terminate();
                 break;
             }
-
-            // grab the input from the command line and write it to the pipe
-            getline(std::cin, data);
 
             Payload payload;
             payload.SetType(MessageType::CHAT_MSG);
