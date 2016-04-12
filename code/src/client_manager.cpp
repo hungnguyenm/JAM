@@ -34,7 +34,7 @@ std::vector<sockaddr_in> ClientManager::GetAllClientSockAddressWithoutMe() {
     if (client_list_.size() > 0) {
         for (int i = 0; i < client_list_.size(); i++) {
             if (client_list_[i].GetSockAddress().sin_addr.s_addr != self_addr_.sin_addr.s_addr &&
-                    client_list_[i].GetSockAddress().sin_port != self_addr_.sin_port) {
+                client_list_[i].GetSockAddress().sin_port != self_addr_.sin_port) {
                 vectorOfSockAddress.push_back(client_list_[i].GetSockAddress());
             }
         }
@@ -84,16 +84,12 @@ void ClientManager::AddClient(sockaddr_in client, const std::string &username, b
 
 void ClientManager::AddClient(ClientInfo client) {
     client_list_.push_back(client);
-    //TODO: sort doesnt work
+    // TODO: implement sort
+
     EncodeClientList();
-//    sort(client_list_.begin(), client_list_.end());
 }
 
-//void ClientManager::RemoveClient(sockaddr_in client) {
-//    RemoveClient(ClientInfo(client));
-//}
-
-std::string ClientManager::PrintSingleClientIP(sockaddr_in client){
+std::string ClientManager::PrintSingleClientIP(sockaddr_in client) {
     std::string client_ip_information;
     int port;
     char ipstr[INET_ADDRSTRLEN];
@@ -115,10 +111,13 @@ void ClientManager::RemoveClient(ClientInfo client) {
             }
         }
     }
+
+    EncodeClientList();
 }
 
 void ClientManager::RemoveAllClients() {
     client_list_.clear();
+    encoded_data_size_ = 0;
 }
 
 JamStatus ClientManager::EncodeClientList() {
@@ -178,7 +177,8 @@ void ClientManager::PrintClients() {
     if (client_list_.size() > 0) {
         for (int i = 0; i < client_list_.size(); i++) {
             printf("%s ", client_list_[i].get_username().c_str());
-            printf("%s:%d", inet_ntoa(client_list_[i].GetSockAddress().sin_addr), ntohs(client_list_[i].GetSockAddress().sin_port));
+            printf("%s:%d", inet_ntoa(client_list_[i].GetSockAddress().sin_addr),
+                   ntohs(client_list_[i].GetSockAddress().sin_port));
             if (client_list_[i].is_leader()) {
                 printf(" (Leader)\n");
             } else {

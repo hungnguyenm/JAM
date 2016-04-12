@@ -161,15 +161,15 @@ void JAM::Main() {
                     payload.SetType(CHAT_MSG);
                     payload.SetUsername(user_name_);
                     if (payload.EncodePayload() == SUCCESS) {
-                        vector<sockaddr_in> list = clientManager_.GetAllClientSockAddress();
+                        list = clientManager_.GetAllClientSockAddress();
                         udpWrapper_.SendPayloadList(payload, &list);
-                        // udpWrapper_.SendPayloadSelf(payload);
                     }
                 }
 
                 if (queues_.try_pop_udp_crash(addr)) {
                     // TODO: implement notification to all modules
                     has_data = true;
+
                 }
 
                 if (queues_.try_pop_udp_in(payload)) {
