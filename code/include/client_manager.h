@@ -53,6 +53,10 @@ public:                    // begin public section
 
     uint32_t GetPayloadSize();
 
+    static uint32_t EncodeSingleAddress(uint8_t *payload, sockaddr_in *addr);
+
+    static JamStatus DecodeSingleAddress(uint8_t *payload, uint32_t length, sockaddr_in *addr);
+
 private:
     sockaddr_in self_addr_;
 

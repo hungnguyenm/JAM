@@ -197,3 +197,28 @@ uint8_t *ClientManager::GetPayload() {
 uint32_t ClientManager::GetPayloadSize() {
     return encoded_data_size_;
 }
+
+uint32_t ClientManager::EncodeSingleAddress(uint8_t *payload, sockaddr_in *addr) {
+    uint32_t size = 0;
+    uint8_t *buffer = payload;
+
+    size += SerializerHelper::packu32(buffer, addr->sin_addr.s_addr);
+    size += SerializerHelper::packu16(buffer, addr->sin_port);
+
+    return size;
+}
+
+JamStatus ClientManager::DecodeSingleAddress(uint8_t *payload, uint32_t length, sockaddr_in *addr) {
+    JamStatus ret = SUCCESS;
+
+    if (length == 6) {
+        uint8_t *buffer = payload;
+        addr->sin_family = AF_INET;
+        addr->sin_addr.s_addr = SerializerHelper::unpacku32(buffer);
+        addr->sin_port = SerializerHelper::unpacku16(buffer);
+    } else {
+        ret = CLIENT_BUFFER_INVALID_LENGTH;
+    }
+
+    return ret;
+}

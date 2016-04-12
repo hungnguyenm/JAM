@@ -154,8 +154,10 @@ void JAM::StartAsClient(const char *user_name,
 void JAM::Main() {
     Payload payload;
     sockaddr_in addr;
-    vector<sockaddr_in> list;
+    vector<sockaddr_in> multicast_list;
     string username;
+    uint8_t buffer[MAX_MESSAGE_LENGTH];
+    uint32_t length;
 
     // Infinite loop to monitor central communication
     for (; ;) {
@@ -173,8 +175,8 @@ void JAM::Main() {
                     payload.SetType(CHAT_MSG);
                     payload.SetUsername(user_name_);
                     if (payload.EncodePayload() == SUCCESS) {
-                        list = clientManager_.GetAllClientSockAddress();
-                        udpWrapper_.SendPayloadList(payload, &list);
+                        multicast_list = clientManager_.GetAllClientSockAddress();
+                        udpWrapper_.SendPayloadList(payload, &multicast_list);
                     }
                 }
 
@@ -185,16 +187,17 @@ void JAM::Main() {
                     if (clientManager_.RemoveClient(addr, &username)) {
                         DCOUT("INFO: JAM - Client unreachable at " +
                               ClientManager::PrintSingleClientIP(addr));
+                        cout << "NOTICE - " << username << " crashed." << endl;
 
                         // Rebuild payload to notify all
                         payload.clear();
                         payload.SetType(STATUS_MSG);
                         payload.SetStatus(CLIENT_CRASH);
-                        payload.SetMessage(clientManager_.GetPayload(),
-                                           clientManager_.GetPayloadSize());
+                        length = ClientManager::EncodeSingleAddress(buffer, &addr);
+                        payload.SetMessage(buffer, length);
 
-                        list = clientManager_.GetAllClientSockAddressWithoutMe();
-                        udpWrapper_.SendPayloadList(payload, &list);
+                        multicast_list = clientManager_.GetAllClientSockAddressWithoutMe();
+                        udpWrapper_.SendPayloadList(payload, &multicast_list);
                     }
                 }
 
@@ -224,20 +227,29 @@ void JAM::Main() {
                                 case CLIENT_JOIN_MULTICAST:
                                     addr = *payload.GetAddress();
                                     if (clientManager_.AddClient(addr, payload.GetUsername(), false)) {
-                                        cout << "NOTICE " << payload.GetUsername() << " joined on " <<
+                                        cout << "NOTICE - " << payload.GetUsername() << " joined on " <<
                                         clientManager_.PrintSingleClientIP(addr) << "." << endl;
                                     }
                                     break;
                                 case CLIENT_LEAVE:
                                     addr = *payload.GetAddress();
                                     if (clientManager_.RemoveClient(addr, &username)) {
-                                        cout << "NOTICE " << username << " left the chat." << endl;
+                                        cout << "NOTICE - " << username << " left the chat." << endl;
                                     }
                                     break;
                                 case CLIENT_CRASH:
                                     // TODO: notify other modules
-                                    clientManager_.DecodeBufferToClientList((uint8_t *) payload.GetMessage().c_str(),
-                                                                            payload.GetMessageLength());
+                                    if (ClientManager::DecodeSingleAddress((uint8_t *) payload.GetMessage().c_str(),
+                                                                           payload.GetMessageLength(),
+                                                                           &addr) == SUCCESS) {
+                                        if (clientManager_.RemoveClient(addr, &username)) {
+                                            cout << "NOTICE - " << username << " crashed." << endl;
+                                        }
+                                    } else {
+                                        DCERR("ERROR: JAM - Failed to decode sockaddr_in of crash info.");
+                                    }
+                                    break;
+                                case LEADER_LEAVE:
                                     break;
                                 default:
                                     break;
@@ -256,6 +268,13 @@ void JAM::Main() {
     }
 
     DCOUT("INFO: JAM - Received terminate signal");
+    payload.clear();
+    payload.SetType(STATUS_MSG);
+    // TODO: change with leader as well
+    payload.SetStatus(CLIENT_LEAVE);
+    multicast_list = clientManager_.GetAllClientSockAddressWithoutMe();
+    udpWrapper_.SendPayloadList(payload, &multicast_list);
+
     udpWrapper_.Stop();
 
     cout << "Bye." << endl;
