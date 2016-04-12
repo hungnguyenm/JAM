@@ -109,9 +109,11 @@ void JAM::StartAsClient(const char *user_name,
     if (queues_.wait_for_data(JOIN_TIMEOUT)) {
         // Only check incoming UDP queue
         if (queues_.try_pop_udp_in(payload)) {
-            if (payload.GetType() == STATUS_MSG && payload.GetStatus() == JOIN_ACK) {
+            if (payload.GetType() == STATUS_MSG && payload.GetStatus() == CLIENT_JOIN_ACK) {
                 if (clientManager_.DecodeBufferToClientList((uint8_t *) payload.GetMessage().c_str(),
                                                             payload.GetMessageLength()) == SUCCESS) {
+                    // Add self
+                    clientManager_.AddClient(client_addr, user_name, false);
                     goto next;
                 } else {
                     cerr << "Failed to hand-shake with server!" << endl;
@@ -137,6 +139,15 @@ void JAM::StartAsClient(const char *user_name,
     cout << "Succeeded. Current users:" << endl;
     clientManager_.PrintClients();
 
+    // Notify all other clients
+    payload.clear();
+    payload.SetType(STATUS_MSG);
+    payload.SetStatus(CLIENT_JOIN_MULTICAST);
+    payload.SetUsername(user_name);
+
+    vector<sockaddr_in> list = clientManager_.GetAllClientSockAddressWithoutMe();
+    udpWrapper_.SendPayloadList(payload, &list);
+
     Main();
 }
 
@@ -144,6 +155,7 @@ void JAM::Main() {
     Payload payload;
     sockaddr_in addr;
     vector<sockaddr_in> list;
+    string username;
 
     // Infinite loop to monitor central communication
     for (; ;) {
@@ -168,8 +180,22 @@ void JAM::Main() {
 
                 if (queues_.try_pop_udp_crash(addr)) {
                     // TODO: implement notification to all modules
+                    // TODO: clear history queue for crash/left client
                     has_data = true;
+                    if (clientManager_.RemoveClient(addr, &username)) {
+                        DCOUT("INFO: JAM - Client unreachable at " +
+                              ClientManager::PrintSingleClientIP(addr));
 
+                        // Rebuild payload to notify all
+                        payload.clear();
+                        payload.SetType(STATUS_MSG);
+                        payload.SetStatus(CLIENT_CRASH);
+                        payload.SetMessage(clientManager_.GetPayload(),
+                                           clientManager_.GetPayloadSize());
+
+                        list = clientManager_.GetAllClientSockAddressWithoutMe();
+                        udpWrapper_.SendPayloadList(payload, &list);
+                    }
                 }
 
                 if (queues_.try_pop_udp_in(payload)) {
@@ -177,6 +203,7 @@ void JAM::Main() {
                     has_data = true;
                     switch (payload.GetType()) {
                         case CHAT_MSG:
+                            // TODO: implement ordering here
                             StreamCommunicator::SendMessage(userHandler_.get_write_pipe(),
                                                             payload.GetUsername(),
                                                             payload.GetMessage());
@@ -184,20 +211,33 @@ void JAM::Main() {
                         case STATUS_MSG:
                             switch (payload.GetStatus()) {
                                 case CLIENT_JOIN:
-                                    addr = *payload.GetAddress();
-                                    cout << "NOTICE " << payload.GetUsername() << " joined on " <<
-                                            clientManager_.PrintSingleClientIP(addr) << endl;
-                                    clientManager_.AddClient(addr, payload.GetUsername(), false);
-                                    clientManager_.PrintClients();
                                     // Rebuild payload to acknowledge
                                     payload.clear();
                                     payload.SetType(STATUS_MSG);
-                                    payload.SetStatus(JOIN_ACK);
+                                    payload.SetStatus(CLIENT_JOIN_ACK);
                                     payload.SetMessage(clientManager_.GetPayload(),
                                                        clientManager_.GetPayloadSize());
 
-                                    list = clientManager_.GetAllClientSockAddressWithoutMe();
-                                    udpWrapper_.SendPayloadList(payload, &list);
+                                    addr = *payload.GetAddress();
+                                    udpWrapper_.SendPayloadSingle(payload, &addr);
+                                    break;
+                                case CLIENT_JOIN_MULTICAST:
+                                    addr = *payload.GetAddress();
+                                    if (clientManager_.AddClient(addr, payload.GetUsername(), false)) {
+                                        cout << "NOTICE " << payload.GetUsername() << " joined on " <<
+                                        clientManager_.PrintSingleClientIP(addr) << "." << endl;
+                                    }
+                                    break;
+                                case CLIENT_LEAVE:
+                                    addr = *payload.GetAddress();
+                                    if (clientManager_.RemoveClient(addr, &username)) {
+                                        cout << "NOTICE " << username << " left the chat." << endl;
+                                    }
+                                    break;
+                                case CLIENT_CRASH:
+                                    // TODO: notify other modules
+                                    clientManager_.DecodeBufferToClientList((uint8_t *) payload.GetMessage().c_str(),
+                                                                            payload.GetMessageLength());
                                     break;
                                 default:
                                     break;

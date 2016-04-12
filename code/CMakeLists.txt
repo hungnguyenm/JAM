@@ -34,6 +34,7 @@ set(DEV_H_SOURCES src/payload.cpp src/central_queues.cpp src/serializer_helper.c
         src/udp_wrapper.cpp src/user_handler.cpp src/client_info.cpp src/client_manager.cpp src/jam.cpp)
 add_executable(jam-dev_h_1 ${DEV_H_HEADERS} ${DEV_H_SOURCES} src/dev/dev_h_1.cpp)
 add_executable(jam-dev_h_2 ${DEV_H_HEADERS} ${DEV_H_SOURCES} src/dev/dev_h_2.cpp)
+add_executable(jam-dev_h_3 ${DEV_H_HEADERS} ${DEV_H_SOURCES} src/dev/dev_h_3.cpp)
 
 set(DEV_C_SOURCES src/dev/dev_c.cpp src/user_handler.cpp src/callable.cpp src/payload.cpp
         src/central_queues.cpp)
@@ -53,6 +54,7 @@ if(Boost_FOUND)
 
     target_link_libraries(jam-dev_h_1 ${Boost_LIBRARIES})
     target_link_libraries(jam-dev_h_2 ${Boost_LIBRARIES})
+    target_link_libraries(jam-dev_h_3 ${Boost_LIBRARIES})
     target_link_libraries(jam-dev_c ${Boost_LIBRARIES})
 
     target_link_libraries(test-udp_wrapper ${Boost_LIBRARIES})

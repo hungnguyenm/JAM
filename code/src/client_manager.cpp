@@ -33,7 +33,7 @@ std::vector<sockaddr_in> ClientManager::GetAllClientSockAddressWithoutMe() {
     std::vector<sockaddr_in> vectorOfSockAddress;
     if (client_list_.size() > 0) {
         for (int i = 0; i < client_list_.size(); i++) {
-            if (client_list_[i].GetSockAddress().sin_addr.s_addr != self_addr_.sin_addr.s_addr &&
+            if (client_list_[i].GetSockAddress().sin_addr.s_addr != self_addr_.sin_addr.s_addr ||
                 client_list_[i].GetSockAddress().sin_port != self_addr_.sin_port) {
                 vectorOfSockAddress.push_back(client_list_[i].GetSockAddress());
             }
@@ -65,18 +65,6 @@ vector<ClientInfo> ClientManager::GetHigherOrderClients(ClientInfo client) {
     return higher_order_clients;
 }
 
-void ClientManager::HandleNotification() {
-
-}
-
-void ClientManager::HandleNewClient() {
-
-}
-
-void ClientManager::HandleCrashClient() {
-
-}
-
 bool ClientManager::AddClient(sockaddr_in client, const std::string &username, bool isLeader) {
     bool ret = AddClient(ClientInfo(client, username, isLeader));
     return ret;
@@ -95,26 +83,29 @@ bool ClientManager::AddClient(ClientInfo client) {
     return true;
 }
 
-std::string ClientManager::RemoveClient(sockaddr_in client) {
-    return RemoveClient(ClientInfo(client));
+bool ClientManager::RemoveClient(sockaddr_in client,
+                                 std::string *username) {
+    return RemoveClient(ClientInfo(client), username);
 }
 
-std::string ClientManager::RemoveClient(ClientInfo client) {
-    int i;
-    std::string crash_username;
-    for (i = 0; i < client_list_.size(); i++) {
+bool ClientManager::RemoveClient(ClientInfo client,
+                                 std::string *username) {
+    bool ret = false;
+
+    for (int i = 0; i < client_list_.size(); i++) {
         if (client_list_[i] == client) {
-            crash_username = client_list_[i].get_username();
+            *username = client_list_[i].get_username();
             client_list_.erase(client_list_.begin() + i);
+            ret = true;
+            EncodeClientList();
             break;
         }
     }
-    EncodeClientList();
-    return crash_username;
 
+    return ret;
 }
 
-std::string ClientManager::PrintSingleClientIP(sockaddr_in client){
+std::string ClientManager::PrintSingleClientIP(sockaddr_in client) {
     std::string client_ip_information;
     int port;
     char ipstr[INET_ADDRSTRLEN];
@@ -151,6 +142,7 @@ JamStatus ClientManager::EncodeClientList() {
 JamStatus ClientManager::DecodeBufferToClientList(uint8_t *payload, uint32_t length) {
     JamStatus ret = SUCCESS;
 
+    RemoveAllClients();
     uint8_t *buffer = payload;
     encoded_data_size_ = length;
 
@@ -161,8 +153,6 @@ JamStatus ClientManager::DecodeBufferToClientList(uint8_t *payload, uint32_t len
     if (length > MAX_CLIENT_BUFFER_LENGTH) {
         ret = CLIENT_BUFFER_INVALID_LENGTH;
     } else {
-        RemoveAllClients();
-
         uint32_t count = 0;
         while (count < encoded_data_size_) {
             username_length = SerializerHelper::unpacku32(buffer);

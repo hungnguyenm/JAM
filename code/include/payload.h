@@ -30,7 +30,8 @@ enum MessageType : uint8_t {
 };
 
 enum Status : uint8_t {
-    CLIENT_JOIN, JOIN_ACK, CLIENT_LEAVE, CLIENT_CRASH, LEADER_LEAVE
+    CLIENT_JOIN, CLIENT_JOIN_ACK, CLIENT_JOIN_MULTICAST,
+    CLIENT_LEAVE, CLIENT_CRASH, LEADER_LEAVE
 };
 
 enum ElectionCommand : uint8_t {

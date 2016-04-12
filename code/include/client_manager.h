@@ -19,18 +19,17 @@ public:                    // begin public section
 
     void SetSelfAddress(sockaddr_in addr);
 
-    std::vector<ClientInfo> GetAllClients(); //return a list of all current clients
+    // Return a list of all current clients
+    std::vector<ClientInfo> GetAllClients();
 
     std::vector<sockaddr_in> GetAllClientSockAddressWithoutMe();
 
     std::vector<sockaddr_in> GetAllClientSockAddress();
 
-    std::vector<ClientInfo> GetHigherOrderClients(
-            sockaddr_in client); //return a list of higher order clients for election
+    // Return a list of higher order clients for election
+    std::vector<ClientInfo> GetHigherOrderClients(sockaddr_in client);
 
     std::vector<ClientInfo> GetHigherOrderClients(ClientInfo client);
-
-    void HandleNotification(); //status update
 
     bool AddClient(sockaddr_in client, const std::string &username, bool isLeader);
 
@@ -38,10 +37,9 @@ public:                    // begin public section
 
     static std::string PrintSingleClientIP(sockaddr_in client);
 
-    std::string RemoveClient(sockaddr_in client);
+    bool RemoveClient(sockaddr_in client, std::string *username);
 
-    std::string RemoveClient(ClientInfo client);
-
+    bool RemoveClient(ClientInfo client, std::string *username);
 
     void RemoveAllClients();
 
@@ -56,20 +54,11 @@ public:                    // begin public section
     uint32_t GetPayloadSize();
 
 private:
-    enum {
-        ENCODED_CLIENT_LENGTH = 6
-    };
-
     sockaddr_in self_addr_;
-    std::string self_username_;
-    sockaddr_in loopback_addr_;
 
     uint8_t encoded_data_[MAX_CLIENT_BUFFER_LENGTH];
     uint32_t encoded_data_size_;
     std::vector<ClientInfo> client_list_;
-
-    void HandleNewClient(); //deals with new clients joining the chat
-    void HandleCrashClient(); //deals with existing clients crashing
 };
 
 

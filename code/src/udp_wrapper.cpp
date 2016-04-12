@@ -76,17 +76,13 @@ JamStatus UdpWrapper::SendPayloadSingle(Payload payload,
 
     if (is_ready_) {
         if (ntohs(addr->sin_port) >= MIN_PORT) {
-            if (payload.GetLength() > 0) {
-                payload.SetUid(uid_++);
-                payload.SetAddress(addr);
-                if (payload.EncodePayload() == SUCCESS) {
-                    out_queue_.push(payload);
-                } else {
-                    ret = ENCODE_VALIDATION_FAILED;
-                    DCERR("ERROR: UdpWrapper - Encode validation failed");
-                }
+            payload.SetUid(uid_++);
+            payload.SetAddress(addr);
+            if (payload.EncodePayload() == SUCCESS) {
+                out_queue_.push(payload);
             } else {
-                ret = UDP_INVALID_PAYLOAD_ERROR;
+                ret = ENCODE_VALIDATION_FAILED;
+                DCERR("ERROR: UdpWrapper - Encode validation failed");
             }
         } else {
             ret = ERROR_INVALID_PARAMETERS;
@@ -103,17 +99,13 @@ JamStatus UdpWrapper::SendPayloadSelf(Payload payload) {
     JamStatus ret = SUCCESS;
 
     if (is_ready_) {
-        if (payload.GetLength() > 0) {
-            payload.SetUid(uid_++);
-            payload.SetAddress(&this_addr_);
-            if (payload.EncodePayload() == SUCCESS) {
-                out_queue_.push(payload);
-            } else {
-                ret = ENCODE_VALIDATION_FAILED;
-                DCERR("ERROR: UdpWrapper - Encode validation failed");
-            }
+        payload.SetUid(uid_++);
+        payload.SetAddress(&this_addr_);
+        if (payload.EncodePayload() == SUCCESS) {
+            out_queue_.push(payload);
         } else {
-            ret = UDP_INVALID_PAYLOAD_ERROR;
+            ret = ENCODE_VALIDATION_FAILED;
+            DCERR("ERROR: UdpWrapper - Encode validation failed");
         }
     } else {
         ret = UDP_NOT_INIT_ERROR;
@@ -128,19 +120,15 @@ JamStatus UdpWrapper::SendPayloadList(Payload payload,
 
     if (is_ready_) {
         // TODO: port validation
-        if (payload.GetLength() > 0) {
-            for (sockaddr_in addr : *list) {
-                payload.SetUid(uid_++);
-                payload.SetAddress(&addr);
-                if (payload.EncodePayload() == SUCCESS) {
-                    out_queue_.push(payload);
-                } else {
-                    ret = ENCODE_VALIDATION_FAILED;
-                    DCERR("ERROR: UdpWrapper - Encode validation failed");
-                }
+        for (sockaddr_in addr : *list) {
+            payload.SetUid(uid_++);
+            payload.SetAddress(&addr);
+            if (payload.EncodePayload() == SUCCESS) {
+                out_queue_.push(payload);
+            } else {
+                ret = ENCODE_VALIDATION_FAILED;
+                DCERR("ERROR: UdpWrapper - Encode validation failed");
             }
-        } else {
-            ret = UDP_INVALID_PAYLOAD_ERROR;
         }
     } else {
         ret = UDP_NOT_INIT_ERROR;
