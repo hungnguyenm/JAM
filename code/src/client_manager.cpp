@@ -89,7 +89,24 @@ void ClientManager::AddClient(ClientInfo client) {
     EncodeClientList();
 }
 
-std::string ClientManager::PrintSingleClientIP(sockaddr_in client) {
+void ClientManager::RemoveClient(sockaddr_in client) {
+    RemoveClient(ClientInfo(client));
+
+}
+
+void ClientManager::RemoveClient(ClientInfo client) {
+    int i;
+    for (i = 0; i < client_list_.size(); i++) {
+        if (client_list_[i] == client) {
+            client_list_.erase(client_list_.begin() + i);
+            break;
+        }
+    }
+    EncodeClientList();
+
+}
+
+std::string ClientManager::PrintSingleClientIP(sockaddr_in client){
     std::string client_ip_information;
     int port;
     char ipstr[INET_ADDRSTRLEN];
@@ -100,19 +117,6 @@ std::string ClientManager::PrintSingleClientIP(sockaddr_in client) {
     client_ip_information += ":";
     client_ip_information += std::to_string(port);
     return client_ip_information;
-}
-
-void ClientManager::RemoveClient(ClientInfo client) {
-    int i;
-    if (client_list_.size() > 0) {
-        for (i = 0; i < client_list_.size(); i++) {
-            if (client == client_list_[i]) {
-                client_list_.erase(client_list_.begin() + i);
-            }
-        }
-    }
-
-    EncodeClientList();
 }
 
 void ClientManager::RemoveAllClients() {

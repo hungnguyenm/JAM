@@ -8,6 +8,11 @@
 #include <cstring>
 #include <sstream>
 
+ClientInfo::ClientInfo(sockaddr_in client) :
+    client_(client) {
+
+}
+
 ClientInfo::ClientInfo(sockaddr_in client, const std::string &username, bool isLeader) :
         client_(client), username_(username), isLeader_(isLeader) {
     char ipstr[INET_ADDRSTRLEN];
@@ -29,23 +34,16 @@ bool ClientInfo::operator<(const ClientInfo &other) {
 #define CMP(a, b) if (a != b) return a < b ? true : false;
 
     CMP(client_.sin_family, other.client_.sin_family);
-
-    CMP(ntohl(client_.sin_addr.s_addr), ntohl(other.client_.sin_addr.s_addr));
-    CMP(ntohs(client_.sin_port), ntohs(other.client_.sin_port));
+    CMP(client_.sin_addr.s_addr, other.client_.sin_addr.s_addr);
+    CMP(client_.sin_port, other.client_.sin_port);
 
     return false;
 #undef CMP
 }
 
 bool ClientInfo::operator==(const ClientInfo &other) {
-#define CMP(a, b) return a == b ? true : false;
-
-    CMP(client_.sin_family, other.client_.sin_family);
-
-    CMP(ntohl(client_.sin_addr.s_addr), ntohl(other.client_.sin_addr.s_addr));
-    CMP(ntohs(client_.sin_port), ntohs(other.client_.sin_port));
-
-#undef CMP
+        return ((client_.sin_addr.s_addr == other.client_.sin_addr.s_addr) &&
+                (client_.sin_port == other.client_.sin_port));
 }
 
 sockaddr_in ClientInfo::GetSockAddress() {

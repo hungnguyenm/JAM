@@ -13,9 +13,11 @@
 
 class ClientInfo {
 public:
+    ClientInfo(sockaddr_in client);
     ClientInfo(sockaddr_in client, const std::string& username, bool is_Leader = false);
     bool operator<(const ClientInfo& other);
     bool operator==(const ClientInfo& other);
+    bool operator==(const sockaddr_in& other);
     sockaddr_in GetSockAddress();
     static uint32_t GetPacketSize();
 

@@ -10,19 +10,26 @@
 int main(){
     struct sockaddr_in myaddr;
     struct sockaddr_in myaddr1;
+    struct sockaddr_in myaddr2;
 
     memset(&myaddr, 0, sizeof myaddr);
     memset(&myaddr1, 0, sizeof myaddr1);
+    memset(&myaddr2, 0, sizeof myaddr2);
 
     std::string myname = "Bipeen";
     myaddr.sin_family = AF_INET;
     myaddr.sin_port = htons(3490);
     inet_aton("194.158.169.137", &myaddr.sin_addr);
 
-    std::string myname1 = "Chris";
+    std::string myname1 = "Hung";
     myaddr1.sin_family = AF_INET;
     myaddr1.sin_port = htons(3490);
     inet_aton("193.159.170.137", &myaddr1.sin_addr);
+
+    std::string myname2 = "Chris";
+    myaddr2.sin_family = AF_INET;
+    myaddr2.sin_port = htons(3490);
+    inet_aton("193.159.134.137", &myaddr2.sin_addr);
 
     ClientManager cm = ClientManager();
     printf("Printing clients:\n");
@@ -33,33 +40,19 @@ int main(){
 
     cm.AddClient(myaddr, myname, true);
     cm.AddClient(myaddr1, myname1, false);
+    cm.AddClient(myaddr2, myname2, false);
+
 
     std::cout << "Print single cleint " << cm.PrintSingleClientIP(myaddr).c_str() << std::endl;
 
+    cm.PrintClients();
     printf("Added clients:\n");
 
     std::cout << "Size: \n " << sizeof myaddr1 << std::endl;
 
-//  cm.GetHigherOrderClients(myaddr);
-//  cm.RemoveClient(myaddr1);
+    cm.RemoveClient(myaddr);
 
-    std::vector<ClientInfo> all_clients = cm.GetAllClients();
-
-    printf("All Clients: ");
-    for (int i=0; i<all_clients.size(); i++) {
-        printf("%s\n", inet_ntoa(all_clients[i].GetSockAddress().sin_addr));
-    }
-
-
-//    std::vector<ClientInfo> higher_order_clients = cm.GetHigherOrderClients(myaddr1);
-//    printf("Higher Order Clients: ");
-//    for (int i=0; i<higher_order_clients.size(); i++) {
-//        printf("%s\n", inet_ntoa(higher_order_clients[i].GetSockAddress().sin_addr));
-//    }
-
-    std::cout << "Removed Clients" << std::endl;
-    //cm.RemoveAllClients();
-
+    std::cout << "Print after removal of client" << std::endl;
     cm.PrintClients();
 
     JamStatus jm = cm.EncodeClientList();
@@ -71,8 +64,6 @@ int main(){
     std::cout << "All Clients after Decode: \n" << std::endl;
 
     cm.DecodeBufferToClientList(cm.GetPayload(), cm.GetPayloadSize());
-
-    cm.PrintClients();
 
     return 0;
 }
