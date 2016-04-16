@@ -50,10 +50,13 @@ int main(){
 
     std::cout << "Size: \n " << sizeof myaddr1 << std::endl;
 
-    std::string removed_client = cm.RemoveClient(myaddr);
+    //std::string removed_client = cm.RemoveClient(myaddr, myname.c_str());
 
-    std::cout << "Print after removal of client" << removed_client.c_str() << std::endl;
+    //std::cout << "Print after removal of client" << removed_client.c_str() << std::endl;
     cm.PrintClients();
+
+    cm.GetHigherOrderClients(myaddr);
+
 
     JamStatus jm = cm.EncodeClientList();
 
