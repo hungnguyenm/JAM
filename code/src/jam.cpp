@@ -35,7 +35,7 @@ void JAM::StartAsLeader(const char *user_name,
     if (GetInterfaceAddress(user_interface, user_port, &servaddr)) {
         // Add creator as leader
         clientManager_.AddClient(servaddr, user_name, true);
-        clientManager_.SetSelfAddress(servaddr);
+        clientManager_.set_self_address(servaddr);
     } else {
         cerr << "Failed to detect network interface!" << endl;
         exit(1);
@@ -72,7 +72,7 @@ void JAM::StartAsClient(const char *user_name,
     // Detect interface address
     sockaddr_in client_addr;
     if (GetInterfaceAddress(user_interface, user_port, &client_addr)) {
-        clientManager_.SetSelfAddress(client_addr);
+        clientManager_.set_self_address(client_addr);
     } else {
         cerr << "Failed to detect network interface!" << endl;
         exit(1);

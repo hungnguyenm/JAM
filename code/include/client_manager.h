@@ -17,8 +17,6 @@ public:                    // begin public section
 
     ~ClientManager();    // destructor
 
-    void SetSelfAddress(sockaddr_in addr);
-
     // Return a list of all current clients
     std::vector<ClientInfo> GetAllClients();
 
@@ -27,35 +25,34 @@ public:                    // begin public section
     std::vector<sockaddr_in> GetAllClientSockAddress();
 
     // Return a list of higher order clients for election
+    std::vector<ClientInfo> GetHigherOrderClients();
     std::vector<ClientInfo> GetHigherOrderClients(sockaddr_in client);
-
     std::vector<ClientInfo> GetHigherOrderClients(ClientInfo client);
 
+    bool AddClient(ClientInfo client);
     bool AddClient(sockaddr_in client, const std::string &username, bool isLeader);
 
-    bool AddClient(ClientInfo client);
-
-    static std::string PrintSingleClientIP(sockaddr_in client);
-
     bool RemoveClient(sockaddr_in client, std::string *username);
-
     bool RemoveClient(ClientInfo client, std::string *username);
 
     void RemoveAllClients();
 
-    JamStatus EncodeClientList();
-
-    JamStatus DecodeBufferToClientList(uint8_t *payload, uint32_t length);
-
+    static std::string PrintSingleClientIP(sockaddr_in client);
     void PrintClients();
 
-    uint8_t *GetPayload();
-
-    uint32_t GetPayloadSize();
-
+    // Encode/Decode methods
     static uint32_t EncodeSingleAddress(uint8_t *payload, sockaddr_in *addr);
+    JamStatus EncodeClientList();
 
     static JamStatus DecodeSingleAddress(uint8_t *payload, uint32_t length, sockaddr_in *addr);
+    JamStatus DecodeBufferToClientList(uint8_t *payload, uint32_t length);
+
+    // Getters/Setters
+    void set_self_address(sockaddr_in addr);
+    sockaddr_in get_self_address();
+
+    uint8_t *GetPayload();
+    uint32_t GetPayloadSize();
 
 private:
     sockaddr_in self_addr_;

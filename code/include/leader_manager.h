@@ -14,7 +14,11 @@ public:
     ClientInfo GetCurrentLeader();
 
 private:
+
     ClientManager clientManager_;
+
+    bool PingLeader();
+    void StartElection();
 };
 
 
