@@ -12,6 +12,7 @@
 #include "udp_wrapper.h"
 #include "user_handler.h"
 #include "client_manager.h"
+#include "leader_manager.h"
 
 class JAM {
 public:
@@ -60,6 +61,7 @@ private:
     UdpWrapper udpWrapper_;
     UserHandler userHandler_;
     ClientManager clientManager_;
+    LeaderManager leaderManager_;
 
     /**
      * Construct string of ip address and port for network interfaces

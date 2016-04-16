@@ -12,8 +12,7 @@ using namespace std::chrono;
 
 
 UdpWrapper::UdpWrapper(CentralQueues *queues)
-        : is_ready_(false), uid_(0) {
-    queues_ = queues;
+        : is_ready_(false), uid_(0), queues_(queues) {
 }
 
 UdpWrapper::~UdpWrapper() {

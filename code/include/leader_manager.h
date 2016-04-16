@@ -5,17 +5,18 @@
 #ifndef JAM_LEADER_MANAGER_H
 #define JAM_LEADER_MANAGER_H
 
+#include "central_queues.h"
 #include "client_manager.h"
 
 class LeaderManager {
 public:
-    LeaderManager(ClientManager clientManager);
+    LeaderManager(CentralQueues *queues, ClientManager *clientManager);
 
     ClientInfo GetCurrentLeader();
 
 private:
-
-    ClientManager clientManager_;
+    CentralQueues *queues_;                         // Central queues for inter-communication
+    ClientManager *clientManager_;
 
     bool PingLeader();
     void StartElection();

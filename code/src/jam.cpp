@@ -16,7 +16,8 @@ using namespace std;
 
 JAM::JAM()
         : udpWrapper_(&queues_),
-          userHandler_(&queues_) {
+          userHandler_(&queues_),
+          leaderManager_(&queues_, &clientManager_) {
 }
 
 JAM::~JAM() {

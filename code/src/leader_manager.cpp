@@ -5,17 +5,16 @@
 #include "../include/leader_manager.h"
 #include "../include/payload.h"
 
-LeaderManager::LeaderManager(ClientManager clientManager) :
-        clientManager_(clientManager)
-{
+LeaderManager::LeaderManager(CentralQueues *queues, ClientManager *clientManager) :
+        queues_(queues), clientManager_(clientManager) {
 
 }
 
 ClientInfo LeaderManager::GetCurrentLeader() {
-    std::vector<ClientInfo> clientInfos = clientManager_.GetAllClients();
+    std::vector<ClientInfo> clientInfos = clientManager_->GetAllClients();
 
-    for(int i = 0; i < clientInfos.size(); ++i) {
-        if(clientInfos[i].is_leader()) {
+    for (int i = 0; i < clientInfos.size(); ++i) {
+        if (clientInfos[i].is_leader()) {
             return clientInfos[i];
         }
     }
@@ -28,14 +27,14 @@ bool LeaderManager::PingLeader() {
 }
 
 void LeaderManager::StartElection() {
-    std::vector<ClientInfo> higherOrderClients  = clientManager_.GetHigherOrderClients();
+    std::vector<ClientInfo> higherOrderClients = clientManager_->GetHigherOrderClients();
 
-    if(higherOrderClients.size() == 0) {
-       // Declare yourself to be the winner and tell anyone who sent you this message to stop
+    if (higherOrderClients.size() == 0) {
+        // Declare yourself to be the winner and tell anyone who sent you this message to stop
         return;
     }
 
-    for(int i = 0; i < higherOrderClients.size(); i++) {
+    for (int i = 0; i < higherOrderClients.size(); i++) {
         // tell each higher order client that you are declaring yourself to be a leader
     }
 }
