@@ -263,6 +263,11 @@ void JAM::Main() {
                             break;
                     }
                 }
+
+                if (queues_.try_pop_leader_out(payload)) {
+                    has_data = true;
+                    udpWrapper_.SendPayloadSingle(payload, payload.GetAddress());
+                }
             } while (has_data);
         }
     }
