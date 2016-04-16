@@ -166,8 +166,9 @@ void JAM::Main() {
                 break;          // Only exit loop if receive terminate signal
 
             // Go through each queue and handle data if available
-            bool has_data = false;
+            bool has_data;
             do {
+                has_data = false;
                 if (queues_.try_pop_user_out(payload)) {
                     // TODO: handle ordering here
                     // Has data in user_out_queue, need to package the payload
@@ -266,7 +267,15 @@ void JAM::Main() {
 
                 if (queues_.try_pop_leader_out(payload)) {
                     has_data = true;
-                    udpWrapper_.SendPayloadSingle(payload, payload.GetAddress());
+                    switch (payload.GetType()) {
+                        case STATUS_MSG:
+                            udpWrapper_.SendPayloadSingle(payload, payload.GetAddress());
+                            break;
+                        case ELECTION_MSG:
+                            break;
+                        default:
+                            break;
+                    }
                 }
             } while (has_data);
         }
