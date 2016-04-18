@@ -8,9 +8,26 @@
 
 HoldQueue::HoldQueue() {
 
-}()
-
+}
 HoldQueue::~HoldQueue() {
 
+}
 
-}()                 // destructor
+// need to take userhandler inside
+
+void HoldQueue::AddMessage(Payload payload) {
+    hold_back_queue_.push(payload);
+}
+
+void HoldQueue::Process() {
+    delivery_queue_.push(hold_back_queue_.pop());
+
+    StreamCommunicator::SendMessage(user_handler_pipe_,
+                                    payload.GetUsername(),
+                                    payload.GetMessage());
+
+
+}
+
+
+

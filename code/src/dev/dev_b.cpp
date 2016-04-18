@@ -55,9 +55,6 @@ int main(){
     //std::cout << "Print after removal of client" << removed_client.c_str() << std::endl;
     cm.PrintClients();
 
-    cm.GetHigherOrderClients(myaddr);
-
-
     JamStatus jm = cm.EncodeClientList();
 
     std::cout << "Encoded clients:" << std::endl;
