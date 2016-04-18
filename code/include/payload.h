@@ -26,7 +26,7 @@
 #define QUIT_MSG_LENGTH 4       // Self-terminate message for UdpReader (must be different than payload length)
 
 enum MessageType : uint8_t {
-    CHAT_MSG, STATUS_MSG, ELECTION_MSG, RECOVER_MSG, ACK_MSG, NA
+    CHAT_MSG, STATUS_MSG, ELECTION_MSG, RECOVER_MSG, ACK_MSG, PING, NA
 };
 
 enum Status : uint8_t {

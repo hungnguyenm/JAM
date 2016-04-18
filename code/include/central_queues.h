@@ -22,7 +22,8 @@ public:
     enum QueueType {
         USER_OUT,
         UDP_IN,
-        UDP_CRASH
+        UDP_CRASH,
+        LEADER_OUT
     };
 
     CentralQueues();
@@ -78,6 +79,8 @@ public:
 
     bool try_pop_udp_crash(sockaddr_in &out);
 
+    bool try_pop_leader_out(Payload &out);
+
     /**
      * Set terminate flag to TRUE
      */
@@ -90,6 +93,8 @@ private:
 
     ConcurrentQueue<Payload> udp_in_queue_;             // Thread-safe incoming payload queue for processing
     ConcurrentQueue<sockaddr_in> udp_crash_queue;       // Thread-safe crash notification queue from UdpHandler
+
+    ConcurrentQueue<Payload> leader_out_queue_;         // Thread-safe outgoing payload queue for processing
 
     mutable boost::mutex m_cond_;                       // mutex just for condition variable
     mutable boost::mutex m_exit_;                       // mutex for exit_

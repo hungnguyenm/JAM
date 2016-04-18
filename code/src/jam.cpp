@@ -16,7 +16,8 @@ using namespace std;
 
 JAM::JAM()
         : udpWrapper_(&queues_),
-          userHandler_(&queues_) {
+          userHandler_(&queues_),
+          leaderManager_(&queues_, &clientManager_) {
 }
 
 JAM::~JAM() {
@@ -35,7 +36,7 @@ void JAM::StartAsLeader(const char *user_name,
     if (GetInterfaceAddress(user_interface, user_port, &servaddr)) {
         // Add creator as leader
         clientManager_.AddClient(servaddr, user_name, true);
-        clientManager_.SetSelfAddress(servaddr);
+        clientManager_.set_self_address(servaddr);
     } else {
         cerr << "Failed to detect network interface!" << endl;
         exit(1);
@@ -72,7 +73,7 @@ void JAM::StartAsClient(const char *user_name,
     // Detect interface address
     sockaddr_in client_addr;
     if (GetInterfaceAddress(user_interface, user_port, &client_addr)) {
-        clientManager_.SetSelfAddress(client_addr);
+        clientManager_.set_self_address(client_addr);
     } else {
         cerr << "Failed to detect network interface!" << endl;
         exit(1);
@@ -166,8 +167,9 @@ void JAM::Main() {
                 break;          // Only exit loop if receive terminate signal
 
             // Go through each queue and handle data if available
-            bool has_data = false;
+            bool has_data;
             do {
+                has_data = false;
                 if (queues_.try_pop_user_out(payload)) {
                     // TODO: handle ordering here
                     // Has data in user_out_queue, need to package the payload
@@ -258,6 +260,19 @@ void JAM::Main() {
                         case ELECTION_MSG:
                             break;
                         case RECOVER_MSG:
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                if (queues_.try_pop_leader_out(payload)) {
+                    has_data = true;
+                    switch (payload.GetType()) {
+                        case STATUS_MSG:
+                            udpWrapper_.SendPayloadSingle(payload, payload.GetAddress());
+                            break;
+                        case ELECTION_MSG:
                             break;
                         default:
                             break;

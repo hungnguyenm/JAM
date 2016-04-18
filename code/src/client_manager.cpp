@@ -21,8 +21,12 @@ ClientManager::~ClientManager()                 // destructor
 
 }
 
-void ClientManager::SetSelfAddress(sockaddr_in addr) {
+void ClientManager::set_self_address(sockaddr_in addr) {
     self_addr_ = addr;
+}
+
+sockaddr_in ClientManager::get_self_address() {
+    return self_addr_;
 }
 
 vector<ClientInfo> ClientManager::GetAllClients() {
@@ -63,6 +67,13 @@ vector<ClientInfo> ClientManager::GetHigherOrderClients(ClientInfo client) {
         }
     }
     return higher_order_clients;
+}
+
+vector<ClientInfo> ClientManager::GetHigherOrderClients(sockaddr_in client) {
+    return GetHigherOrderClients(ClientInfo(self_addr_));
+}
+vector<ClientInfo> ClientManager::GetHigherOrderClients() {
+    return GetHigherOrderClients(self_addr_);
 }
 
 bool ClientManager::AddClient(sockaddr_in client, const std::string &username, bool isLeader) {
