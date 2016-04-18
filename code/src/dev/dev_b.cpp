@@ -53,6 +53,10 @@ int main(){
     //std::string removed_client = cm.RemoveClient(myaddr, myname.c_str());
 
     //std::cout << "Print after removal of client" << removed_client.c_str() << std::endl;
+    cm.RemoveClient(myaddr);
+
+    std::cout << "Print after removal of client" << std::endl;
+
     cm.PrintClients();
 
     JamStatus jm = cm.EncodeClientList();

@@ -105,6 +105,21 @@ bool ClientManager::RemoveClient(ClientInfo client,
     return ret;
 }
 
+void ClientManager::RemoveClient(sockaddr_in client) {
+    RemoveClient(ClientInfo(client));
+
+}
+
+void ClientManager::RemoveClient(ClientInfo client) {
+    int i;
+    for (i = 0; i < client_list_.size(); i++) {
+        if (client_list_[i] == client) {
+            client_list_.erase(client_list_.begin() + i);
+            break;
+        }
+    }
+}
+
 std::string ClientManager::PrintSingleClientIP(sockaddr_in client) {
     std::string client_ip_information;
     int port;
