@@ -30,7 +30,7 @@ ClientInfo::ClientInfo(sockaddr_in client, const std::string &username, bool isL
     port_ = ntohs(client_.sin_port);
 }
 
-bool ClientInfo::operator<(const ClientInfo &other) {
+bool ClientInfo::operator<(const ClientInfo& other) {
 #define CMP(a, b) if (a != b) return a < b ? true : false;
 
     CMP(client_.sin_family, other.client_.sin_family);
@@ -41,12 +41,16 @@ bool ClientInfo::operator<(const ClientInfo &other) {
 #undef CMP
 }
 
-bool ClientInfo::operator==(const ClientInfo &other) {
+bool ClientInfo::operator==(const ClientInfo& other) {
         return ((client_.sin_addr.s_addr == other.client_.sin_addr.s_addr) &&
                 (client_.sin_port == other.client_.sin_port));
 }
 
-sockaddr_in ClientInfo::GetSockAddress() {
+bool ClientInfo::operator==(const sockaddr_in& other) {
+    return (*this == ClientInfo(other));
+}
+
+sockaddr_in ClientInfo::get_sock_address() {
     return client_;
 }
 
@@ -62,7 +66,7 @@ void ClientInfo::set_leader(bool val) {
     isLeader_ = val;
 }
 
-uint32_t ClientInfo::GetPacketSize() {
+uint32_t ClientInfo::get_packet_size() {
     //Sum of sizes of username, ip_address, port, boolean(isLeader)
     uint32_t L = (sizeof(uint32_t) + MAX_USER_NAME_LENGTH + sizeof(uint32_t) + sizeof(uint16_t) + sizeof(uint8_t));
     return L;
@@ -79,8 +83,8 @@ uint32_t ClientInfo::EncodeClientInBuffer(ClientInfo client, uint8_t *&buffer) {
     buffer += username_length_;
     size += username_length_;
 
-    size += SerializerHelper::packu32(buffer, client.GetSockAddress().sin_addr.s_addr);
-    size += SerializerHelper::packu16(buffer, client.GetSockAddress().sin_port);
+    size += SerializerHelper::packu32(buffer, client.get_sock_address().sin_addr.s_addr);
+    size += SerializerHelper::packu16(buffer, client.get_sock_address().sin_port);
     size += SerializerHelper::packu8(buffer, client.is_leader() ? (uint8_t) 1 : (uint8_t) 0);
 
     return size;

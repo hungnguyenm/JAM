@@ -15,17 +15,19 @@ class ClientInfo {
 public:
     ClientInfo(sockaddr_in client);
     ClientInfo(sockaddr_in client, const std::string& username, bool is_Leader = false);
-    bool operator<(const ClientInfo& other);
-    bool operator==(const ClientInfo& other);
-    bool operator==(const sockaddr_in& other);
-    sockaddr_in GetSockAddress();
-    static uint32_t GetPacketSize();
+
+    sockaddr_in get_sock_address();
+    static uint32_t get_packet_size();
 
     static uint32_t EncodeClientInBuffer(ClientInfo client, uint8_t *&buffer);
 
     std::string get_username();
     bool is_leader();
     void set_leader(bool val);
+
+    bool operator<(const ClientInfo& other);
+    bool operator==(const ClientInfo& other);
+    bool operator==(const sockaddr_in& other);
 private:
 
     sockaddr_in client_;

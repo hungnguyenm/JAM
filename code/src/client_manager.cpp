@@ -37,9 +37,9 @@ std::vector<sockaddr_in> ClientManager::GetAllClientSockAddressWithoutMe() {
     std::vector<sockaddr_in> vectorOfSockAddress;
     if (client_list_.size() > 0) {
         for (int i = 0; i < client_list_.size(); i++) {
-            if (client_list_[i].GetSockAddress().sin_addr.s_addr != self_addr_.sin_addr.s_addr ||
-                client_list_[i].GetSockAddress().sin_port != self_addr_.sin_port) {
-                vectorOfSockAddress.push_back(client_list_[i].GetSockAddress());
+            if (client_list_[i].get_sock_address().sin_addr.s_addr != self_addr_.sin_addr.s_addr ||
+                    client_list_[i].get_sock_address().sin_port != self_addr_.sin_port) {
+                vectorOfSockAddress.push_back(client_list_[i].get_sock_address());
             }
         }
     }
@@ -50,7 +50,7 @@ std::vector<sockaddr_in> ClientManager::GetAllClientSockAddress() {
     std::vector<sockaddr_in> vectorOfSockAddress;
     if (client_list_.size() > 0) {
         for (int i = 0; i < client_list_.size(); i++) {
-            vectorOfSockAddress.push_back(client_list_[i].GetSockAddress());
+            vectorOfSockAddress.push_back(client_list_[i].get_sock_address());
         }
     }
     return vectorOfSockAddress;
@@ -205,8 +205,8 @@ void ClientManager::PrintClients() {
     if (client_list_.size() > 0) {
         for (int i = 0; i < client_list_.size(); i++) {
             printf("%s ", client_list_[i].get_username().c_str());
-            printf("%s:%d", inet_ntoa(client_list_[i].GetSockAddress().sin_addr),
-                   ntohs(client_list_[i].GetSockAddress().sin_port));
+            printf("%s:%d", inet_ntoa(client_list_[i].get_sock_address().sin_addr),
+                   ntohs(client_list_[i].get_sock_address().sin_port));
             if (client_list_[i].is_leader()) {
                 printf(" (Leader)\n");
             } else {

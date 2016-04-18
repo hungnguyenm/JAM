@@ -33,6 +33,8 @@
 
 #define MK_ERROR(x)                 (0x00000000|(x))
 
+#define PING_INTERVAL               5000
+
 #ifdef DEBUG
 #define DCOUT(str) do { std::cout << "DEBUG - " << str << std::endl; } while ( false )
 #define DCERR(str) do { \

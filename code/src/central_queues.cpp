@@ -37,7 +37,7 @@ bool CentralQueues::is_empty(QueueType type) {
             return udp_in_queue_.is_empty();
         case UDP_CRASH:
             return udp_crash_queue.is_empty();
-        case LEADER_OUT;
+        case LEADER_OUT:
             return leader_out_queue_.is_empty();
     }
 }

@@ -37,7 +37,8 @@ add_executable(jam-dev_h_2 ${DEV_H_HEADERS} ${DEV_H_SOURCES} src/dev/dev_h_2.cpp
 add_executable(jam-dev_h_3 ${DEV_H_HEADERS} ${DEV_H_SOURCES} src/dev/dev_h_3.cpp)
 
 set(DEV_C_SOURCES src/dev/dev_c.cpp src/user_handler.cpp src/callable.cpp src/payload.cpp
-        src/central_queues.cpp)
+        src/central_queues.cpp src/leader_manager.cpp src/client_info.cpp src/client_manager.cpp
+        src/serializer_helper.cpp)
 add_executable(jam-dev_c ${DEV_C_SOURCES})
 
 # Test files
