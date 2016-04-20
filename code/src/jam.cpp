@@ -258,6 +258,7 @@ void JAM::Main() {
                             }
                             break;
                         case ELECTION_MSG:
+                            leaderManager_.HandleElectionMessagge(payload);
                             break;
                         case RECOVER_MSG:
                             break;
@@ -273,6 +274,7 @@ void JAM::Main() {
                             udpWrapper_.SendPayloadSingle(payload, payload.GetAddress());
                             break;
                         case ELECTION_MSG:
+                            udpWrapper_.SendPayloadSingle(payload, payload.GetAddress());
                             break;
                         default:
                             break;
