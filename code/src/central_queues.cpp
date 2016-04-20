@@ -26,6 +26,8 @@ size_t CentralQueues::size(QueueType type) {
             return udp_crash_queue.size();
         case LEADER_OUT:
             return leader_out_queue_.size();
+        case HISTORY_REQUEST:
+            return history_request_queue_.size();
     }
 }
 
@@ -39,6 +41,8 @@ bool CentralQueues::is_empty(QueueType type) {
             return udp_crash_queue.is_empty();
         case LEADER_OUT:
             return leader_out_queue_.is_empty();
+        case HISTORY_REQUEST:
+            return history_request_queue_.is_empty();
     }
 }
 
@@ -56,6 +60,9 @@ void CentralQueues::push(QueueType type, QueueParam const &in) {
         case LEADER_OUT:
             leader_out_queue_.push(boost::get<Payload>(in));
             break;
+        case HISTORY_REQUEST:
+            history_request_queue_.push(boost::get<int32_t>(in));
+            break;
     }
     cond_variable_.notify_all();
 }
@@ -65,7 +72,8 @@ bool CentralQueues::wait_for_data(uint32_t time) {
     while (user_out_queue_.is_empty() &&
            udp_in_queue_.is_empty() &&
            udp_crash_queue.is_empty() &&
-           leader_out_queue_.is_empty()) {
+           leader_out_queue_.is_empty() &&
+           history_request_queue_.is_empty()) {
         cond_variable_.timed_wait(lock, boost::posix_time::milliseconds(time));
     }
 
@@ -73,6 +81,7 @@ bool CentralQueues::wait_for_data(uint32_t time) {
             !udp_in_queue_.is_empty() ||
             !udp_crash_queue.is_empty() ||
             !leader_out_queue_.is_empty() ||
+            !history_request_queue_.is_empty() ||
             exit_);
 }
 
@@ -90,6 +99,10 @@ bool CentralQueues::try_pop_udp_crash(sockaddr_in &out) {
 
 bool CentralQueues::try_pop_leader_out(Payload &out) {
     return leader_out_queue_.try_pop(out);
+}
+
+bool CentralQueues::try_pop_history_request(int32_t &out) {
+    return history_request_queue_.try_pop(out);
 }
 
 void CentralQueues::signal_terminate() {

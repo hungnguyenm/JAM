@@ -17,13 +17,14 @@
 
 class CentralQueues {
 public:
-    typedef boost::variant<Payload, sockaddr_in> QueueParam;
+    typedef boost::variant<Payload, sockaddr_in, int32_t> QueueParam;
 
     enum QueueType {
         USER_OUT,
         UDP_IN,
         UDP_CRASH,
-        LEADER_OUT
+        LEADER_OUT,
+        HISTORY_REQUEST
     };
 
     CentralQueues();
@@ -81,6 +82,8 @@ public:
 
     bool try_pop_leader_out(Payload &out);
 
+    bool try_pop_history_request(int32_t &out);
+
     /**
      * Set terminate flag to TRUE
      */
@@ -95,6 +98,8 @@ private:
     ConcurrentQueue<sockaddr_in> udp_crash_queue;       // Thread-safe crash notification queue from UdpHandler
 
     ConcurrentQueue<Payload> leader_out_queue_;         // Thread-safe outgoing payload queue for processing
+
+    ConcurrentQueue<int32_t> history_request_queue_;    // Thread-safe queue for HoldQueue to request missing payload
 
     mutable boost::mutex m_cond_;                       // mutex just for condition variable
     mutable boost::mutex m_exit_;                       // mutex for exit_
