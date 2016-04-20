@@ -18,6 +18,7 @@
 #define MAX_MESSAGE_LENGTH          100     // Maximum message length per payload
 #define MAX_USER_NAME_LENGTH        20      // Maximum displayed user name length
 #define MAX_BUFFER_LENGTH           200     // Maximum UDP socket buffer length
+#define DEFAULT_NO_ORDER            -1      // Default value for payload
 
 #define MAX_CLIENT_BUFFER_LENGTH    100     // Maximum client list encoded length
 

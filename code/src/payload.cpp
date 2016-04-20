@@ -16,7 +16,7 @@ using namespace std;
 
 Payload::Payload()
         : type_(NA),
-          order_(0),
+          order_(DEFAULT_NO_ORDER),
           username_length_(0),
           message_length_(0) {
 }
