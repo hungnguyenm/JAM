@@ -116,21 +116,6 @@ bool ClientManager::RemoveClient(ClientInfo client,
     return ret;
 }
 
-void ClientManager::RemoveClient(sockaddr_in client) {
-    RemoveClient(ClientInfo(client));
-
-}
-
-void ClientManager::RemoveClient(ClientInfo client) {
-    int i;
-    for (i = 0; i < client_list_.size(); i++) {
-        if (client_list_[i] == client) {
-            client_list_.erase(client_list_.begin() + i);
-            break;
-        }
-    }
-}
-
 std::string ClientManager::PrintSingleClientIP(sockaddr_in client) {
     std::string client_ip_information;
     int port;
@@ -214,6 +199,46 @@ void ClientManager::PrintClients() {
             }
         }
     }
+}
+
+
+bool ClientManager::set_new_leader(const ClientInfo&  newLeader) {
+    ClientInfo* info = get_current_leader();
+
+    if(info != nullptr) {
+        info->set_leader(false);
+    }
+
+    info = get_client_info(newLeader);
+
+    if(info == nullptr) {
+        return false;
+    }
+
+    info->set_leader(true);
+
+    return true;
+}
+
+ClientInfo* ClientManager::get_client_info(const ClientInfo& info) {
+    for(int i = 0; i < client_list_.size(); ++i) {
+        if(client_list_[i] == info) {
+            return &client_list_[i];
+        }
+    }
+
+    return nullptr;
+}
+
+ClientInfo* ClientManager::get_current_leader() {
+
+    for(int i = 0; i < client_list_.size(); ++i) {
+        if(client_list_[i].is_leader()) {
+            return &client_list_[i];
+        }
+    }
+
+    return nullptr;
 }
 
 uint8_t *ClientManager::GetPayload() {

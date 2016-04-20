@@ -51,6 +51,10 @@ public:                    // begin public section
     void set_self_address(sockaddr_in addr);
     sockaddr_in get_self_address();
 
+    bool set_new_leader(const ClientInfo&  newLeader);
+    ClientInfo* get_client_info(const ClientInfo& info);
+    ClientInfo* get_current_leader();
+
     uint8_t *GetPayload();
     uint32_t GetPayloadSize();
 

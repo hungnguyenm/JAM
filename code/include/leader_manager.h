@@ -19,7 +19,7 @@ public:
     void StartLeaderHeartbeat();
     void StopLeaderHeartBeat();
 
-    void HandleElectionMessagge(Payload msg);
+    void HandleElectionMessage(Payload msg);
     void ReceivedPing(Payload ping);
     void PingTimedOut();
 
@@ -33,6 +33,8 @@ private:
     ClientInfo* lastLeader_;
 
     long sentElectionCandidatesOut_;
+    bool cancelledElection_;
+    bool electionInProgress_;
 
     void StartElection();
     void HeartBeatPing();

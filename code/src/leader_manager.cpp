@@ -12,24 +12,16 @@ LeaderManager::LeaderManager(CentralQueues* queues, ClientManager* clientManager
 ClientInfo* LeaderManager::GetCurrentLeader() {
     boost::mutex::scoped_lock lock(m_leader_);
 
-    std::vector<ClientInfo> clientInfos = clientManager_->GetAllClients();
-
-    if(lastLeader_ != nullptr) {
-        delete lastLeader_;
-        lastLeader_ = nullptr;
-    }
-
-    for (int i = 0; i < clientInfos.size(); ++i) {
-        if (clientInfos[i].is_leader()) {
-            lastLeader_ = new ClientInfo(clientInfos[i]);
-            break;
-        }
+    if (lastLeader_ == nullptr) {
+        lastLeader_ = clientManager_->get_current_leader();
     }
 
     return lastLeader_;
 }
 
 void LeaderManager::ReceivedPing(Payload ping) {
+    boost::mutex::scoped_lock lock(m_leader_);
+
     ClientInfo* leader = GetCurrentLeader();
 
     if(*leader == clientManager_->get_self_address()) {
@@ -39,6 +31,8 @@ void LeaderManager::ReceivedPing(Payload ping) {
 }
 
 bool LeaderManager::PingLeader() {
+    boost::mutex::scoped_lock lock(m_leader_);
+
     ClientInfo* leader = GetCurrentLeader();
 
     if(leader == nullptr) {
@@ -62,6 +56,10 @@ void LeaderManager::PingTimedOut() {
 }
 
 void LeaderManager::StartElection() {
+    boost::mutex::scoped_lock lock(m_leader_);
+    electionInProgress_ = true;
+    cancelledElection_ = false;
+
     StopLeaderHeartBeat();
 
     auto higherOrderClients = clientManager_->GetHigherOrderClients();
@@ -98,8 +96,10 @@ void LeaderManager::StartElection() {
 }
 
 
-void LeaderManager::HandleElectionMessagge(Payload msg)
+void LeaderManager::HandleElectionMessage(Payload msg)
 {
+    boost::mutex::scoped_lock lock(m_leader_);
+
     ClientInfo selfInfo = ClientInfo(clientManager_->get_self_address());
     auto clients = clientManager_->GetAllClients();
 
@@ -123,13 +123,13 @@ void LeaderManager::HandleElectionMessagge(Payload msg)
 
         case ElectionCommand::ELECT_STOP:
             sentElectionCandidatesOut_ = 0;
-
+            cancelledElection_ = true;
             break;
 
         case ElectionCommand::ELECT_YIELD:
             --sentElectionCandidatesOut_;
 
-            if(sentElectionCandidatesOut_ > 0) {
+            if(sentElectionCandidatesOut_ > 0 || cancelledElection_) {
                 break;
             }
 
@@ -141,16 +141,22 @@ void LeaderManager::HandleElectionMessagge(Payload msg)
 
                 queues_->push(CentralQueues::LEADER_OUT, msg);
             }
+
+            clientManager_->set_new_leader(clientManager_->get_self_address());
             break;
 
         case ElectionCommand::ELECT_WIN:
             // Set the new leader here
+            electionInProgress_ = false;
+            clientManager_->set_new_leader(*msg.GetAddress());
             break;
 
     }
 }
 
 void LeaderManager::StartLeaderHeartbeat() {
+    boost::mutex::scoped_lock lock(m_leader_);
+
     StopLeaderHeartBeat();
 
     heartbeatThread_ = new boost::thread(boost::bind(&LeaderManager::HeartBeatPing, this));
@@ -164,6 +170,8 @@ void LeaderManager::HeartBeatPing() {
 }
 
 void LeaderManager::StopLeaderHeartBeat() {
+    boost::mutex::scoped_lock lock(m_leader_);
+
     if(heartbeatThread_ != nullptr) {
         heartbeatThread_->interrupt();
         delete heartbeatThread_;
