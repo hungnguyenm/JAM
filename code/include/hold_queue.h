@@ -18,7 +18,7 @@ public:                    // begin public section
     void AddMessageToQueue(Payload payload);
     void Process(Payload payload);
 
-    void HistoryRequest();
+    void GetPayloadInHistory(int32_t value);
 
 private:
     std::queue<Payload> history_queue_;

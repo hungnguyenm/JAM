@@ -4,10 +4,7 @@
 
 #include "../include/hold_queue.h"
 
-#include <queue>
-#include <iostream>     // std::cout
 #include <algorithm>    // std::sort
-#include <vector>
 
 HoldQueue::HoldQueue() {
 
