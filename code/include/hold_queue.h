@@ -10,6 +10,7 @@
 #include "stream_communicator.h"
 #include "central_queues.h"
 
+
 class HoldQueue {
 
 public:                    // begin public section
@@ -19,7 +20,12 @@ public:                    // begin public section
     void AddMessageToQueue(Payload payload);
     void Process(Payload payload);
 
-    Payload GetPayloadInHistory(int32_t value);
+    void SetUserHandlerPipe(int pipeId);
+    int GetUserHandlerPipe();
+
+    bool GetPayloadInHistory(int32_t value, Payload* payload);
+
+
 
 private:
     CentralQueues* queues_;

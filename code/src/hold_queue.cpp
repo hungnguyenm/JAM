@@ -7,7 +7,7 @@
 #include <algorithm>    // std::sort
 
 HoldQueue::HoldQueue(CentralQueues *queues) :
-        queues_(queues) {
+        queues_(queues), user_handler_pipe_(-1), expected_order_(0) {
 }
 
 HoldQueue::~HoldQueue() {
@@ -34,20 +34,28 @@ void HoldQueue::Process(Payload payload) {
         return;
     }
 
-    while() {
+    do {
         if (payload.GetOrder() == DEFAULT_FIRST_ORDER) {
-            StreamCommunicator::SendMessage(userHandler_.get_write_pipe(),
+            StreamCommunicator::SendMessage(user_handler_pipe_,
                                             payload.GetUsername(),
                                             payload.GetMessage());
 
 
         }
 
-    }
+    } while (delivery_queue_.size() > 0);
 }
 
-Payload HoldQueue::GetPayloadInHistory(int32_t value) {
+bool HoldQueue::GetPayloadInHistory(int32_t value, Payload* payload) {
 
+}
+
+void HoldQueue::SetUserHandlerPipe(int pipeId) {
+    user_handler_pipe_ = pipeId;
+}
+
+int HoldQueue::GetUserHandlerPipe(){
+    return user_handler_pipe_;
 }
 
 
