@@ -63,6 +63,9 @@ private:
     ClientManager clientManager_;
     LeaderManager leaderManager_;
 
+    int32_t order_;                         // Order kept track as leader
+    int32_t last_witness_order_;            // Order kept track for leader recovery
+
     /**
      * Construct string of ip address and port for network interfaces
      *

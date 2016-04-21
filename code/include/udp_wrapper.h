@@ -113,6 +113,8 @@ private:
             std::chrono::milliseconds,
             Payload> ack_tickets_;                  // Thread-safe outgoing payload ticket monitoring
 
+    ConcurrentQueue<Payload> leader_failed_queue_;  // Thread-safe queue for payload to leader failed to send
+
     boost::thread t_reader_;                        // Reader thread for RunReader()
     boost::thread t_writer_;                        // Writer thread for RunWriter()
     boost::thread t_monitor_;                       // Monitor thread for RunMonitor()
@@ -140,6 +142,12 @@ private:
      * Start monitor thread to keep track of non-ack packets.
      */
     void RunMonitor();
+
+
+    /**
+     * Check the leader_failed_queue and process
+     */
+    void LeaderRecover();
 
     // -- Helper functions
     std::string u32_to_string(uint32_t in);

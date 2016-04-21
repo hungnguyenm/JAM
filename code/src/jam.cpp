@@ -17,7 +17,9 @@ using namespace std;
 JAM::JAM()
         : udpWrapper_(&queues_),
           userHandler_(&queues_),
-          leaderManager_(&queues_, &clientManager_) {
+          leaderManager_(&queues_, &clientManager_),
+          order_(0),
+          last_witness_order_(0) {
 }
 
 JAM::~JAM() {
@@ -258,7 +260,7 @@ void JAM::Main() {
                             }
                             break;
                         case ELECTION_MSG:
-                            leaderManager_.HandleElectionMessagge(payload);
+                            leaderManager_.HandleElectionMessage(payload);
                             break;
                         case RECOVER_MSG:
                             break;
