@@ -56,52 +56,42 @@ public:
     // Copy constructor
     Payload(const Payload &payload);
 
-    // = operator
+    // operators
     void operator=(const Payload &payload);
+
+    bool operator<(const Payload& other);
 
     ~Payload();
 
     sockaddr_in *GetAddress();
-
     void SetAddress(const sockaddr_in *address);
 
     EncryptOption GetEncryption() const;
-
     void SetEncryption(EncryptOption encrypt);
 
     MessageType GetType() const;
-
     void SetType(MessageType type);
 
     uint32_t GetUid() const;
-
     void SetUid(uint32_t uid);
 
     AckStatus GetAck() const;
-
     void SetAck(AckStatus ack);
 
     int32_t GetOrder() const;
-
     void SetOrder(int32_t order);
-
-    bool operator<(const Payload& other);
 
 
     Status GetStatus() const;
-
     void SetStatus(Status status);
 
     ElectionCommand GetElectionCommand() const;
-
     void SetElectionCommand(ElectionCommand command);
 
     RecoverCommand GetRecoverCommand() const;
-
     void SetRecoverCommand(RecoverCommand command);
 
     std::size_t GetLength() const;
-
     void SetLength(uint32_t length);
 
     uint32_t GetUsernameLength() const;
@@ -109,17 +99,13 @@ public:
     uint32_t GetMessageLength() const;
 
     std::string GetUsername();
-
     JamStatus SetUsername(std::string username);
 
     std::string GetMessage();
-
     JamStatus SetMessage(std::string message);
-
     JamStatus SetMessage(uint8_t *in, uint32_t length);
 
     const uint8_t *payload() const;
-
     uint8_t *payload();
 
     /**
@@ -128,7 +114,6 @@ public:
      * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
     JamStatus EncodePayload();
-
 
     /**
      * Computes byte stream ack payload without prior private variables

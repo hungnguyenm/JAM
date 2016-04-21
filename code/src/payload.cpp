@@ -61,6 +61,10 @@ void Payload::operator=(const Payload &payload) {
     length_ = payload.length_;
 }
 
+bool Payload::operator<(const Payload& other){
+    return (this->GetOrder() < other.GetOrder());
+}
+
 Payload::~Payload() {
 
 }
@@ -116,10 +120,6 @@ int32_t Payload::GetOrder() const {
 
 void Payload::SetOrder(int32_t order) {
     order_ = order;
-}
-
-bool Payload::operator<(const Payload& other){
-    return (this->GetOrder() < other.GetOrder());
 }
 
 Status Payload::GetStatus() const {

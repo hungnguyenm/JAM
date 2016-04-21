@@ -17,6 +17,7 @@ public:
     ClientInfo* GetCurrentLeader();
     bool GetLeaderAddress(sockaddr_in* addr); // Some silly c style interface
     bool is_curr_client_leader();
+    bool is_leader(const sockaddr_in& addr);
 
     bool is_election_happening();
 

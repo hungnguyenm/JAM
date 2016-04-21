@@ -48,6 +48,7 @@ void HoldQueue::Process(Payload payload) {
 
 bool HoldQueue::GetPayloadInHistory(int32_t value, Payload* payload) {
 
+    return false;
 }
 
 void HoldQueue::SetUserHandlerPipe(int pipeId) {

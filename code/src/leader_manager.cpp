@@ -18,6 +18,13 @@ ClientInfo* LeaderManager::GetCurrentLeader() {
     return lastLeader_;
 }
 
+bool LeaderManager::is_leader(const sockaddr_in& addr){
+    ClientInfo* leader = clientManager_->get_client_info(addr);
+
+    return (leader == nullptr) ? false : leader->is_leader();
+
+}
+
 bool LeaderManager::GetLeaderAddress(sockaddr_in* addr) {
     ClientInfo* leader = GetCurrentLeader();
 
