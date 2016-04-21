@@ -5,6 +5,9 @@
 #include "../include/hold_queue.h"
 
 #include <queue>
+#include <iostream>     // std::cout
+#include <algorithm>    // std::sort
+#include <vector>
 
 HoldQueue::HoldQueue() {
 
@@ -15,18 +18,26 @@ HoldQueue::~HoldQueue() {
 
 // need to take userhandler inside
 
-void HoldQueue::AddMessage(Payload payload) {
-    delivery_queue_.push(payload);
+void HoldQueue::AddMessageToQueue(Payload payload) {
+    delivery_queue_.push_back(payload);
+    std::sort(delivery_queue_.begin(), delivery_queue_.end());
+
+    Process(payload);
 }
 
-void HoldQueue::Process() {
+void HoldQueue::Process(Payload payload) {
 
-    
     history_queue_.push(payload);
-    StreamCommunicator::SendMessage(user_handler_pipe_,
-                                    payload.GetUsername(),
-                                    payload.GetMessage());
 
+    if (payload.GetOrder() == DEFAULT_NO_ORDER) {
+        return;
+    } else if (payload.GetType() == CHAT_MSG) {
+
+        }
+    }
+}
+
+Payload HoldQueue::GetPayloadInHistory(int32_t value) {
 
 }
 

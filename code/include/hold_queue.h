@@ -15,14 +15,14 @@ public:                    // begin public section
     HoldQueue();
     ~HoldQueue();
 
-    void AddMessage(Payload payload);
-    void Process();
+    void AddMessageToQueue(Payload payload);
+    void Process(Payload payload);
 
     void HistoryRequest();
 
 private:
     std::queue<Payload> history_queue_;
-    std::queue<Payload> delivery_queue_;
+    std::vector<Payload> delivery_queue_;
 
 
     int user_handler_pipe_;
