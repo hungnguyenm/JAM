@@ -19,6 +19,7 @@
 #define MAX_USER_NAME_LENGTH        20      // Maximum displayed user name length
 #define MAX_BUFFER_LENGTH           200     // Maximum UDP socket buffer length
 #define DEFAULT_NO_ORDER            -1      // Default value for payload
+#define DEFAULT_FIRST_ORDER         0       // Default order for the first message
 
 #define MAX_QUEUE_LENGTH            100     // Maximum length of hold back and history queue
 

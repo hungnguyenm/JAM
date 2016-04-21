@@ -157,6 +157,7 @@ void JAM::StartAsClient(const char *user_name,
 void JAM::Main() {
     Payload payload;
     sockaddr_in addr;
+    int32_t history_request;
     vector<sockaddr_in> multicast_list;
     string username;
     uint8_t buffer[MAX_MESSAGE_LENGTH];
@@ -293,6 +294,8 @@ void JAM::Main() {
                             break;
                     }
                 }
+
+                if (queues_.try_pop_history_request(history_request))
             } while (has_data);
         }
     }
