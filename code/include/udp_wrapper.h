@@ -95,6 +95,13 @@ public:
      */
     static JamStatus GetAddressFromInfo(const char *addr, const char *port, sockaddr_in *sockaddr);
 
+    /**
+     * Check the leader_failed_queue and process
+     *
+     * @param addr      address of the new leader
+     */
+    void LeaderRecover(sockaddr_in *addr);
+
 private:
     enum {
         NUM_UDP_TERMINATE_RETRIES = 10              // Terminate flag for monitor thread
@@ -142,12 +149,6 @@ private:
      * Start monitor thread to keep track of non-ack packets.
      */
     void RunMonitor();
-
-
-    /**
-     * Check the leader_failed_queue and process
-     */
-    void LeaderRecover();
 
     // -- Helper functions
     std::string u32_to_string(uint32_t in);

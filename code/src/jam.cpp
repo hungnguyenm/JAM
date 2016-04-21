@@ -55,8 +55,9 @@ void JAM::StartAsLeader(const char *user_name,
         exit(1);
     }
 
-    // Start User Handler
+    // Start all other modules
     userHandler_.Start();
+    leaderManager_.StartLeaderHeartbeat();
 
     // Start-up completed
     cout << "Waiting for others to join..." << endl;
@@ -136,8 +137,9 @@ void JAM::StartAsClient(const char *user_name,
     }
 
     next:
-    // Start User Handler
+    // Start all other modules
     userHandler_.Start();
+    leaderManager_.StartLeaderHeartbeat();
 
     // Start-up completed
     cout << "Succeeded. Current users:" << endl;
@@ -189,13 +191,17 @@ void JAM::Main() {
                 }
 
                 if (queues_.try_pop_udp_crash(addr)) {
-                    // TODO: implement notification to all modules
                     // TODO: clear history queue for crash/left client
                     has_data = true;
                     if (clientManager_.RemoveClient(addr, &username)) {
                         DCOUT("INFO: JAM - Client unreachable at " +
                               ClientManager::PrintSingleClientIP(addr));
                         cout << "NOTICE - " << username << " crashed." << endl;
+
+                        // Notify leader manager
+                        if (leaderManager_.is_leader(addr)) {
+                            leaderManager_.LeaderCrash();
+                        }
 
                         // Rebuild payload to notify all
                         payload.clear();
@@ -252,7 +258,6 @@ void JAM::Main() {
                                     }
                                     break;
                                 case CLIENT_CRASH:
-                                    // TODO: notify other modules
                                     if (ClientManager::DecodeSingleAddress((uint8_t *) payload.GetMessage().c_str(),
                                                                            payload.GetMessageLength(),
                                                                            &addr) == SUCCESS) {
@@ -264,6 +269,11 @@ void JAM::Main() {
                                     }
                                     break;
                                 case LEADER_LEAVE:
+                                    leaderManager_.LeaderCrash();
+                                    addr = *payload.GetAddress();
+                                    if (clientManager_.RemoveClient(addr, &username)) {
+                                        cout << "NOTICE - " << username << " left the chat." << endl;
+                                    }
                                     break;
                                 default:
                                     break;
@@ -271,6 +281,10 @@ void JAM::Main() {
                             break;
                         case ELECTION_MSG:
                             leaderManager_.HandleElectionMessage(payload);
+                            if (payload.GetElectionCommand() == ELECT_WIN) {
+                                addr = *payload.GetAddress();
+                                udpWrapper_.LeaderRecover(&addr);
+                            }
                             break;
                         case RECOVER_MSG:
                             switch (payload.GetRecoverCommand()) {
@@ -333,6 +347,7 @@ void JAM::Main() {
     udpWrapper_.SendPayloadList(payload, &multicast_list);
 
     udpWrapper_.Stop();
+    leaderManager_.StopLeaderHeartBeat();
 
     cout << "Bye." << endl;
 }
@@ -402,4 +417,3 @@ bool JAM::GetInterfaceAddress(const char *interface, const char *port, sockaddr_
 
     return ret;
 }
-

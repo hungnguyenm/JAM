@@ -74,8 +74,6 @@ JamStatus UdpWrapper::SendPayloadSingle(Payload payload,
     JamStatus ret = SUCCESS;
 
     if (is_ready_) {
-        LeaderRecover();
-
         if (ntohs(addr->sin_port) >= MIN_PORT) {
             payload.SetUid(uid_++);
             payload.SetAddress(addr);
@@ -100,8 +98,6 @@ JamStatus UdpWrapper::SendPayloadSelf(Payload payload) {
     JamStatus ret = SUCCESS;
 
     if (is_ready_) {
-        LeaderRecover();
-
         payload.SetUid(uid_++);
         payload.SetAddress(&this_addr_);
         if (payload.EncodePayload() == SUCCESS) {
@@ -122,8 +118,6 @@ JamStatus UdpWrapper::SendPayloadList(Payload payload,
     JamStatus ret = SUCCESS;
 
     if (is_ready_) {
-        LeaderRecover();
-
         // TODO: port validation
         for (sockaddr_in addr : *list) {
             payload.SetUid(uid_++);
@@ -167,6 +161,15 @@ JamStatus UdpWrapper::GetAddressFromInfo(const char *addr,
     }
 
     return ret;
+}
+
+void UdpWrapper::LeaderRecover(sockaddr_in *addr) {
+    Payload payload;
+
+    DCOUT("INFO: UdpWrapper - Leader crashed recovery");
+    while (leader_failed_queue_.try_pop(payload)) {
+        SendPayloadSingle(payload, addr);
+    }
 }
 
 JamStatus UdpWrapper::InitUdpSocket(const char *port) {
@@ -324,10 +327,6 @@ void UdpWrapper::RunMonitor() {
     }
     exit:
     DCOUT("INFO: UdpMonitor - Received terminate message");
-}
-
-void UdpWrapper::LeaderRecover() {
-    // TODO: implement this
 }
 
 std::string UdpWrapper::u32_to_string(uint32_t in) {
