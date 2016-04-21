@@ -39,7 +39,7 @@ private:
 
     long sentElectionCandidatesOut_;
     bool cancelledElection_;
-    bool electionInProgress_;
+    bool electionInProgress_ = false;
 
     void StartElection();
     void HeartBeatPing();

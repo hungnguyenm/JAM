@@ -127,14 +127,19 @@ void JAM::StartAsClient(const char *user_name,
 
             }
         }
+        goto exit;
 
-        // UDP timeout for hand-shake or crashed
-        udpWrapper_.Stop();
-        cout << "Sorry, no chat is active on " << serv_addr << ":" <<
-        serv_port << ", try again later." << endl;
-        cout << "Bye." << endl;
-        exit(0);
+    } else {
+        goto exit;
     }
+
+    exit:
+    // UDP timeout for hand-shake or crashed
+    udpWrapper_.Stop();
+    cout << "Sorry, no chat is active on " << serv_addr << ":" <<
+    serv_port << ", try again later." << endl;
+    cout << "Bye." << endl;
+    exit(0);
 
     next:
     // Start all other modules

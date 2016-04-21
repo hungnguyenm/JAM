@@ -191,7 +191,7 @@ void LeaderManager::HandleElectionMessage(Payload msg)
 void LeaderManager::StartLeaderHeartbeat() {
     boost::mutex::scoped_lock lock(m_leader_);
 
-    StopLeaderHeartBeat();
+    // StopLeaderHeartBeat();
 
     heartbeatThread_ = new boost::thread(boost::bind(&LeaderManager::HeartBeatPing, this));
 }
