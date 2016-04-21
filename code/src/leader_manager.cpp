@@ -49,8 +49,6 @@ bool LeaderManager::is_election_happening() {
 
 
 void LeaderManager::ReceivedPing(Payload ping) {
-    boost::mutex::scoped_lock lock(m_leader_);
-
     ClientInfo* leader = GetCurrentLeader();
 
     if(*leader == clientManager_->get_self_address()) {
@@ -60,12 +58,10 @@ void LeaderManager::ReceivedPing(Payload ping) {
 }
 
 bool LeaderManager::PingLeader() {
-    boost::mutex::scoped_lock lock(m_leader_);
-
     ClientInfo* leader = GetCurrentLeader();
     DCERR("Pinging leader");
 
-    if(leader == nullptr && is_curr_client_leader() == false) {
+    if(leader == nullptr && !is_curr_client_leader()) {
         DCOUT("Election in progress/or no clients, no heartbeat");
         return false;
     }

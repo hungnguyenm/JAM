@@ -240,6 +240,7 @@ void UdpWrapper::RunReader() {
                             DCOUT("INFO: UdpReader - Duplicate payload occurred");
                         } else {
                             in_payload.SetAddress((sockaddr_in *) &clientaddr);
+                            in_payload.SetLength((uint32_t) size);
                             (*queues_).push(CentralQueues::QueueType::UDP_IN, in_payload);
                         }
                     }
@@ -259,7 +260,9 @@ void UdpWrapper::RunWriter() {
 
     for (; ;) {
         out_queue_.pop(payload);
-        if (payload.GetType() == NA && payload.GetLength() == QUIT_MSG_LENGTH) {
+        if (payload.GetLength() == 0) {
+            DCERR("ERROR: UdpWriter - Invalid payload");
+        } else if (payload.GetType() == NA && payload.GetLength() == QUIT_MSG_LENGTH) {
             // Send self-terminate payload and add terminate flag into ack_tickets_
             DCOUT("INFO: UdpWriter - Received terminate message");
             ack_tickets_.insert(payload.GetUid(), NUM_UDP_TERMINATE_RETRIES,

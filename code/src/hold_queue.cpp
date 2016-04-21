@@ -43,6 +43,9 @@ void HoldQueue::Process(Payload payload) {
 
         }
 
+        // TODO: change this - for JAM testing
+        delivery_queue_.clear();
+
     } while (delivery_queue_.size() > 0);
 }
 
