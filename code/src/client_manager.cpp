@@ -116,7 +116,7 @@ bool ClientManager::RemoveClient(ClientInfo client,
     return ret;
 }
 
-std::string ClientManager::PrintSingleClientIP(sockaddr_in client) {
+std::string ClientManager::StringifyClient(sockaddr_in client) {
     std::string client_ip_information;
     int port;
     char ipstr[INET_ADDRSTRLEN];
@@ -187,17 +187,8 @@ JamStatus ClientManager::DecodeBufferToClientList(uint8_t *payload, uint32_t len
 }
 
 void ClientManager::PrintClients() {
-    if (client_list_.size() > 0) {
-        for (int i = 0; i < client_list_.size(); i++) {
-            printf("%s ", client_list_[i].get_username().c_str());
-            printf("%s:%d", inet_ntoa(client_list_[i].get_sock_address().sin_addr),
-                   ntohs(client_list_[i].get_sock_address().sin_port));
-            if (client_list_[i].is_leader()) {
-                printf(" (Leader)\n");
-            } else {
-                printf("\n");
-            }
-        }
+    for (int i = 0; i < client_list_.size(); i++) {
+        client_list_[i].print_client();
     }
 }
 

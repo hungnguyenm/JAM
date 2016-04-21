@@ -4,8 +4,8 @@
 #include "../include/client_info.h"
 
 #include <arpa/inet.h>
-#include <iosfwd>
-#include <cstring>
+#include <iostream>
+#include <string>
 #include <sstream>
 
 ClientInfo::ClientInfo(sockaddr_in client) :
@@ -30,25 +30,6 @@ ClientInfo::ClientInfo(sockaddr_in client, const std::string &username, bool isL
     port_ = ntohs(client_.sin_port);
 }
 
-bool ClientInfo::operator<(const ClientInfo& other) {
-#define CMP(a, b) if (a != b) return a < b ? true : false;
-
-    CMP(client_.sin_family, other.client_.sin_family);
-    CMP(client_.sin_addr.s_addr, other.client_.sin_addr.s_addr);
-    CMP(client_.sin_port, other.client_.sin_port);
-
-    return false;
-#undef CMP
-}
-
-bool ClientInfo::operator==(const ClientInfo& other) {
-        return ((client_.sin_addr.s_addr == other.client_.sin_addr.s_addr) &&
-                (client_.sin_port == other.client_.sin_port));
-}
-
-bool ClientInfo::operator==(const sockaddr_in& other) {
-    return (*this == ClientInfo(other));
-}
 
 sockaddr_in ClientInfo::get_sock_address() {
     return client_;
@@ -65,6 +46,31 @@ bool ClientInfo::is_leader() {
 void ClientInfo::set_leader(bool val) {
     isLeader_ = val;
 }
+
+void ClientInfo::print_client() {
+    std::cout << username_
+        << " " << inet_ntoa(client_.sin_addr) << ":" << ntohs(client_.sin_port)
+        << ((is_leader()) ? "(Leader)" : "") << std::endl;
+}
+
+
+bool ClientInfo::operator<(const ClientInfo& other) {
+#define CMP(a, b) if (a != b) return a < b ? true : false;
+
+    CMP(client_.sin_family, other.client_.sin_family);
+    CMP(client_.sin_addr.s_addr, other.client_.sin_addr.s_addr);
+    CMP(client_.sin_port, other.client_.sin_port);
+
+    return false;
+#undef CMP
+}
+
+bool ClientInfo::operator==(const ClientInfo& other) {
+        return ((client_.sin_addr.s_addr == other.client_.sin_addr.s_addr) &&
+                (client_.sin_port == other.client_.sin_port));
+}
+
+
 
 uint32_t ClientInfo::get_packet_size() {
     //Sum of sizes of username, ip_address, port, boolean(isLeader)

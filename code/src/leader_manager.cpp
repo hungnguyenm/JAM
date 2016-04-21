@@ -63,6 +63,7 @@ bool LeaderManager::PingLeader() {
     boost::mutex::scoped_lock lock(m_leader_);
 
     ClientInfo* leader = GetCurrentLeader();
+    DCERR("Pinging leader");
 
     if(leader == nullptr && is_curr_client_leader() == false) {
         DCOUT("Election in progress/or no clients, no heartbeat");

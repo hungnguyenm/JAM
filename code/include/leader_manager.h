@@ -38,7 +38,7 @@ private:
     ClientInfo* lastLeader_;
 
     long sentElectionCandidatesOut_;
-    bool cancelledElection_;
+    bool cancelledElection_ = false;
     bool electionInProgress_ = false;
 
     void StartElection();

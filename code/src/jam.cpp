@@ -85,7 +85,7 @@ void JAM::StartAsClient(const char *user_name,
 
     // Start UDP Wrapper
     if (udpWrapper_.Start(user_port) == SUCCESS) {
-        cout << "Listening on " << clientManager_.PrintSingleClientIP(client_addr) << endl;
+        cout << "Listening on " << clientManager_.StringifyClient(client_addr) << endl;
     } else {
         cerr << "Failed to start UDP service!" << endl;
         exit(1);
@@ -200,7 +200,7 @@ void JAM::Main() {
                     has_data = true;
                     if (clientManager_.RemoveClient(addr, &username)) {
                         DCOUT("INFO: JAM - Client unreachable at " +
-                              ClientManager::PrintSingleClientIP(addr));
+                                      ClientManager::StringifyClient(addr));
                         cout << "NOTICE - " << username << " crashed." << endl;
 
                         // Notify leader manager
@@ -253,7 +253,7 @@ void JAM::Main() {
                                     addr = *payload.GetAddress();
                                     if (clientManager_.AddClient(addr, payload.GetUsername(), false)) {
                                         cout << "NOTICE - " << payload.GetUsername() << " joined on " <<
-                                        clientManager_.PrintSingleClientIP(addr) << "." << endl;
+                                                clientManager_.StringifyClient(addr) << "." << endl;
                                     }
                                     break;
                                 case CLIENT_LEAVE:
