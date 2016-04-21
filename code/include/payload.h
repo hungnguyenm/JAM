@@ -85,6 +85,9 @@ public:
 
     void SetOrder(int32_t order);
 
+    bool operator<(const Payload& other);
+
+
     Status GetStatus() const;
 
     void SetStatus(Status status);

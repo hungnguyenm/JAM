@@ -18,9 +18,12 @@ public:                    // begin public section
     void AddMessage(Payload payload);
     void Process();
 
+    void HistoryRequest();
+
 private:
-    std::queue<Payload> hold_back_queue_;
+    std::queue<Payload> history_queue_;
     std::queue<Payload> delivery_queue_;
+
 
     int user_handler_pipe_;
 

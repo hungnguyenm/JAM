@@ -118,6 +118,10 @@ void Payload::SetOrder(int32_t order) {
     order_ = order;
 }
 
+bool Payload::operator<(const Payload& other){
+    return (this->GetOrder() < other.GetOrder());
+}
+
 Status Payload::GetStatus() const {
     return code_.status;
 }

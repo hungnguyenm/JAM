@@ -16,12 +16,13 @@ HoldQueue::~HoldQueue() {
 // need to take userhandler inside
 
 void HoldQueue::AddMessage(Payload payload) {
-    hold_back_queue_.push(payload);
+    delivery_queue_.push(payload);
 }
 
 void HoldQueue::Process() {
-    delivery_queue_.push(hold_back_queue_.pop());
 
+    
+    history_queue_.push(payload);
     StreamCommunicator::SendMessage(user_handler_pipe_,
                                     payload.GetUsername(),
                                     payload.GetMessage());
