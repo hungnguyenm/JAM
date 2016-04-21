@@ -61,7 +61,7 @@ void Payload::operator=(const Payload &payload) {
     length_ = payload.length_;
 }
 
-bool Payload::operator<(const Payload& other){
+bool Payload::operator<(const Payload& other) const {
     return (this->GetOrder() < other.GetOrder());
 }
 

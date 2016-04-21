@@ -59,7 +59,7 @@ public:
     // operators
     void operator=(const Payload &payload);
 
-    bool operator<(const Payload& other);
+    bool operator<(const Payload& other) const;
 
     ~Payload();
 
