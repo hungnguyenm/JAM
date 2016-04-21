@@ -13,6 +13,7 @@
 #include "user_handler.h"
 #include "client_manager.h"
 #include "leader_manager.h"
+#include "hold_queue.h"
 
 class JAM {
 public:
@@ -62,6 +63,7 @@ private:
     UserHandler userHandler_;
     ClientManager clientManager_;
     LeaderManager leaderManager_;
+    HoldQueue holdQueue_;
 
     int32_t order_;                         // Order kept track as leader
     int32_t last_witness_order_;            // Order kept track for leader recovery

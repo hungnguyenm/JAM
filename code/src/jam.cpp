@@ -7,7 +7,6 @@
  */
 
 #include "../include/jam.h"
-#include "../include/stream_communicator.h"
 
 #include <ifaddrs.h>
 #include <arpa/inet.h>
@@ -18,8 +17,10 @@ JAM::JAM()
         : udpWrapper_(&queues_),
           userHandler_(&queues_),
           leaderManager_(&queues_, &clientManager_),
-          order_(0),
-          last_witness_order_(0) {
+          holdQueue_(&queues_),
+          order_(DEFAULT_FIRST_ORDER),
+          last_witness_order_(DEFAULT_FIRST_ORDER) {
+    holdQueue_.SetUserHandlerPipe(userHandler_.get_write_pipe());
 }
 
 JAM::~JAM() {
@@ -221,10 +222,7 @@ void JAM::Main() {
                                 order_++;
                             } else {
                                 last_witness_order_ = payload.GetOrder();
-                                // TODO: change to HoldQueue
-                                StreamCommunicator::SendMessage(userHandler_.get_write_pipe(),
-                                                                payload.GetUsername(),
-                                                                payload.GetMessage());
+                                holdQueue_.AddMessageToQueue(payload);
                             }
                             break;
                         case STATUS_MSG:
@@ -275,6 +273,15 @@ void JAM::Main() {
                             leaderManager_.HandleElectionMessage(payload);
                             break;
                         case RECOVER_MSG:
+                            switch (payload.GetRecoverCommand()) {
+                                case MSG_LOST:
+                                    addr = *payload.GetAddress();
+                                    history_request = payload.GetOrder();
+                                    if (holdQueue_.GetPayloadInHistory(history_request, &payload)) {
+                                        udpWrapper_.SendPayloadSingle(payload, &addr);
+                                    }
+                                    break;
+                            }
                             break;
                         default:
                             break;
@@ -295,7 +302,21 @@ void JAM::Main() {
                     }
                 }
 
-                if (queues_.try_pop_history_request(history_request))
+                if (!queues_.is_empty(CentralQueues::QueueType::HISTORY_REQUEST) &&
+                    !leaderManager_.is_election_happening() &&
+                    leaderManager_.GetLeaderAddress(&addr)) {
+                    // These conditions are for reducing computation overhead in case no leader
+                    if (queues_.try_pop_history_request(history_request)) {
+                        has_data = true;
+                        payload.SetType(RECOVER_MSG);
+                        payload.SetRecoverCommand(MSG_LOST);
+                        payload.SetOrder(history_request);
+                        if (payload.EncodePayload() == SUCCESS) {
+                            udpWrapper_.SendPayloadSingle(payload, &addr);
+                        }
+                    }
+                }
+
             } while (has_data);
         }
     }
