@@ -19,6 +19,29 @@ ClientInfo* LeaderManager::GetCurrentLeader() {
     return lastLeader_;
 }
 
+bool LeaderManager::GetLeaderAddress(sockaddr_in* addr) {
+    ClientInfo* leader = GetCurrentLeader();
+
+    if(leader != nullptr && addr != nullptr) {
+        *addr = leader->get_sock_address();
+        return true;
+    }
+
+    return false;
+}
+
+
+bool LeaderManager::is_curr_client_leader() {
+    ClientInfo* leader = GetCurrentLeader();
+
+    return (leader != nullptr) ? (*leader == clientManager_->get_self_address()) : false;
+}
+
+bool LeaderManager::is_election_happening() {
+    return electionInProgress_;
+}
+
+
 void LeaderManager::ReceivedPing(Payload ping) {
     boost::mutex::scoped_lock lock(m_leader_);
 
