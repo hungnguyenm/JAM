@@ -173,14 +173,16 @@ void JAM::Main() {
             do {
                 has_data = false;
                 if (queues_.try_pop_user_out(payload)) {
-                    // TODO: handle ordering here
                     // Has data in user_out_queue, need to package the payload
                     has_data = true;
                     payload.SetType(CHAT_MSG);
                     payload.SetUsername(user_name_);
                     if (payload.EncodePayload() == SUCCESS) {
-                        multicast_list = clientManager_.GetAllClientSockAddress();
-                        udpWrapper_.SendPayloadList(payload, &multicast_list);
+                        if (leaderManager_.GetLeaderAddress(&addr)) {
+                            udpWrapper_.SendPayloadSingle(payload, &addr);
+                        } else {
+                            // TODO: handle no leader interrupting
+                        }
                     }
                 }
 
@@ -210,10 +212,19 @@ void JAM::Main() {
                     has_data = true;
                     switch (payload.GetType()) {
                         case CHAT_MSG:
-                            // TODO: implement ordering here
-                            StreamCommunicator::SendMessage(userHandler_.get_write_pipe(),
-                                                            payload.GetUsername(),
-                                                            payload.GetMessage());
+                            if (payload.GetOrder() == DEFAULT_NO_ORDER && leaderManager_.is_curr_client_leader()) {
+                                // Need to handle ordering
+                                payload.SetOrder(order_);
+                                multicast_list = clientManager_.GetAllClientSockAddress();
+                                udpWrapper_.SendPayloadList(payload, &multicast_list);
+                                order_++;
+                            } else {
+                                last_witness_order_ = payload.GetOrder();
+                                // TODO: change to HoldQueue
+                                StreamCommunicator::SendMessage(userHandler_.get_write_pipe(),
+                                                                payload.GetUsername(),
+                                                                payload.GetMessage());
+                            }
                             break;
                         case STATUS_MSG:
                             switch (payload.GetStatus()) {
@@ -289,8 +300,11 @@ void JAM::Main() {
     DCOUT("INFO: JAM - Received terminate signal");
     payload.clear();
     payload.SetType(STATUS_MSG);
-    // TODO: change with leader as well
-    payload.SetStatus(CLIENT_LEAVE);
+    if (leaderManager_.is_curr_client_leader()) {
+        payload.SetStatus(LEADER_LEAVE);
+    } else {
+        payload.SetStatus(CLIENT_LEAVE);
+    }
     multicast_list = clientManager_.GetAllClientSockAddressWithoutMe();
     udpWrapper_.SendPayloadList(payload, &multicast_list);
 
