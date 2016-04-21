@@ -25,7 +25,7 @@ public:
 
     void HandleElectionMessage(Payload msg);
     void ReceivedPing(Payload ping);
-    void PingTimedOut();
+    void LeaderCrash();
 
     bool PingLeader();
 

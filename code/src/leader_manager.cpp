@@ -6,7 +6,6 @@
 
 LeaderManager::LeaderManager(CentralQueues* queues, ClientManager* clientManager) :
         queues_(queues), clientManager_(clientManager) {
-
 }
 
 ClientInfo* LeaderManager::GetCurrentLeader() {
@@ -58,8 +57,8 @@ bool LeaderManager::PingLeader() {
 
     ClientInfo* leader = GetCurrentLeader();
 
-    if(leader == nullptr) {
-        DCOUT("Election in progress, no heartbeat");
+    if(leader == nullptr && is_curr_client_leader() == false) {
+        DCOUT("Election in progress/or no clients, no heartbeat");
         return false;
     }
 
@@ -74,12 +73,17 @@ bool LeaderManager::PingLeader() {
     return true;
 }
 
-void LeaderManager::PingTimedOut() {
+void LeaderManager::LeaderCrash() {
     StartElection();
 }
 
 void LeaderManager::StartElection() {
     boost::mutex::scoped_lock lock(m_leader_);
+
+    if(electionInProgress_) {
+        return;
+    }
+
     electionInProgress_ = true;
     cancelledElection_ = false;
 
