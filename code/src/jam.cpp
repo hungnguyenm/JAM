@@ -172,16 +172,16 @@ void JAM::Main() {
             bool has_data;
             do {
                 has_data = false;
-                if (queues_.try_pop_user_out(payload)) {
-                    // Has data in user_out_queue, need to package the payload
-                    has_data = true;
-                    payload.SetType(CHAT_MSG);
-                    payload.SetUsername(user_name_);
-                    if (payload.EncodePayload() == SUCCESS) {
-                        if (leaderManager_.GetLeaderAddress(&addr)) {
+                if (!queues_.is_empty(CentralQueues::QueueType::USER_OUT) &&
+                        !leaderManager_.is_election_happening() &&
+                        leaderManager_.GetLeaderAddress(&addr)) {
+                    // These conditions are for reducing computation overhead in case no leader
+                    if (queues_.try_pop_user_out(payload)) {
+                        has_data = true;
+                        payload.SetType(CHAT_MSG);
+                        payload.SetUsername(user_name_);
+                        if (payload.EncodePayload() == SUCCESS) {
                             udpWrapper_.SendPayloadSingle(payload, &addr);
-                        } else {
-                            // TODO: handle no leader interrupting
                         }
                     }
                 }

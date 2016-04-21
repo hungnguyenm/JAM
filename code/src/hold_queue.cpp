@@ -9,9 +9,11 @@
 #include <algorithm>    // std::sort
 #include <vector>
 
-HoldQueue::HoldQueue() {
+HoldQueue::HoldQueue(CentralQueues *queues) :
+        queues_(queues) {
 
 }
+
 HoldQueue::~HoldQueue() {
 
 }
@@ -33,8 +35,9 @@ void HoldQueue::Process(Payload payload) {
         return;
     } else if (payload.GetType() == CHAT_MSG) {
 
-        }
     }
+}
+
 }
 
 Payload HoldQueue::GetPayloadInHistory(int32_t value) {

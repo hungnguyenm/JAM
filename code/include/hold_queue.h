@@ -8,11 +8,12 @@
 #include <queue>
 #include "payload.h"
 #include "stream_communicator.h"
+#include "central_queues.h"
 
 class HoldQueue {
 
 public:                    // begin public section
-    HoldQueue();
+    HoldQueue(CentralQueues* queues);
     ~HoldQueue();
 
     void AddMessageToQueue(Payload payload);
@@ -21,9 +22,9 @@ public:                    // begin public section
     void HistoryRequest();
 
 private:
+    CentralQueues* queues_;
     std::queue<Payload> history_queue_;
     std::vector<Payload> delivery_queue_;
-
 
     int user_handler_pipe_;
 
