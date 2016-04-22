@@ -18,7 +18,7 @@ public:                    // begin public section
     ~HoldQueue();
 
     void AddMessageToQueue(Payload payload);
-    void Process(Payload payload);
+    void ProcessPayloads();
 
     void SetUserHandlerPipe(int pipeId);
     int GetUserHandlerPipe();
