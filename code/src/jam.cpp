@@ -319,10 +319,23 @@ void JAM::Main() {
                     has_data = true;
                     switch (payload.GetType()) {
                         case STATUS_MSG:
-                            udpWrapper_.SendPayloadSingle(payload, payload.GetAddress());
+                            if (payload.GetStatus() == PING) {
+                                if (leaderManager_.is_curr_client_leader()) {
+                                    // This client is the leader, need to ping all other clients
+                                    multicast_list = clientManager_.GetAllClientSockAddressWithoutMe();
+                                    udpWrapper_.SendPayloadList(payload, &multicast_list);
+                                } else if (leaderManager_.GetLeaderAddress(&addr)) {
+                                    // This client is not the leader, need to ping the leader
+                                    udpWrapper_.SendPayloadSingle(payload, &addr);
+                                }
+                            }
                             break;
                         case ELECTION_MSG:
                             udpWrapper_.SendPayloadSingle(payload, payload.GetAddress());
+                            if (payload.GetElectionCommand() == ELECT_WIN) {
+                                // This client is the leader now
+                                order_ = last_witness_order_ + 1;
+                            }
                             break;
                         default:
                             break;
