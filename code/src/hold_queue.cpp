@@ -4,17 +4,13 @@
 
 #include "../include/hold_queue.h"
 
-#include <algorithm>    // std::sort
-
 HoldQueue::HoldQueue(CentralQueues *queues) :
-        queues_(queues), user_handler_pipe_(-1), expected_order_(0) {
+        queues_(queues), user_handler_pipe_(-1), expected_order_(DEFAULT_FIRST_ORDER) {
 }
 
 HoldQueue::~HoldQueue() {
 
 }
-
-// need to take userhandler inside
 
 void HoldQueue::AddMessageToQueue(Payload payload) {
     if (payload.GetType() == CHAT_MSG) {
@@ -35,12 +31,13 @@ void HoldQueue::Process(Payload payload) {
     }
 
     do {
-        if (payload.GetOrder() == DEFAULT_FIRST_ORDER) {
+        if (payload.GetOrder() == expected_order_) {
             StreamCommunicator::SendMessage(user_handler_pipe_,
                                             payload.GetUsername(),
                                             payload.GetMessage());
 
-
+            delivery_queue_.erase(delivery_queue_.begin());
+            expected_order_ += 1;
         }
 
     } while (delivery_queue_.size() > 0);
