@@ -38,7 +38,7 @@ void HoldQueue::ProcessPayloads() {
 bool HoldQueue::GetPayloadInHistory(int32_t value, Payload* payload) {
 
     if (value < history_queue_.size()) {
-        payload = history_queue_.
+//        payload = history_queue_.
     }
     return false;
 }
