@@ -29,7 +29,7 @@ public:                    // begin public section
 
 private:
     CentralQueues* queues_;
-    std::queue<Payload> history_queue_;
+    std::deque<Payload> history_queue_;
     std::vector<Payload> delivery_queue_;
 
     int user_handler_pipe_;

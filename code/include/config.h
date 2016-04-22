@@ -21,7 +21,7 @@
 #define DEFAULT_NO_ORDER            -1      // Default value for payload
 #define DEFAULT_FIRST_ORDER         0       // Default order for the first message
 
-#define MAX_QUEUE_LENGTH            100     // Maximum length of hold back and history queue
+#define MAX_HOLDBACK_QUEUE_LENGTH   100     // Maximum length of hold back and history queue
 
 #define MAX_CLIENT_BUFFER_LENGTH    100     // Maximum client list encoded length
 

@@ -5,7 +5,9 @@
 #include "../include/hold_queue.h"
 
 HoldQueue::HoldQueue(CentralQueues *queues) :
-        queues_(queues), user_handler_pipe_(-1), expected_order_(DEFAULT_FIRST_ORDER) {
+        queues_(queues), history_queue_(MAX_HOLDBACK_QUEUE_LENGTH),
+        delivery_queue_(MAX_HOLDBACK_QUEUE_LENGTH),
+        user_handler_pipe_(-1), expected_order_(DEFAULT_FIRST_ORDER) {
 }
 
 HoldQueue::~HoldQueue() {
@@ -28,17 +30,21 @@ void HoldQueue::ProcessPayloads() {
         StreamCommunicator::SendMessage(user_handler_pipe_,
                                         payload.GetUsername(),
                                         payload.GetMessage());
-        history_queue_.push(payload); //add sent payload to history queue
+        history_queue_.push_back(payload); //add sent payload to history queue
         delivery_queue_.erase(delivery_queue_.begin()); //remove sent message from delivery queue
         expected_order_ += 1; //increase the expected order of the next message
-
     }
 }
 
-bool HoldQueue::GetPayloadInHistory(int32_t value, Payload* payload) {
+bool HoldQueue::GetPayloadInHistory(int32_t order, Payload* payload) {
+    std::deque<Payload>::iterator it = history_queue_.begin();
 
-    if (value < history_queue_.size()) {
-        payload = history_queue_.
+    while (it != history_queue_.end()) {
+        if (order == it->GetOrder()) {
+            payload = &*it;
+            return true;
+        }
+        ++it;
     }
     return false;
 }
