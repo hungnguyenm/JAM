@@ -6,7 +6,7 @@
 
 LeaderManager::LeaderManager(CentralQueues* queues, ClientManager* clientManager) :
         queues_(queues), clientManager_(clientManager) {
-
+    StartLeaderHeartbeat();
 }
 
 ClientInfo* LeaderManager::GetCurrentLeader() {
@@ -17,6 +17,13 @@ ClientInfo* LeaderManager::GetCurrentLeader() {
     }
 
     return lastLeader_;
+}
+
+bool LeaderManager::is_leader(const sockaddr_in& addr){
+    ClientInfo* leader = clientManager_->get_client_info(addr);
+
+    return (leader == nullptr) ? false : leader->is_leader();
+
 }
 
 bool LeaderManager::GetLeaderAddress(sockaddr_in* addr) {
@@ -43,8 +50,6 @@ bool LeaderManager::is_election_happening() {
 
 
 void LeaderManager::ReceivedPing(Payload ping) {
-    boost::mutex::scoped_lock lock(m_leader_);
-
     ClientInfo* leader = GetCurrentLeader();
 
     if(*leader == clientManager_->get_self_address()) {
@@ -54,12 +59,10 @@ void LeaderManager::ReceivedPing(Payload ping) {
 }
 
 bool LeaderManager::PingLeader() {
-    boost::mutex::scoped_lock lock(m_leader_);
-
     ClientInfo* leader = GetCurrentLeader();
 
-    if(leader == nullptr) {
-        DCOUT("Election in progress, no heartbeat");
+    if(leader == nullptr && !is_curr_client_leader()) {
+        DCOUT("Election in progress/or no clients, no heartbeat");
         return false;
     }
 
@@ -74,12 +77,17 @@ bool LeaderManager::PingLeader() {
     return true;
 }
 
-void LeaderManager::PingTimedOut() {
+void LeaderManager::LeaderCrash() {
     StartElection();
 }
 
 void LeaderManager::StartElection() {
     boost::mutex::scoped_lock lock(m_leader_);
+
+    if(electionInProgress_) {
+        return;
+    }
+
     electionInProgress_ = true;
     cancelledElection_ = false;
 
@@ -180,7 +188,7 @@ void LeaderManager::HandleElectionMessage(Payload msg)
 void LeaderManager::StartLeaderHeartbeat() {
     boost::mutex::scoped_lock lock(m_leader_);
 
-    StopLeaderHeartBeat();
+    // StopLeaderHeartBeat();
 
     heartbeatThread_ = new boost::thread(boost::bind(&LeaderManager::HeartBeatPing, this));
 }
@@ -188,7 +196,9 @@ void LeaderManager::StartLeaderHeartbeat() {
 void LeaderManager::HeartBeatPing() {
     while(true) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(PING_INTERVAL));
-        PingLeader();
+        if(electionInProgress_ == false) {
+            PingLeader();
+        }
     }
 }
 

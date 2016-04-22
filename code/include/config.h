@@ -29,7 +29,6 @@
 #define NUM_UDP_RETRIES             2       // Default number of UDP resend before notify crash
 #define UDP_TIMEOUT                 2000    // Timeout before trying resend UDP payload in miliseconds
 #define ACK_MONITOR_INTERVAL        1       // Ack check interval in seconds
-#define MONITOR_ERROR_QUEUE_SIZE    50      // Number of payload kept track by monitor if leader crashed
 
 #define JAM_CENTRAL_TIMEOUT         1000    // Timeout for main jam waiting internal communication in miliseconds
 #define JOIN_TIMEOUT                10000   // Timeout to join chat group in miliseconds

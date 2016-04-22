@@ -37,7 +37,7 @@ public:                    // begin public section
 
     void RemoveAllClients();
 
-    static std::string PrintSingleClientIP(sockaddr_in client);
+    static std::string StringifyClient(sockaddr_in client);
     void PrintClients();
 
     // Encode/Decode methods

@@ -7,7 +7,6 @@
  */
 
 #include "../include/jam.h"
-#include "../include/stream_communicator.h"
 
 #include <ifaddrs.h>
 #include <arpa/inet.h>
@@ -18,8 +17,10 @@ JAM::JAM()
         : udpWrapper_(&queues_),
           userHandler_(&queues_),
           leaderManager_(&queues_, &clientManager_),
-          order_(0),
-          last_witness_order_(0) {
+          holdQueue_(&queues_),
+          order_(DEFAULT_FIRST_ORDER),
+          last_witness_order_(DEFAULT_FIRST_ORDER) {
+    holdQueue_.SetUserHandlerPipe(userHandler_.get_write_pipe());
 }
 
 JAM::~JAM() {
@@ -54,8 +55,9 @@ void JAM::StartAsLeader(const char *user_name,
         exit(1);
     }
 
-    // Start User Handler
+    // Start all other modules
     userHandler_.Start();
+    leaderManager_.StartLeaderHeartbeat();
 
     // Start-up completed
     cout << "Waiting for others to join..." << endl;
@@ -83,7 +85,7 @@ void JAM::StartAsClient(const char *user_name,
 
     // Start UDP Wrapper
     if (udpWrapper_.Start(user_port) == SUCCESS) {
-        cout << "Listening on " << clientManager_.PrintSingleClientIP(client_addr) << endl;
+        cout << "Listening on " << clientManager_.StringifyClient(client_addr) << endl;
     } else {
         cerr << "Failed to start UDP service!" << endl;
         exit(1);
@@ -122,21 +124,26 @@ void JAM::StartAsClient(const char *user_name,
                     cerr << "Failed to hand-shake with server!" << endl;
                     exit(1);
                 }
-
             }
         }
+        goto exit;
 
-        // UDP timeout for hand-shake or crashed
-        udpWrapper_.Stop();
-        cout << "Sorry, no chat is active on " << serv_addr << ":" <<
-        serv_port << ", try again later." << endl;
-        cout << "Bye." << endl;
-        exit(0);
+    } else {
+        goto exit;
     }
 
+    exit:
+    // UDP timeout for hand-shake or crashed
+    udpWrapper_.Stop();
+    cout << "Sorry, no chat is active on " << serv_addr << ":" <<
+    serv_port << ", try again later." << endl;
+    cout << "Bye." << endl;
+    exit(0);
+
     next:
-    // Start User Handler
+    // Start all other modules
     userHandler_.Start();
+    leaderManager_.StartLeaderHeartbeat();
 
     // Start-up completed
     cout << "Succeeded. Current users:" << endl;
@@ -188,13 +195,19 @@ void JAM::Main() {
                 }
 
                 if (queues_.try_pop_udp_crash(addr)) {
-                    // TODO: implement notification to all modules
-                    // TODO: clear history queue for crash/left client
                     has_data = true;
                     if (clientManager_.RemoveClient(addr, &username)) {
                         DCOUT("INFO: JAM - Client unreachable at " +
-                              ClientManager::PrintSingleClientIP(addr));
+                                      ClientManager::StringifyClient(addr));
                         cout << "NOTICE - " << username << " crashed." << endl;
+
+                        // Notify leader manager
+                        if (leaderManager_.is_leader(addr)) {
+                            leaderManager_.LeaderCrash();
+                        }
+
+                        // Clear history
+                        udpWrapper_.ClearReceivedHistory(&addr);
 
                         // Rebuild payload to notify all
                         payload.clear();
@@ -221,12 +234,10 @@ void JAM::Main() {
                                 order_++;
                             } else {
                                 last_witness_order_ = payload.GetOrder();
-                                // TODO: change to HoldQueue
-                                StreamCommunicator::SendMessage(userHandler_.get_write_pipe(),
-                                                                payload.GetUsername(),
-                                                                payload.GetMessage());
+                                holdQueue_.AddMessageToQueue(payload);
                             }
                             break;
+
                         case STATUS_MSG:
                             switch (payload.GetStatus()) {
                                 case CLIENT_JOIN:
@@ -244,7 +255,7 @@ void JAM::Main() {
                                     addr = *payload.GetAddress();
                                     if (clientManager_.AddClient(addr, payload.GetUsername(), false)) {
                                         cout << "NOTICE - " << payload.GetUsername() << " joined on " <<
-                                        clientManager_.PrintSingleClientIP(addr) << "." << endl;
+                                                clientManager_.StringifyClient(addr) << "." << endl;
                                     }
                                     break;
                                 case CLIENT_LEAVE:
@@ -252,30 +263,53 @@ void JAM::Main() {
                                     if (clientManager_.RemoveClient(addr, &username)) {
                                         cout << "NOTICE - " << username << " left the chat." << endl;
                                     }
+                                    udpWrapper_.ClearReceivedHistory(&addr);
                                     break;
                                 case CLIENT_CRASH:
-                                    // TODO: notify other modules
                                     if (ClientManager::DecodeSingleAddress((uint8_t *) payload.GetMessage().c_str(),
                                                                            payload.GetMessageLength(),
                                                                            &addr) == SUCCESS) {
                                         if (clientManager_.RemoveClient(addr, &username)) {
                                             cout << "NOTICE - " << username << " crashed." << endl;
                                         }
+                                        udpWrapper_.ClearReceivedHistory(&addr);
                                     } else {
                                         DCERR("ERROR: JAM - Failed to decode sockaddr_in of crash info.");
                                     }
                                     break;
                                 case LEADER_LEAVE:
+                                    leaderManager_.LeaderCrash();
+                                    addr = *payload.GetAddress();
+                                    if (clientManager_.RemoveClient(addr, &username)) {
+                                        cout << "NOTICE - " << username << " left the chat." << endl;
+                                    }
+                                    udpWrapper_.ClearReceivedHistory(&addr);
                                     break;
                                 default:
                                     break;
                             }
                             break;
+
                         case ELECTION_MSG:
                             leaderManager_.HandleElectionMessage(payload);
+                            if (payload.GetElectionCommand() == ELECT_WIN) {
+                                addr = *payload.GetAddress();
+                                udpWrapper_.LeaderRecover(&addr);
+                            }
                             break;
+
                         case RECOVER_MSG:
+                            switch (payload.GetRecoverCommand()) {
+                                case MSG_LOST:
+                                    addr = *payload.GetAddress();
+                                    history_request = payload.GetOrder();
+                                    if (holdQueue_.GetPayloadInHistory(history_request, &payload)) {
+                                        udpWrapper_.SendPayloadSingle(payload, &addr);
+                                    }
+                                    break;
+                            }
                             break;
+
                         default:
                             break;
                     }
@@ -295,7 +329,21 @@ void JAM::Main() {
                     }
                 }
 
-                if (queues_.try_pop_history_request(history_request))
+                if (!queues_.is_empty(CentralQueues::QueueType::HISTORY_REQUEST) &&
+                    !leaderManager_.is_election_happening() &&
+                    leaderManager_.GetLeaderAddress(&addr)) {
+                    // These conditions are for reducing computation overhead in case no leader
+                    if (queues_.try_pop_history_request(history_request)) {
+                        has_data = true;
+                        payload.SetType(RECOVER_MSG);
+                        payload.SetRecoverCommand(MSG_LOST);
+                        payload.SetOrder(history_request);
+                        if (payload.EncodePayload() == SUCCESS) {
+                            udpWrapper_.SendPayloadSingle(payload, &addr);
+                        }
+                    }
+                }
+
             } while (has_data);
         }
     }
@@ -312,6 +360,7 @@ void JAM::Main() {
     udpWrapper_.SendPayloadList(payload, &multicast_list);
 
     udpWrapper_.Stop();
+    leaderManager_.StopLeaderHeartBeat();
 
     cout << "Bye." << endl;
 }
@@ -381,4 +430,3 @@ bool JAM::GetInterfaceAddress(const char *interface, const char *port, sockaddr_
 
     return ret;
 }
-

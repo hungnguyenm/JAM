@@ -17,6 +17,7 @@ public:
     ClientInfo* GetCurrentLeader();
     bool GetLeaderAddress(sockaddr_in* addr); // Some silly c style interface
     bool is_curr_client_leader();
+    bool is_leader(const sockaddr_in& addr);
 
     bool is_election_happening();
 
@@ -25,7 +26,7 @@ public:
 
     void HandleElectionMessage(Payload msg);
     void ReceivedPing(Payload ping);
-    void PingTimedOut();
+    void LeaderCrash();
 
     bool PingLeader();
 
@@ -37,8 +38,8 @@ private:
     ClientInfo* lastLeader_;
 
     long sentElectionCandidatesOut_;
-    bool cancelledElection_;
-    bool electionInProgress_;
+    bool cancelledElection_ = false;
+    bool electionInProgress_ = false;
 
     void StartElection();
     void HeartBeatPing();

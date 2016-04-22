@@ -43,7 +43,7 @@ int main(){
     cm.AddClient(myaddr2, myname2, false);
 
 
-    std::cout << "Print single cleint " << cm.PrintSingleClientIP(myaddr).c_str() << std::endl;
+    std::cout << "Print single cleint " << cm.StringifyClient(myaddr).c_str() << std::endl;
 
     cm.PrintClients();
     printf("Added clients:\n");

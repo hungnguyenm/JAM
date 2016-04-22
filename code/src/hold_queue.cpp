@@ -13,6 +13,13 @@ HoldQueue::~HoldQueue() {
 }
 
 void HoldQueue::AddMessageToQueue(Payload payload) {
+    // TODO: change this - for JAM testing
+    StreamCommunicator::SendMessage(user_handler_pipe_,
+                                    payload.GetUsername(),
+                                    payload.GetMessage());
+
+    return;
+
     if (payload.GetType() == CHAT_MSG) {
         delivery_queue_.push_back(payload);
     }
@@ -45,6 +52,7 @@ void HoldQueue::Process(Payload payload) {
 
 bool HoldQueue::GetPayloadInHistory(int32_t value, Payload* payload) {
 
+    return false;
 }
 
 void HoldQueue::SetUserHandlerPipe(int pipeId) {

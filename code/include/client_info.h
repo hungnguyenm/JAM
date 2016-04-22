@@ -25,9 +25,10 @@ public:
     bool is_leader();
     void set_leader(bool val);
 
+    void print_client();
+
     bool operator<(const ClientInfo& other);
     bool operator==(const ClientInfo& other);
-    bool operator==(const sockaddr_in& other);
 private:
 
     sockaddr_in client_;

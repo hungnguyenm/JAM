@@ -29,9 +29,10 @@ add_executable(jam-dev_b ${DEV_B_HEADERS} ${DEV_B_SOURCES})
 set(DEV_H_HEADERS include/config.h include/concurrent_queue.h include/concurrent_ticket.h
         include/central_queues.h include/serializer_helper.h include/stream_communicator.h
         include/payload.h include/udp_wrapper.h include/user_handler.h include/client_manager.h
-        include/client_info.h include/jam.h)
-set(DEV_H_SOURCES src/payload.cpp src/central_queues.cpp src/serializer_helper.cpp
-        src/udp_wrapper.cpp src/user_handler.cpp src/client_info.cpp src/client_manager.cpp src/jam.cpp)
+        include/client_info.h include/hold_queue.h include/jam.h)
+set(DEV_H_SOURCES src/leader_manager.cpp src/payload.cpp src/central_queues.cpp src/serializer_helper.cpp
+        src/udp_wrapper.cpp src/user_handler.cpp src/client_info.cpp src/client_manager.cpp
+        src/hold_queue.cpp src/jam.cpp)
 add_executable(jam-dev_h_1 ${DEV_H_HEADERS} ${DEV_H_SOURCES} src/dev/dev_h_1.cpp)
 add_executable(jam-dev_h_2 ${DEV_H_HEADERS} ${DEV_H_SOURCES} src/dev/dev_h_2.cpp)
 add_executable(jam-dev_h_3 ${DEV_H_HEADERS} ${DEV_H_SOURCES} src/dev/dev_h_3.cpp)

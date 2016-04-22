@@ -2,7 +2,7 @@
 
 using namespace std;
 
-int main() {
+int main(int argc, char** argv) {
     const char *user_name = "Alice";
     const char *user_interface = DEFAULT_INTERFACE;
     const char *user_port = DEFAULT_PORT_DEBUG_1;
@@ -11,6 +11,10 @@ int main() {
 
 
     JAM jam;
+    if(argc == 2) {
+        user_port = argv[1];
+    }
+
     jam.StartAsClient(user_name, user_interface, user_port, serv_addr, serv_port);
 
     return 0;

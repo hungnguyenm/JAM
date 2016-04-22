@@ -95,6 +95,20 @@ public:
      */
     static JamStatus GetAddressFromInfo(const char *addr, const char *port, sockaddr_in *sockaddr);
 
+    /**
+     * Check the leader_failed_queue and process
+     *
+     * @param addr      address of the new leader
+     */
+    void LeaderRecover(const sockaddr_in *addr);
+
+    /**
+     * Clear received history from another client
+     *
+     * #param addr      address of the client to be cleared
+     */
+    void ClearReceivedHistory(const sockaddr_in *addr);
+
 private:
     enum {
         NUM_UDP_TERMINATE_RETRIES = 10              // Terminate flag for monitor thread
@@ -118,6 +132,10 @@ private:
     boost::thread t_reader_;                        // Reader thread for RunReader()
     boost::thread t_writer_;                        // Writer thread for RunWriter()
     boost::thread t_monitor_;                       // Monitor thread for RunMonitor()
+
+    // Thread-safe queue for history of received payload
+    std::deque<std::tuple<in_addr_t, in_port_t, uint32_t>> received_queue_;
+    mutable boost::mutex m_received_queue_;
 
     /**
      * Initialize listening UDP socket (bind to specific port)
@@ -143,19 +161,12 @@ private:
      */
     void RunMonitor();
 
-
-    /**
-     * Check the leader_failed_queue and process
-     */
-    void LeaderRecover();
-
     // -- Helper functions
     std::string u32_to_string(uint32_t in);
 
-    bool already_received(std::deque<std::tuple<in_addr_t, in_port_t, uint32_t>> *queue,
-                          in_addr_t ip,
-                          in_port_t port,
-                          uint32_t uid);
+    bool payload_already_received(in_addr_t ip,
+                                  in_port_t port,
+                                  uint32_t uid);
 };
 
 #endif //JAM_UDP_WRAPPER_H
