@@ -61,7 +61,7 @@ void LeaderManager::ReceivedPing(Payload ping) {
 bool LeaderManager::PingLeader() {
     ClientInfo* leader = GetCurrentLeader();
 
-    if(leader == nullptr && !is_curr_client_leader()) {
+    if(leader == nullptr || is_curr_client_leader()) {
         DCOUT("Election in progress/or no clients, no heartbeat");
         return false;
     }
