@@ -34,6 +34,7 @@ private:
 
     int user_handler_pipe_;
     int expected_order_;
+    int recovery_counter_;
 
 };
 
