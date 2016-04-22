@@ -9,7 +9,6 @@ HoldQueue::HoldQueue(CentralQueues *queues) :
 }
 
 HoldQueue::~HoldQueue() {
-
 }
 
 void HoldQueue::AddMessageToQueue(Payload payload) {
@@ -31,27 +30,31 @@ void HoldQueue::AddMessageToQueue(Payload payload) {
 
 void HoldQueue::Process(Payload payload) {
 
-    history_queue_.push(payload);
-
     if (payload.GetOrder() == DEFAULT_NO_ORDER) {
         return;
     }
 
     do {
-        if (payload.GetOrder() == expected_order_) {
+        if (payload.GetOrder() == expected_order_) { //if payload is of the right order
             StreamCommunicator::SendMessage(user_handler_pipe_,
                                             payload.GetUsername(),
                                             payload.GetMessage());
+            history_queue_.push(payload); //add sent payload to history queue
+            delivery_queue_.erase(delivery_queue_.begin()); //remove sent message from delivery queue
+            expected_order_ += 1; //increase the expected order of the next message
+            payload = delivery_queue_.front(); //update payload to be the front of the message
+        } else if (payload.GetOrder() != expected_order_) { //if payload is not of right order
+            //TODO: ask for missing payload from somewhere
 
-            delivery_queue_.erase(delivery_queue_.begin());
-            expected_order_ += 1;
         }
-
     } while (delivery_queue_.size() > 0);
 }
 
 bool HoldQueue::GetPayloadInHistory(int32_t value, Payload* payload) {
 
+    if (value < history_queue_.size()) {
+        payload = history_queue_.
+    }
     return false;
 }
 
