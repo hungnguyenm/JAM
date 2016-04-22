@@ -163,12 +163,25 @@ JamStatus UdpWrapper::GetAddressFromInfo(const char *addr,
     return ret;
 }
 
-void UdpWrapper::LeaderRecover(sockaddr_in *addr) {
+void UdpWrapper::LeaderRecover(const sockaddr_in *addr) {
     Payload payload;
 
     DCOUT("INFO: UdpWrapper - Leader crashed recovery");
     while (leader_failed_queue_.try_pop(payload)) {
         SendPayloadSingle(payload, addr);
+    }
+}
+
+void UdpWrapper::ClearReceivedHistory(const sockaddr_in *addr) {
+    boost::mutex::scoped_lock lock(m_received_queue_);
+    in_addr_t ip = addr->sin_addr.s_addr;
+    in_port_t port = addr->sin_port;
+
+    for (std::deque<std::tuple<in_addr_t, in_port_t, uint32_t>>::iterator it = received_queue_.begin();
+         it != received_queue_.end(); ++it) {
+        if (std::get<0>(*it) == ip && std::get<1>(*it) == port) {
+            received_queue_.erase(it);
+        }
     }
 }
 
@@ -212,9 +225,6 @@ void UdpWrapper::RunReader() {
     Payload in_payload;
     Payload ack_payload;
 
-    // TODO: optimize duplicate monitor algorithm
-    std::deque<std::tuple<uint32_t, uint16_t, uint32_t>> receive_queue;
-
     for (; ;) {
         if ((size = (int) recvfrom(sockfd_, in_payload.payload(), MAX_BUFFER_LENGTH - 1, 0,
                                    (sockaddr *) &clientaddr, &addrlen)) > 0) {
@@ -233,10 +243,9 @@ void UdpWrapper::RunReader() {
                                    (sockaddr *) &clientaddr, addrlen) < 0) {
                             DCERR("ERROR: UdpReader - Failed to send ACK payload");
                         }
-                        if (already_received(&receive_queue,
-                                             ((sockaddr_in *) &clientaddr)->sin_addr.s_addr,
-                                             ((sockaddr_in *) &clientaddr)->sin_port,
-                                             in_payload.GetUid())) {
+                        if (payload_already_received(((sockaddr_in *) &clientaddr)->sin_addr.s_addr,
+                                                     ((sockaddr_in *) &clientaddr)->sin_port,
+                                                     in_payload.GetUid())) {
                             DCOUT("INFO: UdpReader - Duplicate payload occurred");
                         } else {
                             in_payload.SetAddress((sockaddr_in *) &clientaddr);
@@ -341,19 +350,19 @@ std::string UdpWrapper::u32_to_string(uint32_t in) {
     return str;
 }
 
-bool UdpWrapper::already_received(std::deque<std::tuple<in_addr_t, in_port_t, uint32_t>> *queue,
-                                  in_addr_t ip,
-                                  in_port_t port,
-                                  uint32_t uid) {
-    for (auto log : *queue) {
+bool UdpWrapper::payload_already_received(in_addr_t ip,
+                                          in_port_t port,
+                                          uint32_t uid) {
+    boost::mutex::scoped_lock lock(m_received_queue_);
+    for (auto log : received_queue_) {
         if (std::get<0>(log) == ip && std::get<1>(log) == port && std::get<2>(log) == uid) {
             return true;
         }
     }
 
     // Entry is not exists in the log
-    (*queue).push_front(std::make_tuple(ip, port, uid));
-    if ((*queue).size() > UDP_RECEIVER_QUEUE_SIZE)
-        (*queue).pop_back();
+    received_queue_.push_front(std::make_tuple(ip, port, uid));
+    if (received_queue_.size() > UDP_RECEIVER_QUEUE_SIZE)
+        received_queue_.pop_back();
     return false;
 }

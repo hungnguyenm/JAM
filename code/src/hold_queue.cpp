@@ -14,9 +14,14 @@ HoldQueue::~HoldQueue() {
 
 }
 
-// need to take userhandler inside
-
 void HoldQueue::AddMessageToQueue(Payload payload) {
+    // TODO: change this - for JAM testing
+    StreamCommunicator::SendMessage(user_handler_pipe_,
+                                    payload.GetUsername(),
+                                    payload.GetMessage());
+
+    return;
+
     if (payload.GetType() == CHAT_MSG) {
         delivery_queue_.push_back(payload);
     }
@@ -42,9 +47,6 @@ void HoldQueue::Process(Payload payload) {
 
 
         }
-
-        // TODO: change this - for JAM testing
-        delivery_queue_.clear();
 
     } while (delivery_queue_.size() > 0);
 }

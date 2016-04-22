@@ -124,7 +124,6 @@ void JAM::StartAsClient(const char *user_name,
                     cerr << "Failed to hand-shake with server!" << endl;
                     exit(1);
                 }
-
             }
         }
         goto exit;
@@ -196,7 +195,6 @@ void JAM::Main() {
                 }
 
                 if (queues_.try_pop_udp_crash(addr)) {
-                    // TODO: clear history queue for crash/left client
                     has_data = true;
                     if (clientManager_.RemoveClient(addr, &username)) {
                         DCOUT("INFO: JAM - Client unreachable at " +
@@ -207,6 +205,9 @@ void JAM::Main() {
                         if (leaderManager_.is_leader(addr)) {
                             leaderManager_.LeaderCrash();
                         }
+
+                        // Clear history
+                        udpWrapper_.ClearReceivedHistory(&addr);
 
                         // Rebuild payload to notify all
                         payload.clear();
@@ -236,6 +237,7 @@ void JAM::Main() {
                                 holdQueue_.AddMessageToQueue(payload);
                             }
                             break;
+
                         case STATUS_MSG:
                             switch (payload.GetStatus()) {
                                 case CLIENT_JOIN:
@@ -261,6 +263,7 @@ void JAM::Main() {
                                     if (clientManager_.RemoveClient(addr, &username)) {
                                         cout << "NOTICE - " << username << " left the chat." << endl;
                                     }
+                                    udpWrapper_.ClearReceivedHistory(&addr);
                                     break;
                                 case CLIENT_CRASH:
                                     if (ClientManager::DecodeSingleAddress((uint8_t *) payload.GetMessage().c_str(),
@@ -269,6 +272,7 @@ void JAM::Main() {
                                         if (clientManager_.RemoveClient(addr, &username)) {
                                             cout << "NOTICE - " << username << " crashed." << endl;
                                         }
+                                        udpWrapper_.ClearReceivedHistory(&addr);
                                     } else {
                                         DCERR("ERROR: JAM - Failed to decode sockaddr_in of crash info.");
                                     }
@@ -279,11 +283,13 @@ void JAM::Main() {
                                     if (clientManager_.RemoveClient(addr, &username)) {
                                         cout << "NOTICE - " << username << " left the chat." << endl;
                                     }
+                                    udpWrapper_.ClearReceivedHistory(&addr);
                                     break;
                                 default:
                                     break;
                             }
                             break;
+
                         case ELECTION_MSG:
                             leaderManager_.HandleElectionMessage(payload);
                             if (payload.GetElectionCommand() == ELECT_WIN) {
@@ -291,6 +297,7 @@ void JAM::Main() {
                                 udpWrapper_.LeaderRecover(&addr);
                             }
                             break;
+
                         case RECOVER_MSG:
                             switch (payload.GetRecoverCommand()) {
                                 case MSG_LOST:
@@ -302,6 +309,7 @@ void JAM::Main() {
                                     break;
                             }
                             break;
+
                         default:
                             break;
                     }
