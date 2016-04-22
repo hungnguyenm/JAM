@@ -6,7 +6,6 @@
 
 LeaderManager::LeaderManager(CentralQueues* queues, ClientManager* clientManager) :
         queues_(queues), clientManager_(clientManager) {
-    StartLeaderHeartbeat();
 }
 
 ClientInfo* LeaderManager::GetCurrentLeader() {
@@ -191,6 +190,7 @@ void LeaderManager::HandleElectionMessage(Payload msg)
 void LeaderManager::StartLeaderHeartbeat() {
     boost::mutex::scoped_lock lock(m_leader_);
 
+    DCOUT("Heartbeat started");
     // StopLeaderHeartBeat();
 
     heartbeatThread_ = new boost::thread(boost::bind(&LeaderManager::HeartBeatPing, this));
@@ -211,5 +211,7 @@ void LeaderManager::StopLeaderHeartBeat() {
     if(heartbeatThread_ != nullptr) {
         heartbeatThread_->interrupt();
         delete heartbeatThread_;
+        DCOUT("Heartbeat started");
+
     }
 }
