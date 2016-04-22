@@ -6,7 +6,6 @@
 
 LeaderManager::LeaderManager(CentralQueues* queues, ClientManager* clientManager) :
         queues_(queues), clientManager_(clientManager) {
-    StartLeaderHeartbeat();
 }
 
 ClientInfo* LeaderManager::GetCurrentLeader() {
@@ -61,8 +60,11 @@ void LeaderManager::ReceivedPing(Payload ping) {
 bool LeaderManager::PingLeader() {
     ClientInfo* leader = GetCurrentLeader();
 
-    if(leader == nullptr || is_curr_client_leader()) {
+    if(leader == nullptr) {
         DCOUT("Election in progress/or no clients, no heartbeat");
+        return false;
+    } else if (is_curr_client_leader()) {
+        DCOUT("I am leader, no heartbeat");
         return false;
     }
 
@@ -188,6 +190,7 @@ void LeaderManager::HandleElectionMessage(Payload msg)
 void LeaderManager::StartLeaderHeartbeat() {
     boost::mutex::scoped_lock lock(m_leader_);
 
+    DCOUT("Heartbeat started");
     // StopLeaderHeartBeat();
 
     heartbeatThread_ = new boost::thread(boost::bind(&LeaderManager::HeartBeatPing, this));
@@ -208,5 +211,7 @@ void LeaderManager::StopLeaderHeartBeat() {
     if(heartbeatThread_ != nullptr) {
         heartbeatThread_->interrupt();
         delete heartbeatThread_;
+        DCOUT("Heartbeat started");
+
     }
 }
