@@ -80,8 +80,6 @@ void LeaderManager::StartElection() {
     electionInProgress_ = true;
     cancelledElection_ = false;
 
-    StopLeaderHeartBeat();
-
     auto higherOrderClients = clientManager_->GetHigherOrderClients();
     sentElectionCandidatesOut_ = higherOrderClients.size();
 
@@ -90,15 +88,12 @@ void LeaderManager::StartElection() {
 
     // Declare yourself to be the winner and tell all clients that you are the winner
     if (higherOrderClients.size() == 0) {
-        auto clients = clientManager_->GetAllClients();
-        payload.SetElectionCommand(ElectionCommand::ELECT_WIN);
-
-        for (int i = 0; i < clients.size(); i++) {
-            sockaddr_in addr = clients[i].get_sock_address();
-            payload.SetAddress(&addr);
-
+        if(clientManager_->get_client_count() > 1) {
+            payload.SetElectionCommand(ElectionCommand::ELECT_WIN);
             queues_->push(CentralQueues::LEADER_OUT, payload);
         }
+        clientManager_->set_new_leader(clientManager_->get_self_address());
+        
         return;
     }
 
