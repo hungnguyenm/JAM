@@ -183,8 +183,8 @@ void JAM::Main() {
             do {
                 has_data = false;
                 if (!queues_.is_empty(CentralQueues::QueueType::USER_OUT) &&
-                        !leaderManager_.is_election_happening() &&
-                        leaderManager_.GetLeaderAddress(&addr)) {
+                    !leaderManager_.is_election_happening() &&
+                    leaderManager_.GetLeaderAddress(&addr)) {
                     // These conditions are for reducing computation overhead in case no leader
                     if (queues_.try_pop_user_out(payload)) {
                         has_data = true;
@@ -199,9 +199,10 @@ void JAM::Main() {
                 if (queues_.try_pop_udp_crash(addr)) {
                     has_data = true;
                     bool is_leader = leaderManager_.is_leader(addr);
+                    leaderManager_.UdpCrashDetected(addr);
                     if (clientManager_.RemoveClient(addr, &username)) {
                         DCOUT("INFO: JAM - Client unreachable at " +
-                                      ClientManager::StringifyClient(addr));
+                              ClientManager::StringifyClient(addr));
                         cout << "NOTICE - " << username << " crashed." << endl;
 
                         // Notify leader manager
@@ -258,7 +259,7 @@ void JAM::Main() {
                                     addr = *payload.GetAddress();
                                     if (clientManager_.AddClient(addr, payload.GetUsername(), false)) {
                                         cout << "NOTICE - " << payload.GetUsername() << " joined on " <<
-                                                clientManager_.StringifyClient(addr) << "." << endl;
+                                        clientManager_.StringifyClient(addr) << "." << endl;
                                     }
                                     break;
                                 case CLIENT_LEAVE:
@@ -331,6 +332,10 @@ void JAM::Main() {
                                     // This client is not the leader, need to ping the leader
                                     udpWrapper_.SendPayloadSingle(payload, &addr);
                                 }
+                            } else if (payload.GetStatus() == PING_TARGET) {
+                                // Handle targeted ping
+                                multicast_list = leaderManager_.GetHigherOrderPingTargets();
+                                udpWrapper_.SendPayloadList(payload, &multicast_list);
                             }
                             break;
                         case ELECTION_MSG:
