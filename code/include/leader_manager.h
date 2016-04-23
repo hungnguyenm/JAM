@@ -30,8 +30,6 @@ public:
     void UdpCrashDetected(const sockaddr_in& addr);
     std::vector<sockaddr_in> GetHigherOrderPingTargets();
 
-    bool Ping();
-
 private:
     boost::thread* heartbeatThread_;
     CentralQueues* queues_;                        // Central queues for inter-communication
@@ -41,12 +39,10 @@ private:
     bool cancelledElection_ = false;
     bool electionInProgress_ = false;
 
-    boost::mutex m_leader_;
-
     void StartElection();
     void HeartBeatPing();
 
-    void RemoveHigherOrderClient(const ClientInfo& info);
+    bool RemoveHigherOrderClient(const ClientInfo& info);
 };
 
 

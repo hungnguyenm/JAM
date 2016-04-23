@@ -116,18 +116,10 @@ void LeaderManager::LeaderCrash() {
 }
 
 void LeaderManager::UdpCrashDetected(const sockaddr_in& addr) {
-    RemoveHigherOrderClient(addr);
 
-    if (higherOrderClients_.size() > 0 || cancelledElection_) {
-        return;
+    if(RemoveHigherOrderClient(addr)) {
+        StartElection();
     }
-
-    Payload msg;
-    DCOUT("INFO: LM - I won the election (because of crash)");
-    msg.SetType(MessageType::ELECTION_MSG);
-    msg.SetElectionCommand(ELECT_WIN);
-    queues_->push(CentralQueues::LEADER_OUT, msg);
-    clientManager_->set_new_leader(clientManager_->get_self_address());
 }
 
 std::vector<sockaddr_in> LeaderManager::GetHigherOrderPingTargets() {
@@ -145,7 +137,6 @@ void LeaderManager::StartElection() {
     cancelledElection_ = false;
 
     auto higherOrderClients = clientManager_->GetHigherOrderClients();
-//    sentElectionCandidatesOut_ = higherOrderClients.size();
 
     Payload payload;
     payload.SetType(MessageType::ELECTION_MSG);
@@ -176,11 +167,6 @@ void LeaderManager::StartElection() {
     }
 }
 
-bool LeaderManager::Ping() {
-
-    return true;
-}
-
 void LeaderManager::HeartBeatPing() {
     while (true) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(PING_INTERVAL));
@@ -202,11 +188,13 @@ void LeaderManager::HeartBeatPing() {
     }
 }
 
-void LeaderManager::RemoveHigherOrderClient(const ClientInfo& info) {
-    for(auto it = higherOrderClients_.begin(); it != higherOrderClients_.end(); ++i) {
-        if(info == i) {
+bool LeaderManager::RemoveHigherOrderClient(const ClientInfo& info) {
+    for(auto it = higherOrderClients_.begin(); it != higherOrderClients_.end(); ++it) {
+        if(info == *it) {
             higherOrderClients_.erase(it);
-            break;
+            return true;
         }
     }
+
+    return false;
 }
