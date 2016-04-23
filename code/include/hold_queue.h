@@ -23,13 +23,8 @@ public:                    // begin public section
     bool GetPayloadInHistory(int32_t value, Payload* payload);
 
     void SetUserHandlerPipe(int pipeId);
-    int GetUserHandlerPipe();
-
 
     void ClearQueue();
-
-
-
 
 private:
     CentralQueues* queues_;
@@ -39,7 +34,6 @@ private:
     int user_handler_pipe_;
     int expected_order_;
     int recovery_counter_;
-
 };
 
 #endif //JAM_HOLD_QUEUE_H

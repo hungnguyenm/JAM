@@ -25,7 +25,7 @@ void HoldQueue::AddMessageToQueue(Payload payload) {
 
 void HoldQueue::ProcessPayloads() {
 
-    int payload_order = delivery_queue_[0].GetOrder()
+    int payload_order = delivery_queue_[0].GetOrder();
     while(delivery_queue_.size() > 0 && payload_order == expected_order_) {
         Payload payload = delivery_queue_[0];
 
@@ -74,12 +74,10 @@ void HoldQueue::SetUserHandlerPipe(int pipeId) {
     user_handler_pipe_ = pipeId;
 }
 
-int HoldQueue::GetUserHandlerPipe(){
-    return user_handler_pipe_;
-}
-
 void HoldQueue::ClearQueue() {
     delivery_queue_.clear();
+    history_queue_.clear();
+    expected_order_ = DEFAULT_FIRST_ORDER;
 }
 
 
