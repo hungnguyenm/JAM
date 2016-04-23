@@ -27,21 +27,22 @@ public:
     void ReceivedPing(Payload ping);
     void LeaderCrash();
 
-    bool Ping();
+    void UdpCrashDetected(const sockaddr_in& addr);
+    std::vector<sockaddr_in> GetHigherOrderPingTargets();
 
 private:
     boost::thread* heartbeatThread_;
     CentralQueues* queues_;                        // Central queues for inter-communication
     ClientManager* clientManager_;
+    std::vector<sockaddr_in> higherOrderClients_;
 
-    long sentElectionCandidatesOut_;
     bool cancelledElection_ = false;
     bool electionInProgress_ = false;
 
     void StartElection();
     void HeartBeatPing();
 
-    boost::mutex m_leader_;
+    bool RemoveHigherOrderClient(const ClientInfo& info);
 };
 
 

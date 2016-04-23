@@ -28,7 +28,7 @@ public:
     void print_client();
 
     bool operator<(const ClientInfo& other);
-    bool operator==(const ClientInfo& other);
+    bool operator==(const ClientInfo& other) const;
 private:
 
     sockaddr_in client_;

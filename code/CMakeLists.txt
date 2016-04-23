@@ -19,18 +19,11 @@ endif ()
 
 set(MAIN_HEADERS include/config.h include/concurrent_queue.h include/concurrent_ticket.h
         include/central_queues.h include/serializer_helper.h include/stream_communicator.h
-        include/payload.h include/udp_wrapper.h include/user_handler.h include/client_manager.h
+        include/leader_manager.h include/payload.h include/udp_wrapper.h include/user_handler.h include/client_manager.h
         include/client_info.h include/hold_queue.h include/jam.h)
 set(MAIN_SOURCES src/leader_manager.cpp src/payload.cpp src/central_queues.cpp src/serializer_helper.cpp
         src/udp_wrapper.cpp src/user_handler.cpp src/client_info.cpp src/client_manager.cpp
         src/hold_queue.cpp src/jam.cpp)
-
-set(DEV_B_HEADERS include/client_info.h include/serializer_helper.h include/hold_queue.h
-        include/client_manager.h include/payload.h include/config.h include/concurrent_queue.h
-        include/central_queues.h)
-set(DEV_B_SOURCES src/dev/dev_b.cpp src/client_manager.cpp src/client_info.cpp
-        src/payload.cpp src/serializer_helper.cpp src/hold_queue.cpp src/central_queues.cpp )
-add_executable(jam-dev_b ${DEV_B_HEADERS} ${DEV_B_SOURCES})
 
 # Executables depend on BOOST:
 add_executable(jam-main ${MAIN_HEADERS} ${MAIN_SOURCES} src/main.cpp)
@@ -38,11 +31,6 @@ add_executable(jam-main ${MAIN_HEADERS} ${MAIN_SOURCES} src/main.cpp)
 add_executable(jam-dev_h_1 ${MAIN_HEADERS} ${MAIN_SOURCES} src/dev/dev_h_1.cpp)
 add_executable(jam-dev_h_2 ${MAIN_HEADERS} ${MAIN_SOURCES} src/dev/dev_h_2.cpp)
 add_executable(jam-dev_h_3 ${MAIN_HEADERS} ${MAIN_SOURCES} src/dev/dev_h_3.cpp)
-
-set(DEV_C_SOURCES src/dev/dev_c.cpp src/user_handler.cpp src/callable.cpp src/payload.cpp
-        src/central_queues.cpp src/leader_manager.cpp src/client_info.cpp src/client_manager.cpp
-        src/serializer_helper.cpp)
-add_executable(jam-dev_c ${DEV_C_SOURCES})
 
 # Test files
 set(TEST_CLIENT_MANAGER_SOURCES test/test_client_manager.cpp src/client_manager.cpp)
@@ -61,8 +49,6 @@ if (Boost_FOUND)
     target_link_libraries(jam-dev_h_1 ${Boost_LIBRARIES})
     target_link_libraries(jam-dev_h_2 ${Boost_LIBRARIES})
     target_link_libraries(jam-dev_h_3 ${Boost_LIBRARIES})
-    target_link_libraries(jam-dev_c ${Boost_LIBRARIES})
-    target_link_libraries(jam-dev_b ${Boost_LIBRARIES})
 
     target_link_libraries(test-udp_wrapper ${Boost_LIBRARIES})
     target_link_libraries(test-hold_queue ${Boost_LIBRARIES})

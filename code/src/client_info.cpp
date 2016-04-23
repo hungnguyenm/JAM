@@ -64,7 +64,7 @@ bool ClientInfo::operator<(const ClientInfo& other) {
 #undef CMP
 }
 
-bool ClientInfo::operator==(const ClientInfo& other) {
+bool ClientInfo::operator==(const ClientInfo& other) const {
         return ((client_.sin_addr.s_addr == other.client_.sin_addr.s_addr) &&
                 (client_.sin_port == other.client_.sin_port));
 }

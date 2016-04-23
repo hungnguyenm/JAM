@@ -183,8 +183,8 @@ void JAM::Main() {
             do {
                 has_data = false;
                 if (!queues_.is_empty(CentralQueues::QueueType::USER_OUT) &&
-                        !leaderManager_.is_election_happening() &&
-                        leaderManager_.GetLeaderAddress(&addr)) {
+                    !leaderManager_.is_election_happening() &&
+                    leaderManager_.GetLeaderAddress(&addr)) {
                     // These conditions are for reducing computation overhead in case no leader
                     if (queues_.try_pop_user_out(payload)) {
                         has_data = true;
@@ -198,16 +198,10 @@ void JAM::Main() {
 
                 if (queues_.try_pop_udp_crash(addr)) {
                     has_data = true;
-                    bool is_leader = leaderManager_.is_leader(addr);
                     if (clientManager_.RemoveClient(addr, &username)) {
                         DCOUT("INFO: JAM - Client unreachable at " +
-                                      ClientManager::StringifyClient(addr));
+                              ClientManager::StringifyClient(addr));
                         cout << "NOTICE - " << username << " crashed." << endl;
-
-                        // Notify leader manager
-                        if (is_leader) {
-                            leaderManager_.LeaderCrash();
-                        }
 
                         // Clear history
                         udpWrapper_.ClearReceivedHistory(&addr);
@@ -222,6 +216,7 @@ void JAM::Main() {
                         multicast_list = clientManager_.GetAllClientSockAddressWithoutMe();
                         udpWrapper_.SendPayloadList(payload, &multicast_list);
                     }
+                    leaderManager_.UdpCrashDetected(addr);
                 }
 
                 if (queues_.try_pop_udp_in(payload)) {
@@ -258,7 +253,7 @@ void JAM::Main() {
                                     addr = *payload.GetAddress();
                                     if (clientManager_.AddClient(addr, payload.GetUsername(), false)) {
                                         cout << "NOTICE - " << payload.GetUsername() << " joined on " <<
-                                                clientManager_.StringifyClient(addr) << "." << endl;
+                                        clientManager_.StringifyClient(addr) << "." << endl;
                                     }
                                     break;
                                 case CLIENT_LEAVE:
@@ -281,11 +276,11 @@ void JAM::Main() {
                                     }
                                     break;
                                 case LEADER_LEAVE:
-                                    leaderManager_.LeaderCrash();
                                     addr = *payload.GetAddress();
                                     if (clientManager_.RemoveClient(addr, &username)) {
                                         cout << "NOTICE - " << username << " left the chat." << endl;
                                     }
+                                    leaderManager_.UdpCrashDetected(addr);
                                     udpWrapper_.ClearReceivedHistory(&addr);
                                     break;
                                 default:
@@ -298,11 +293,6 @@ void JAM::Main() {
                             if (payload.GetElectionCommand() == ELECT_WIN) {
                                 addr = *payload.GetAddress();
                                 udpWrapper_.LeaderRecover(&addr);
-
-                                if (leaderManager_.is_curr_client_leader()) {
-                                    // This client is the leader now, need to set order to the latest one
-                                    order_ = last_witness_order_ + 1;
-                                }
                             }
                             break;
 
@@ -336,13 +326,21 @@ void JAM::Main() {
                                     // This client is not the leader, need to ping the leader
                                     udpWrapper_.SendPayloadSingle(payload, &addr);
                                 }
+                            } else if (payload.GetStatus() == PING_TARGET) {
+                                // Handle targeted ping
+                                multicast_list = leaderManager_.GetHigherOrderPingTargets();
+                                udpWrapper_.SendPayloadList(payload, &multicast_list);
                             }
                             break;
                         case ELECTION_MSG:
                             if (payload.GetElectionCommand() == ELECT_WIN) {
                                 // Distribute to all
-                                multicast_list = clientManager_.GetAllClientSockAddress();
+                                multicast_list = clientManager_.GetAllClientSockAddressWithoutMe();
                                 udpWrapper_.SendPayloadList(payload, &multicast_list);
+                                // Do recovery
+                                order_ = last_witness_order_ + 1;
+                                addr = clientManager_.get_self_address();
+                                udpWrapper_.LeaderRecover(&addr);
                             } else {
                                 // Targeted payload
                                 udpWrapper_.SendPayloadSingle(payload, payload.GetAddress());
