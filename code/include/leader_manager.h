@@ -41,10 +41,12 @@ private:
     bool cancelledElection_ = false;
     bool electionInProgress_ = false;
 
+    boost::mutex m_leader_;
+
     void StartElection();
     void HeartBeatPing();
 
-    boost::mutex m_leader_;
+    void RemoveHigherOrderClient(const ClientInfo& info);
 };
 
 
