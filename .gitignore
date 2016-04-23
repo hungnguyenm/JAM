@@ -2,6 +2,10 @@
 .idea/
 bin/
 
+# Build folder
+build/
+!build/README
+
 # Compiled Object files
 *.slo
 *.lo
