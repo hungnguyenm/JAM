@@ -4,11 +4,11 @@
 
 #include "../include/leader_manager.h"
 
-LeaderManager::LeaderManager(CentralQueues* queues, ClientManager* clientManager) :
+LeaderManager::LeaderManager(CentralQueues *queues, ClientManager *clientManager) :
         queues_(queues), clientManager_(clientManager) {
 }
 
-ClientInfo* LeaderManager::GetCurrentLeader() {
+ClientInfo *LeaderManager::GetCurrentLeader() {
     boost::mutex::scoped_lock lock(m_leader_);
 
     if (lastLeader_ == nullptr) {
@@ -18,17 +18,17 @@ ClientInfo* LeaderManager::GetCurrentLeader() {
     return lastLeader_;
 }
 
-bool LeaderManager::is_leader(const sockaddr_in& addr){
-    ClientInfo* leader = clientManager_->get_client_info(addr);
+bool LeaderManager::is_leader(const sockaddr_in &addr) {
+    ClientInfo *leader = clientManager_->get_client_info(addr);
 
     return (leader == nullptr) ? false : leader->is_leader();
 
 }
 
-bool LeaderManager::GetLeaderAddress(sockaddr_in* addr) {
-    ClientInfo* leader = GetCurrentLeader();
+bool LeaderManager::GetLeaderAddress(sockaddr_in *addr) {
+    ClientInfo *leader = GetCurrentLeader();
 
-    if(leader != nullptr && addr != nullptr) {
+    if (leader != nullptr && addr != nullptr) {
         *addr = leader->get_sock_address();
         return true;
     }
@@ -38,7 +38,7 @@ bool LeaderManager::GetLeaderAddress(sockaddr_in* addr) {
 
 
 bool LeaderManager::is_curr_client_leader() {
-    ClientInfo* leader = GetCurrentLeader();
+    ClientInfo *leader = GetCurrentLeader();
 
     return (leader != nullptr) ? (*leader == clientManager_->get_self_address()) : false;
 }
@@ -49,32 +49,25 @@ bool LeaderManager::is_election_happening() {
 
 
 void LeaderManager::ReceivedPing(Payload ping) {
-    ClientInfo* leader = GetCurrentLeader();
+    ClientInfo *leader = GetCurrentLeader();
 
-    if(*leader == clientManager_->get_self_address()) {
+    if (*leader == clientManager_->get_self_address()) {
         // Ping back the client since you are the leader
         queues_->push(CentralQueues::LEADER_OUT, ping);
     }
 }
 
 bool LeaderManager::PingLeader() {
-    ClientInfo* leader = GetCurrentLeader();
+    ClientInfo *leader = GetCurrentLeader();
 
-    if(leader == nullptr) {
-        DCOUT("Election in progress/or no clients, no heartbeat");
+    if (leader == nullptr) {
+        DCOUT("INFO: LM - Election in progress/or no clients, no heartbeat");
         return false;
     }
-//    else if (is_curr_client_leader()) {
-//        DCOUT("I am leader, no heartbeat");
-//        return false;
-//    }
 
     Payload payload;
     payload.SetType(MessageType::STATUS_MSG);
     payload.SetStatus(Status::PING);
-
-    sockaddr_in addr =  leader->get_sock_address();
-    payload.SetAddress(&addr);
 
     queues_->push(CentralQueues::QueueType::LEADER_OUT, payload);
     return true;
@@ -87,7 +80,7 @@ void LeaderManager::LeaderCrash() {
 void LeaderManager::StartElection() {
     boost::mutex::scoped_lock lock(m_leader_);
 
-    if(electionInProgress_) {
+    if (electionInProgress_) {
         return;
     }
 
@@ -107,8 +100,8 @@ void LeaderManager::StartElection() {
         auto clients = clientManager_->GetAllClients();
         payload.SetElectionCommand(ElectionCommand::ELECT_WIN);
 
-        for(int i = 0; i < clients.size(); i++) {
-            sockaddr_in  addr = clients[i].get_sock_address();
+        for (int i = 0; i < clients.size(); i++) {
+            sockaddr_in addr = clients[i].get_sock_address();
             payload.SetAddress(&addr);
 
             queues_->push(CentralQueues::LEADER_OUT, payload);
@@ -120,7 +113,7 @@ void LeaderManager::StartElection() {
     for (int i = 0; i < higherOrderClients.size(); i++) {
         payload.SetElectionCommand(ElectionCommand::ELECT_CANDIDATE);
 
-        for(int i = 0; i < higherOrderClients.size(); i++) {
+        for (int i = 0; i < higherOrderClients.size(); i++) {
             sockaddr_in addr = higherOrderClients[i].get_sock_address();
             payload.SetAddress(&addr);
 
@@ -130,21 +123,20 @@ void LeaderManager::StartElection() {
 }
 
 
-void LeaderManager::HandleElectionMessage(Payload msg)
-{
+void LeaderManager::HandleElectionMessage(Payload msg) {
     boost::mutex::scoped_lock lock(m_leader_);
 
     ClientInfo selfInfo = ClientInfo(clientManager_->get_self_address());
     auto clients = clientManager_->GetAllClients();
 
-    switch(msg.GetElectionCommand()) {
+    switch (msg.GetElectionCommand()) {
         case ElectionCommand::ELECT_START:
             StartElection();
             break;
 
         case ElectionCommand::ELECT_CANDIDATE:
             // check if the client that sent you the message is bigger
-            if(selfInfo < *msg.GetAddress()) {
+            if (selfInfo < *msg.GetAddress()) {
                 msg.SetElectionCommand(ElectionCommand::ELECT_YIELD);
                 queues_->push(CentralQueues::LEADER_OUT, msg);
             } else {
@@ -163,18 +155,12 @@ void LeaderManager::HandleElectionMessage(Payload msg)
         case ElectionCommand::ELECT_YIELD:
             --sentElectionCandidatesOut_;
 
-            if(sentElectionCandidatesOut_ > 0 || cancelledElection_) {
+            if (sentElectionCandidatesOut_ > 0 || cancelledElection_) {
                 break;
             }
 
             msg.SetElectionCommand(ELECT_WIN);
-
-//            for(int i = 0; i < clients.size(); i++) {
-//                sockaddr_in addr = clients[i].get_sock_address();
-//                msg.SetAddress(&addr);
-
             queues_->push(CentralQueues::LEADER_OUT, msg);
-//            }
 
             clientManager_->set_new_leader(clientManager_->get_self_address());
             break;
@@ -191,16 +177,16 @@ void LeaderManager::HandleElectionMessage(Payload msg)
 void LeaderManager::StartLeaderHeartbeat() {
     boost::mutex::scoped_lock lock(m_leader_);
 
-    DCOUT("Heartbeat started");
+    DCOUT("INFO: LM - Heartbeat started");
     // StopLeaderHeartBeat();
 
     heartbeatThread_ = new boost::thread(boost::bind(&LeaderManager::HeartBeatPing, this));
 }
 
 void LeaderManager::HeartBeatPing() {
-    while(true) {
+    while (true) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(PING_INTERVAL));
-        if(electionInProgress_ == false) {
+        if (electionInProgress_ == false) {
             PingLeader();
         }
     }
@@ -209,10 +195,9 @@ void LeaderManager::HeartBeatPing() {
 void LeaderManager::StopLeaderHeartBeat() {
     boost::mutex::scoped_lock lock(m_leader_);
 
-    if(heartbeatThread_ != nullptr) {
+    if (heartbeatThread_ != nullptr) {
         heartbeatThread_->interrupt();
         delete heartbeatThread_;
-        DCOUT("Heartbeat started");
-
+        DCOUT("INFO: LM - Heartbeat started");
     }
 }

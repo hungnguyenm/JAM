@@ -336,7 +336,14 @@ void JAM::Main() {
                             }
                             break;
                         case ELECTION_MSG:
-                            udpWrapper_.SendPayloadSingle(payload, payload.GetAddress());
+                            if (payload.GetElectionCommand() == ELECT_WIN) {
+                                // Distribute to all
+                                multicast_list = clientManager_.GetAllClientSockAddress();
+                                udpWrapper_.SendPayloadList(payload, &multicast_list);
+                            } else {
+                                // Targeted payload
+                                udpWrapper_.SendPayloadSingle(payload, payload.GetAddress());
+                            }
                             break;
                         default:
                             break;
