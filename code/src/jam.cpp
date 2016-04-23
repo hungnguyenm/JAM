@@ -34,20 +34,21 @@ void JAM::StartAsLeader(const char *user_name,
     cout << user_name << " is starting a new chat group!" << endl;
     user_name_ = user_name;
 
-    // Detect interface address
-    sockaddr_in servaddr;
-    if (GetInterfaceAddress(user_interface, user_port, &servaddr)) {
-        // Add creator as leader
-        clientManager_.AddClient(servaddr, user_name, true);
-        clientManager_.set_self_address(servaddr);
-    } else {
-        cerr << "Failed to detect network interface!" << endl;
-        exit(1);
-    }
-
     // Start UDP Wrapper
-    if (udpWrapper_.Start(user_port) == SUCCESS) {
-        cout << "Succeeded, listening on" << GetInterfaceAddressStr(user_interface, user_port) <<
+    uint16_t bind_port;
+    sockaddr_in servaddr;
+    if (udpWrapper_.Start(user_port, &bind_port) == SUCCESS) {
+        // Detect interface address
+        if (GetInterfaceAddress(user_interface, bind_port, &servaddr)) {
+            // Add creator as leader
+            clientManager_.AddClient(servaddr, user_name, true);
+            clientManager_.set_self_address(servaddr);
+        } else {
+            cerr << "Failed to detect network interface!" << endl;
+            exit(1);
+        }
+
+        cout << "Succeeded, listening on " << clientManager_.StringifyClient(servaddr) <<
         ". Current users:" << endl;
         clientManager_.PrintClients();
     } else {
@@ -74,17 +75,18 @@ void JAM::StartAsClient(const char *user_name,
     cout << user_name << " is joining a chat group at " << serv_addr << ":" << serv_port << "!" << endl;
     user_name_ = user_name;
 
-    // Detect interface address
-    sockaddr_in client_addr;
-    if (GetInterfaceAddress(user_interface, user_port, &client_addr)) {
-        clientManager_.set_self_address(client_addr);
-    } else {
-        cerr << "Failed to detect network interface!" << endl;
-        exit(1);
-    }
-
     // Start UDP Wrapper
-    if (udpWrapper_.Start(user_port) == SUCCESS) {
+    uint16_t bind_port;
+    sockaddr_in client_addr;
+    if (udpWrapper_.Start(user_port, &bind_port) == SUCCESS) {
+        // Detect interface address
+        if (GetInterfaceAddress(user_interface, bind_port, &client_addr)) {
+            clientManager_.set_self_address(client_addr);
+        } else {
+            cerr << "Failed to detect network interface!" << endl;
+            exit(1);
+        }
+
         cout << "Listening on " << clientManager_.StringifyClient(client_addr) << endl;
     } else {
         cerr << "Failed to start UDP service!" << endl;
@@ -196,13 +198,14 @@ void JAM::Main() {
 
                 if (queues_.try_pop_udp_crash(addr)) {
                     has_data = true;
+                    bool is_leader = leaderManager_.is_leader(addr);
                     if (clientManager_.RemoveClient(addr, &username)) {
                         DCOUT("INFO: JAM - Client unreachable at " +
                                       ClientManager::StringifyClient(addr));
                         cout << "NOTICE - " << username << " crashed." << endl;
 
                         // Notify leader manager
-                        if (leaderManager_.is_leader(addr)) {
+                        if (is_leader) {
                             leaderManager_.LeaderCrash();
                         }
 
@@ -432,7 +435,7 @@ string JAM::GetInterfaceAddressStr(const char *interface, const char *port) {
     return ss.str();
 }
 
-bool JAM::GetInterfaceAddress(const char *interface, const char *port, sockaddr_in *addr) {
+bool JAM::GetInterfaceAddress(const char *interface, uint16_t port, sockaddr_in *addr) {
     bool ret = false;
     ifaddrs *ifap, *ifa;
     char *name;
@@ -444,7 +447,7 @@ bool JAM::GetInterfaceAddress(const char *interface, const char *port, sockaddr_
             if (strcmp(name, interface) == 0) {     // Only select this interface
                 ret = true;
                 memcpy(addr, ifa->ifa_addr, sizeof(sockaddr_in));
-                addr->sin_port = (in_port_t) htons(atoi(port));
+                addr->sin_port = port;
             }
         }
     }

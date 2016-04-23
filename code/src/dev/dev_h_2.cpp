@@ -5,7 +5,7 @@ using namespace std;
 int main(int argc, char** argv) {
     const char *user_name = "Alice";
     const char *user_interface = DEFAULT_INTERFACE;
-    const char *user_port = DEFAULT_PORT_DEBUG_1;
+    const char *user_port = DEFAULT_PORT;
     const char *serv_addr = "127.0.0.1";
     const char *serv_port = DEFAULT_PORT;
 

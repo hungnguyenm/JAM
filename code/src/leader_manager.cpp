@@ -78,6 +78,8 @@ void LeaderManager::LeaderCrash() {
 }
 
 void LeaderManager::StartElection() {
+    DCOUT("INFO: LM - Start election");
+
     boost::mutex::scoped_lock lock(m_leader_);
 
     if (electionInProgress_) {
@@ -161,7 +163,7 @@ void LeaderManager::HandleElectionMessage(Payload msg) {
 
             msg.SetElectionCommand(ELECT_WIN);
             queues_->push(CentralQueues::LEADER_OUT, msg);
-
+            DCOUT("INFO: LM - Declaring election win");
             clientManager_->set_new_leader(clientManager_->get_self_address());
             break;
 
@@ -169,6 +171,7 @@ void LeaderManager::HandleElectionMessage(Payload msg) {
             // Set the new leader here
             electionInProgress_ = false;
             clientManager_->set_new_leader(*msg.GetAddress());
+            DCOUT("INFO: LM - Another client wins election");
             break;
 
     }
