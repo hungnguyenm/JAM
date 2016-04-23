@@ -1,5 +1,5 @@
 /**
- * Payload object sent over the network via UDP wrapper.
+ * Payload object sent over the network via UDP wrapper with encryption.
  *
  * There are 3 different payloads:
  *  + Normal communication payload
@@ -7,10 +7,10 @@
  *  + Self-terminate payload (bound back to terminate threads)
  *
  * @author: Hung Nguyen
- * @version 1.0 03/31/16
+ * @version 1.0 04/23/16
  */
 
-#include "../include/payload.h"
+#include "../include/payload_secure.h"
 
 using namespace std;
 

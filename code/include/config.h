@@ -13,18 +13,26 @@
 #else
 #define DEFAULT_INTERFACE           "en0"   // Default UDP interface
 #endif
+
+#ifdef SECURE
+#define ENCRYPT_SET                 1       // Security flag
+#else
+#define ENCRYPT_SET                 0
+#endif
+#define PASS_PHRASE                 "jamp"  // Encryption pass-phrase
+
 #define DEFAULT_PORT                "9346"  // Default UDP datagram port
 
 #define MIN_PORT                    9000    // Port must be greater than MIN_PORT
 #define MAX_UDP_BIND_RETRIES        10      // Number of retries for different UDP port to bind
 
-#define MAX_MESSAGE_LENGTH          100     // Maximum message length per payload
+#define MAX_MESSAGE_LENGTH          200     // Maximum message length per payload
 #define MAX_USER_NAME_LENGTH        20      // Maximum displayed user name length
-#define MAX_BUFFER_LENGTH           200     // Maximum UDP socket buffer length
+#define MAX_BUFFER_LENGTH           500     // Maximum UDP socket buffer length
 #define DEFAULT_NO_ORDER            -1      // Default value for payload
 #define DEFAULT_FIRST_ORDER         0       // Default order for the first message
 
-#define MAX_HOLDBACK_QUEUE_LENGTH   100     // Maximum length of hold back and history queue
+#define MAX_HOLDBACK_QUEUE_LENGTH   200     // Maximum length of hold back and history queue
 #define NUM_MISSING_ORDER           5       // Number of tries for missing
 
 #define MAX_CLIENT_BUFFER_LENGTH    100     // Maximum client list encoded length
@@ -56,11 +64,6 @@
 #define DCOUT(str) do { } while ( false )
 #define DCERR(str) do { } while ( false )
 #endif
-
-enum EncryptOption {
-    NO_ENCRYPTION,
-    ENCRYPT
-};
 
 enum JamStatus {
     SUCCESS								= MK_ERROR(0x0000),

@@ -1,5 +1,5 @@
 /**
- * Payload object sent over the network via UDP wrapper.
+ * Payload object sent over the network via UDP wrapper with encryption.
  *
  * There are 3 different payloads:
  *  + Normal communication payload
@@ -7,7 +7,7 @@
  *  + Self-terminate payload (bound back to terminate threads)
  *
  * @author: Hung Nguyen
- * @version 1.0 03/31/16
+ * @version 1.0 04/23/16
  */
 
 #ifndef JAM_PAYLOAD_H
@@ -22,6 +22,7 @@
 
 #include <sys/socket.h>
 #include <netdb.h>
+#include <openssl/aes.h>
 
 #define QUIT_MSG_LENGTH 4       // Self-terminate message for UdpReader (must be different than payload length)
 
