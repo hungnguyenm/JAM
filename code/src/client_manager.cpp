@@ -56,6 +56,10 @@ std::vector<sockaddr_in> ClientManager::GetAllClientSockAddress() {
     return vectorOfSockAddress;
 }
 
+int ClientManager::get_client_count() {
+    return client_list_.size();
+}
+
 vector<ClientInfo> ClientManager::GetHigherOrderClients(ClientInfo client) {
     int i;
     vector<ClientInfo> higher_order_clients;

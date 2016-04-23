@@ -93,7 +93,7 @@ void LeaderManager::StartElection() {
             queues_->push(CentralQueues::LEADER_OUT, payload);
         }
         clientManager_->set_new_leader(clientManager_->get_self_address());
-        
+
         return;
     }
 
