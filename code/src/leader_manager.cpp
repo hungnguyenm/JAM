@@ -96,6 +96,8 @@ void LeaderManager::HandleElectionMessage(Payload msg) {
             }
 
             DCOUT("INFO: LM - I won the election");
+            electionInProgress_ = false;
+            cancelledElection_ = false;
             msg.SetElectionCommand(ELECT_WIN);
             queues_->push(CentralQueues::LEADER_OUT, msg);
             clientManager_->set_new_leader(clientManager_->get_self_address());
@@ -104,6 +106,7 @@ void LeaderManager::HandleElectionMessage(Payload msg) {
         case ElectionCommand::ELECT_WIN:
             // Set the new leader here
             electionInProgress_ = false;
+            cancelledElection_ = false;
             clientManager_->set_new_leader(*msg.GetAddress());
             DCOUT("INFO: LM - Another client wins election");
             break;
@@ -111,13 +114,9 @@ void LeaderManager::HandleElectionMessage(Payload msg) {
     }
 }
 
-void LeaderManager::LeaderCrash() {
-    StartElection();
-}
-
 void LeaderManager::UdpCrashDetected(const sockaddr_in& addr) {
-
-    if(RemoveHigherOrderClient(addr)) {
+    if(RemoveHigherOrderClient(addr) ||
+            (clientManager_->get_current_leader() == nullptr && electionInProgress_ == false)) {
         StartElection();
     }
 }
@@ -129,10 +128,7 @@ std::vector<sockaddr_in> LeaderManager::GetHigherOrderPingTargets() {
 void LeaderManager::StartElection() {
     DCOUT("INFO: LM - Start election");
 
-    if (electionInProgress_) {
-        return;
-    }
-
+    higherOrderClients_.clear();
     electionInProgress_ = true;
     cancelledElection_ = false;
 
@@ -148,6 +144,9 @@ void LeaderManager::StartElection() {
             payload.SetElectionCommand(ElectionCommand::ELECT_WIN);
             queues_->push(CentralQueues::LEADER_OUT, payload);
         }
+
+        electionInProgress_ = false;
+        cancelledElection_ = false;
         clientManager_->set_new_leader(clientManager_->get_self_address());
 
         return;

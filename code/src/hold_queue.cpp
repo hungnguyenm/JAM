@@ -31,7 +31,7 @@ void HoldQueue::AddMessageToQueue(Payload payload) {
 
         delivery_queue_.push_back(payload);
         std::sort(delivery_queue_.begin(), delivery_queue_.end());
-        recovery_counter_ ++;
+        recovery_counter_++;
         ProcessPayloads();
     }
 
@@ -40,7 +40,7 @@ void HoldQueue::AddMessageToQueue(Payload payload) {
 
 void HoldQueue::ProcessPayloads() {
 
-    while(delivery_queue_.size() > 0 && delivery_queue_[0].GetOrder() == expected_order_) {
+    while (delivery_queue_.size() > 0 && delivery_queue_[0].GetOrder() == expected_order_) {
         Payload payload = delivery_queue_[0];
 
         StreamCommunicator::SendMessage(user_handler_pipe_,
@@ -59,16 +59,14 @@ void HoldQueue::ProcessPayloads() {
     }
 }
 
-bool HoldQueue::GetPayloadInHistory(int32_t order, Payload* payload) {
-    std::deque<Payload>::iterator it = history_queue_.begin();
-
-    while (it != history_queue_.end()) {
+bool HoldQueue::GetPayloadInHistory(int32_t order, Payload *payload) {
+    for (std::deque<Payload>::iterator it = history_queue_.begin(); it != history_queue_.end(); ++it) {
         if (order == it->GetOrder()) {
-            payload = &*it;
+            *payload = *it;
             return true;
         }
-        ++it;
     }
+
     return false;
 }
 
