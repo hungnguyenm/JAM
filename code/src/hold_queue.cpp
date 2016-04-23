@@ -5,22 +5,37 @@
 #include "../include/hold_queue.h"
 
 HoldQueue::HoldQueue(CentralQueues *queues) :
-        queues_(queues), history_queue_(MAX_HOLDBACK_QUEUE_LENGTH),
-        delivery_queue_(MAX_HOLDBACK_QUEUE_LENGTH),
-        user_handler_pipe_(-1), expected_order_(DEFAULT_FIRST_ORDER), recovery_counter_(0) {
+        queues_(queues), user_handler_pipe_(-1),
+        expected_order_(DEFAULT_FIRST_ORDER), recovery_counter_(0) {
+    delivery_queue_.reserve(MAX_HOLDBACK_QUEUE_LENGTH);
 }
 
 HoldQueue::~HoldQueue() {
 }
 
 void HoldQueue::AddMessageToQueue(Payload payload) {
-
+    
     if (payload.GetType() == CHAT_MSG) {
+
+        //prevent duplicate sending so goes through history queue
+        // and returns without doing anything
+        // if the payload has already been sent (duplicate)
+        std::deque<Payload>::iterator it = history_queue_.begin();
+        while (it != history_queue_.end()) {
+            if (payload.GetOrder() == it->GetOrder()) {
+                DCOUT("WARNING: HoldQueue - Trying to send duplicate message-ignored");
+                return;
+            }
+            ++it;
+        }
+
         delivery_queue_.push_back(payload);
         std::sort(delivery_queue_.begin(), delivery_queue_.end());
         recovery_counter_ ++;
         ProcessPayloads();
     }
+
+
 }
 
 void HoldQueue::ProcessPayloads() {
@@ -37,8 +52,9 @@ void HoldQueue::ProcessPayloads() {
         expected_order_ += 1; //increase the expected order of the next message
     }
 
-    if (recovery_counter_ >= 10) {
+    if (recovery_counter_ >= 5) {
         //TODO: Add thing to do here to recover messages??
+        DCOUT("WARNING: HoldQueue - Requesting history message order = ");
         queues_->push(CentralQueues::HISTORY_REQUEST, expected_order_);
     }
 }
@@ -60,8 +76,10 @@ void HoldQueue::SetUserHandlerPipe(int pipeId) {
     user_handler_pipe_ = pipeId;
 }
 
-int HoldQueue::GetUserHandlerPipe(){
-    return user_handler_pipe_;
+void HoldQueue::ClearQueue() {
+    delivery_queue_.clear();
+    history_queue_.clear();
+    expected_order_ = DEFAULT_FIRST_ORDER;
 }
 
 

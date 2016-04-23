@@ -17,15 +17,79 @@ int main() {
 
     // Construct payload
     Payload payload;
-    payload.SetType(CHAT_MSG);
-    payload.SetUsername("Dummy");
-    payload.SetMessage("Message 1");
-    payload.SetOrder(1);
 
-    // Pump to queue
+    // In order delivery test
+    cout << "--- In order test ---" << endl;
+
+    payload.SetType(CHAT_MSG);
+    payload.SetUsername("Dummy1");
+    payload.SetMessage("Message 1");
+    payload.SetOrder(0);
     holdQueue.AddMessageToQueue(payload);
 
-    // .... other testing here .....
+    payload.SetUsername("Dummy3");
+    payload.SetMessage("Message 3");
+    payload.SetOrder(2);
+    holdQueue.AddMessageToQueue(payload);
 
+    payload.SetUsername("Dummy2");
+    payload.SetMessage("Message 2");
+    payload.SetOrder(1);
+    holdQueue.AddMessageToQueue(payload);
+
+    // Wait
+    getchar();
+
+    // Get lost payload test
+    cout << "--- Get lost payload test ---" << endl;
+
+    Payload lost_payload;
+    bool value = holdQueue.GetPayloadInHistory(2, &lost_payload);
+
+    if (value) {
+        cout << lost_payload.GetUsername().c_str() << endl;
+    }
+
+    // Wait
+    getchar();
+
+    // Duplicate test
+    cout << "--- Duplicate test ---" << endl;
+
+    holdQueue.ClearQueue();
+
+    payload.SetType(CHAT_MSG);
+    payload.SetUsername("Dummy1");
+    payload.SetMessage("Message 1");
+    payload.SetOrder(0);
+    holdQueue.AddMessageToQueue(payload);
+
+    payload.SetUsername("Dummy2");
+    payload.SetMessage("Message 2");
+    payload.SetOrder(1);
+    holdQueue.AddMessageToQueue(payload);
+
+    payload.SetUsername("Dummy3");
+    payload.SetMessage("Message 3");
+    payload.SetOrder(2);
+    holdQueue.AddMessageToQueue(payload);
+
+    payload.SetUsername("Dummy3");
+    payload.SetMessage("Message 3");
+    payload.SetOrder(2);
+    holdQueue.AddMessageToQueue(payload);
+
+    payload.SetUsername("Dummy4");
+    payload.SetMessage("Message 4");
+    payload.SetOrder(3);
+    holdQueue.AddMessageToQueue(payload);
+
+    payload.SetUsername("Dummy5");
+    payload.SetMessage("Message 5");
+    payload.SetOrder(4);
+    holdQueue.AddMessageToQueue(payload);
+
+    // Wait
+    getchar();
     return 0;
 }
