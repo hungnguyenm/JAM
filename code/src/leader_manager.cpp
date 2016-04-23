@@ -111,15 +111,15 @@ void LeaderManager::HandleElectionMessage(Payload msg) {
     }
 }
 
-void LeaderManager::LeaderCrash() {
-    StartElection();
-}
-
 void LeaderManager::UdpCrashDetected(const sockaddr_in& addr) {
+    long size = higherOrderClients_.size();
 
-    if(RemoveHigherOrderClient(addr)) {
+    if(RemoveHigherOrderClient(addr) ||
+            (clientManager_->get_current_leader() == nullptr && electionInProgress_ == false)) {
         StartElection();
     }
+
+    long afterSize = higherOrderClients_.size();
 }
 
 std::vector<sockaddr_in> LeaderManager::GetHigherOrderPingTargets() {
@@ -129,10 +129,7 @@ std::vector<sockaddr_in> LeaderManager::GetHigherOrderPingTargets() {
 void LeaderManager::StartElection() {
     DCOUT("INFO: LM - Start election");
 
-    if (electionInProgress_) {
-        return;
-    }
-
+    higherOrderClients_.clear();
     electionInProgress_ = true;
     cancelledElection_ = false;
 
