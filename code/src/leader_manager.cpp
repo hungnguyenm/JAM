@@ -9,8 +9,6 @@ LeaderManager::LeaderManager(CentralQueues *queues, ClientManager *clientManager
 }
 
 ClientInfo *LeaderManager::GetCurrentLeader() {
-    boost::mutex::scoped_lock lock(m_leader_);
-
     if (lastLeader_ == nullptr) {
         lastLeader_ = clientManager_->get_current_leader();
     }
@@ -57,14 +55,7 @@ void LeaderManager::ReceivedPing(Payload ping) {
     }
 }
 
-bool LeaderManager::PingLeader() {
-    ClientInfo *leader = GetCurrentLeader();
-
-    if (leader == nullptr) {
-        DCOUT("INFO: LM - Election in progress/or no clients, no heartbeat");
-        return false;
-    }
-
+bool LeaderManager::Ping() {
     Payload payload;
     payload.SetType(MessageType::STATUS_MSG);
     payload.SetStatus(Status::PING);
@@ -79,8 +70,6 @@ void LeaderManager::LeaderCrash() {
 
 void LeaderManager::StartElection() {
     DCOUT("INFO: LM - Start election");
-
-    boost::mutex::scoped_lock lock(m_leader_);
 
     if (electionInProgress_) {
         return;
@@ -126,8 +115,6 @@ void LeaderManager::StartElection() {
 
 
 void LeaderManager::HandleElectionMessage(Payload msg) {
-    boost::mutex::scoped_lock lock(m_leader_);
-
     ClientInfo selfInfo = ClientInfo(clientManager_->get_self_address());
     auto clients = clientManager_->GetAllClients();
 
@@ -178,10 +165,7 @@ void LeaderManager::HandleElectionMessage(Payload msg) {
 }
 
 void LeaderManager::StartLeaderHeartbeat() {
-    boost::mutex::scoped_lock lock(m_leader_);
-
     DCOUT("INFO: LM - Heartbeat started");
-    // StopLeaderHeartBeat();
 
     heartbeatThread_ = new boost::thread(boost::bind(&LeaderManager::HeartBeatPing, this));
 }
@@ -190,17 +174,15 @@ void LeaderManager::HeartBeatPing() {
     while (true) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(PING_INTERVAL));
         if (electionInProgress_ == false) {
-            PingLeader();
+            Ping();
         }
     }
 }
 
 void LeaderManager::StopLeaderHeartBeat() {
-    boost::mutex::scoped_lock lock(m_leader_);
-
     if (heartbeatThread_ != nullptr) {
         heartbeatThread_->interrupt();
         delete heartbeatThread_;
-        DCOUT("INFO: LM - Heartbeat started");
+        DCOUT("INFO: LM - Heartbeat stopped");
     }
 }

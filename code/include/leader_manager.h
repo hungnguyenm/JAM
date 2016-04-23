@@ -28,7 +28,7 @@ public:
     void ReceivedPing(Payload ping);
     void LeaderCrash();
 
-    bool PingLeader();
+    bool Ping();
 
 private:
     boost::thread* heartbeatThread_;
@@ -43,8 +43,6 @@ private:
 
     void StartElection();
     void HeartBeatPing();
-
-    boost::mutex m_leader_;
 };
 
 
