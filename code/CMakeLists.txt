@@ -4,8 +4,9 @@ project(JAM)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 
 message(STATUS "Running cmake...")
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g -std=c++11")
+#
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g -std=c++11 -lboost_system")
 
 find_package(Boost 1.58.0 COMPONENTS system thread)
 if(Boost_FOUND)
@@ -19,10 +20,11 @@ endif()
 set(SOURCE_FILES src/main.cpp)
 add_executable(jam-main ${SOURCE_FILES})
 
-set(DEV_B_HEADERS include/client_info.h include/client_manager.h include/payload.h include/config.h)
+set(DEV_B_HEADERS include/client_info.h include/serializer_helper.h include/hold_queue.h
+        include/client_manager.h include/payload.h include/config.h include/concurrent_queue.h
+        include/central_queues.h)
 set(DEV_B_SOURCES src/dev/dev_b.cpp src/client_manager.cpp src/client_info.cpp
-        src/payload.cpp src/leader_manager.cpp include/leader_manager.h
-        src/serializer_helper.cpp include/serializer_helper.h src/hold_queue.cpp include/hold_queue.h src/hold_queue.cpp)
+        src/payload.cpp src/serializer_helper.cpp src/hold_queue.cpp src/central_queues.cpp )
 add_executable(jam-dev_b ${DEV_B_HEADERS} ${DEV_B_SOURCES})
 
 # Executables depend on BOOST:
@@ -58,6 +60,7 @@ if(Boost_FOUND)
     target_link_libraries(jam-dev_h_2 ${Boost_LIBRARIES})
     target_link_libraries(jam-dev_h_3 ${Boost_LIBRARIES})
     target_link_libraries(jam-dev_c ${Boost_LIBRARIES})
+    target_link_libraries(jam-dev_b ${Boost_LIBRARIES})
 
     target_link_libraries(test-udp_wrapper ${Boost_LIBRARIES})
 endif()

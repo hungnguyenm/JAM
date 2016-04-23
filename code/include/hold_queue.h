@@ -20,10 +20,14 @@ public:                    // begin public section
     void AddMessageToQueue(Payload payload);
     void ProcessPayloads();
 
+    bool GetPayloadInHistory(int32_t value, Payload* payload);
+
     void SetUserHandlerPipe(int pipeId);
     int GetUserHandlerPipe();
 
-    bool GetPayloadInHistory(int32_t value, Payload* payload);
+
+    void ClearQueue();
+
 
 
 

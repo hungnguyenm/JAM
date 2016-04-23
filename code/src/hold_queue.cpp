@@ -5,9 +5,9 @@
 #include "../include/hold_queue.h"
 
 HoldQueue::HoldQueue(CentralQueues *queues) :
-        queues_(queues), history_queue_(MAX_HOLDBACK_QUEUE_LENGTH),
-        delivery_queue_(MAX_HOLDBACK_QUEUE_LENGTH),
-        user_handler_pipe_(-1), expected_order_(DEFAULT_FIRST_ORDER), recovery_counter_(0) {
+        queues_(queues), user_handler_pipe_(-1),
+        expected_order_(DEFAULT_FIRST_ORDER), recovery_counter_(0) {
+    delivery_queue_.reserve(MAX_HOLDBACK_QUEUE_LENGTH);
 }
 
 HoldQueue::~HoldQueue() {
@@ -37,10 +37,10 @@ void HoldQueue::ProcessPayloads() {
         expected_order_ += 1; //increase the expected order of the next message
     }
 
-    if (recovery_counter_ >= 10) {
-        //TODO: Add thing to do here to recover messages??
-        queues_->push(CentralQueues::HISTORY_REQUEST, expected_order_);
-    }
+//    if (recovery_counter_ >= 10) {
+//        //TODO: Add thing to do here to recover messages??
+//        queues_->push(CentralQueues::HISTORY_REQUEST, expected_order_);
+//    }
 }
 
 bool HoldQueue::GetPayloadInHistory(int32_t order, Payload* payload) {
@@ -62,6 +62,10 @@ void HoldQueue::SetUserHandlerPipe(int pipeId) {
 
 int HoldQueue::GetUserHandlerPipe(){
     return user_handler_pipe_;
+}
+
+void HoldQueue::ClearQueue() {
+    delivery_queue_.clear();
 }
 
 
