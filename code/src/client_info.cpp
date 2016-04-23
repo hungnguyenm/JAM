@@ -5,7 +5,6 @@
 
 #include <arpa/inet.h>
 #include <iostream>
-#include <cstring>
 #include <sstream>
 
 ClientInfo::ClientInfo(sockaddr_in client) :

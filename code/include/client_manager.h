@@ -24,7 +24,7 @@ public:                    // begin public section
 
     std::vector<sockaddr_in> GetAllClientSockAddress();
 
-    int get_client_count();
+    long get_client_count();
 
     // Return a list of higher order clients for election
     std::vector<ClientInfo> GetHigherOrderClients();

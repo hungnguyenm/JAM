@@ -8,25 +8,14 @@ LeaderManager::LeaderManager(CentralQueues *queues, ClientManager *clientManager
         queues_(queues), clientManager_(clientManager) {
 }
 
-ClientInfo *LeaderManager::GetCurrentLeader() {
-    boost::mutex::scoped_lock lock(m_leader_);
-
-    if (lastLeader_ == nullptr) {
-        lastLeader_ = clientManager_->get_current_leader();
-    }
-
-    return lastLeader_;
-}
-
 bool LeaderManager::is_leader(const sockaddr_in &addr) {
     ClientInfo *leader = clientManager_->get_client_info(addr);
 
     return (leader == nullptr) ? false : leader->is_leader();
-
 }
 
 bool LeaderManager::GetLeaderAddress(sockaddr_in *addr) {
-    ClientInfo *leader = GetCurrentLeader();
+    ClientInfo *leader = clientManager_->get_current_leader();
 
     if (leader != nullptr && addr != nullptr) {
         *addr = leader->get_sock_address();
@@ -36,9 +25,14 @@ bool LeaderManager::GetLeaderAddress(sockaddr_in *addr) {
     return false;
 }
 
-
 bool LeaderManager::is_curr_client_leader() {
-    ClientInfo *leader = GetCurrentLeader();
+    ClientInfo *leader = clientManager_->get_current_leader();
+
+    if(leader == nullptr ) {
+        DCOUT("I AM NULL");
+    } else {
+        DCOUT((*leader == clientManager_->get_self_address()));
+    }
 
     return (leader != nullptr) ? (*leader == clientManager_->get_self_address()) : false;
 }
@@ -47,9 +41,8 @@ bool LeaderManager::is_election_happening() {
     return electionInProgress_;
 }
 
-
 void LeaderManager::ReceivedPing(Payload ping) {
-    ClientInfo *leader = GetCurrentLeader();
+    ClientInfo *leader = clientManager_->get_current_leader();
 
     if (*leader == clientManager_->get_self_address()) {
         // Ping back the client since you are the leader
@@ -113,7 +106,6 @@ void LeaderManager::StartElection() {
 
 void LeaderManager::HandleElectionMessage(Payload msg) {
     ClientInfo selfInfo = ClientInfo(clientManager_->get_self_address());
-    auto clients = clientManager_->GetAllClients();
 
     switch (msg.GetElectionCommand()) {
         case ElectionCommand::ELECT_START:
