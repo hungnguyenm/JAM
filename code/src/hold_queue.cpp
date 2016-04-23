@@ -14,32 +14,34 @@ HoldQueue::~HoldQueue() {
 }
 
 void HoldQueue::AddMessageToQueue(Payload payload) {
-
+    
     if (payload.GetType() == CHAT_MSG) {
-        delivery_queue_.push_back(payload);
-        std::sort(delivery_queue_.begin(), delivery_queue_.end());
-        recovery_counter_ ++;
-        ProcessPayloads();
-    }
-}
-
-void HoldQueue::ProcessPayloads() {
-
-    int payload_order = delivery_queue_[0].GetOrder();
-    while(delivery_queue_.size() > 0 && payload_order == expected_order_) {
-        Payload payload = delivery_queue_[0];
 
         //prevent duplicate sending so goes through history queue
         // and returns without doing anything
         // if the payload has already been sent (duplicate)
         std::deque<Payload>::iterator it = history_queue_.begin();
         while (it != history_queue_.end()) {
-            if (payload_order == it->GetOrder()) {
+            if (payload.GetOrder() == it->GetOrder()) {
                 DCOUT("WARNING: HoldQueue - Trying to send duplicate message-ignored");
                 return;
             }
             ++it;
         }
+
+        delivery_queue_.push_back(payload);
+        std::sort(delivery_queue_.begin(), delivery_queue_.end());
+        recovery_counter_ ++;
+        ProcessPayloads();
+    }
+
+
+}
+
+void HoldQueue::ProcessPayloads() {
+
+    while(delivery_queue_.size() > 0 && delivery_queue_[0].GetOrder() == expected_order_) {
+        Payload payload = delivery_queue_[0];
 
         StreamCommunicator::SendMessage(user_handler_pipe_,
                                         payload.GetUsername(),
