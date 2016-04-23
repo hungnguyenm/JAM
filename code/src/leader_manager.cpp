@@ -28,12 +28,6 @@ bool LeaderManager::GetLeaderAddress(sockaddr_in *addr) {
 bool LeaderManager::is_curr_client_leader() {
     ClientInfo *leader = clientManager_->get_current_leader();
 
-    if(leader == nullptr ) {
-        DCOUT("I AM NULL");
-    } else {
-        DCOUT((*leader == clientManager_->get_self_address()));
-    }
-
     return (leader != nullptr) ? (*leader == clientManager_->get_self_address()) : false;
 }
 
@@ -103,16 +97,17 @@ void LeaderManager::StartElection() {
     }
 }
 
-
 void LeaderManager::HandleElectionMessage(Payload msg) {
     ClientInfo selfInfo = ClientInfo(clientManager_->get_self_address());
 
     switch (msg.GetElectionCommand()) {
         case ElectionCommand::ELECT_START:
+            DCOUT("INFO: LM - election start received");
             StartElection();
             break;
 
         case ElectionCommand::ELECT_CANDIDATE:
+            DCOUT("INFO: LM - Election candidate gotten");
             // check if the client that sent you the message is bigger
             if (selfInfo < *msg.GetAddress()) {
                 msg.SetElectionCommand(ElectionCommand::ELECT_YIELD);
@@ -126,20 +121,22 @@ void LeaderManager::HandleElectionMessage(Payload msg) {
             break;
 
         case ElectionCommand::ELECT_STOP:
+            DCOUT("INFO: LM - election stop received");
             sentElectionCandidatesOut_ = 0;
             cancelledElection_ = true;
             break;
 
         case ElectionCommand::ELECT_YIELD:
+            DCOUT("INFO: LM - election yield received");
             --sentElectionCandidatesOut_;
 
             if (sentElectionCandidatesOut_ > 0 || cancelledElection_) {
                 break;
             }
 
+            DCOUT("INFO: LM - I won the election");
             msg.SetElectionCommand(ELECT_WIN);
             queues_->push(CentralQueues::LEADER_OUT, msg);
-            DCOUT("INFO: LM - Declaring election win");
             clientManager_->set_new_leader(clientManager_->get_self_address());
             break;
 
