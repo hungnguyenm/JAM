@@ -53,7 +53,7 @@ void HoldQueue::ProcessPayloads() {
     }
 
     if (recovery_counter_ >= NUM_MISSING_ORDER) {
-        DCOUT("WARNING: HoldQueue - Requesting history message order = " + expected_order_);
+        DCOUT("WARNING: HoldQueue - Requesting history message order = " + std::to_string(expected_order_));
         queues_->push(CentralQueues::HISTORY_REQUEST, expected_order_);
         recovery_counter_ = 0;
     }

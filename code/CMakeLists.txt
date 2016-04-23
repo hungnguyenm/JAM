@@ -6,13 +6,23 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 message(STATUS "Running cmake...")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g -std=c++11")
 
-find_package(Boost 1.58.0 COMPONENTS system thread)
+find_package(Boost 1.50.0 COMPONENTS system thread)
 if (Boost_FOUND)
     message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
     message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
     message(STATUS "Boost_VERSION: ${Boost_VERSION}")
 
     include_directories(${Boost_INCLUDE_DIRS})
+else ()
+    set(BOOST_INCLUDE_DIR /usr/include)
+    find_package(Boost 1.50.0 COMPONENTS system thread)
+    if (Boost_FOUND)
+        message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
+        message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
+        message(STATUS "Boost_VERSION: ${Boost_VERSION}")
+
+        include_directories(${Boost_INCLUDE_DIRS})
+    endif()
 endif ()
 
 set(MAIN_HEADERS include/config.h include/concurrent_queue.h include/concurrent_ticket.h
@@ -24,7 +34,7 @@ set(MAIN_SOURCES src/leader_manager.cpp src/payload.cpp src/central_queues.cpp s
         src/hold_queue.cpp src/jam.cpp)
 
 # Executables depend on BOOST:
-add_executable(jam-main ${MAIN_HEADERS} ${MAIN_SOURCES} src/main.cpp)
+add_executable(dchat ${MAIN_HEADERS} ${MAIN_SOURCES} src/main.cpp)
 
 add_executable(jam-dev_h_1 ${MAIN_HEADERS} ${MAIN_SOURCES} src/dev/dev_h_1.cpp)
 add_executable(jam-dev_h_2 ${MAIN_HEADERS} ${MAIN_SOURCES} src/dev/dev_h_2.cpp)
@@ -42,7 +52,7 @@ add_executable(test-udp_wrapper ${TEST_UDP_WRAPPER_HEADERS} ${TEST_UDP_WRAPPER_S
 add_executable(test-hold_queue ${MAIN_HEADERS} ${MAIN_SOURCES} test/test_hold_queue.cpp)
 
 if (Boost_FOUND)
-    target_link_libraries(jam-main ${Boost_LIBRARIES})
+    target_link_libraries(dchat ${Boost_LIBRARIES})
 
     target_link_libraries(jam-dev_h_1 ${Boost_LIBRARIES})
     target_link_libraries(jam-dev_h_2 ${Boost_LIBRARIES})
@@ -50,4 +60,6 @@ if (Boost_FOUND)
 
     target_link_libraries(test-udp_wrapper ${Boost_LIBRARIES})
     target_link_libraries(test-hold_queue ${Boost_LIBRARIES})
+else ()
+
 endif ()
