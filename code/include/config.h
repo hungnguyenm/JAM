@@ -21,6 +21,7 @@
 #define DEFAULT_FIRST_ORDER         0       // Default order for the first message
 
 #define MAX_HOLDBACK_QUEUE_LENGTH   100     // Maximum length of hold back and history queue
+#define NUM_MISSING_ORDER           5       // Number of tries for missing
 
 #define MAX_CLIENT_BUFFER_LENGTH    100     // Maximum client list encoded length
 

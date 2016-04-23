@@ -14,7 +14,7 @@ HoldQueue::~HoldQueue() {
 }
 
 void HoldQueue::AddMessageToQueue(Payload payload) {
-    
+
     if (payload.GetType() == CHAT_MSG) {
 
         //prevent duplicate sending so goes through history queue
@@ -52,10 +52,10 @@ void HoldQueue::ProcessPayloads() {
         expected_order_ += 1; //increase the expected order of the next message
     }
 
-    if (recovery_counter_ >= 5) {
-        //TODO: Add thing to do here to recover messages??
-        DCOUT("WARNING: HoldQueue - Requesting history message order = ");
+    if (recovery_counter_ >= NUM_MISSING_ORDER) {
+        DCOUT("WARNING: HoldQueue - Requesting history message order = " + expected_order_);
         queues_->push(CentralQueues::HISTORY_REQUEST, expected_order_);
+        recovery_counter_ = 0;
     }
 }
 
