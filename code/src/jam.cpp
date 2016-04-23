@@ -298,11 +298,6 @@ void JAM::Main() {
                             if (payload.GetElectionCommand() == ELECT_WIN) {
                                 addr = *payload.GetAddress();
                                 udpWrapper_.LeaderRecover(&addr);
-
-                                if (leaderManager_.is_curr_client_leader()) {
-                                    // This client is the leader now, need to set order to the latest one
-                                    order_ = last_witness_order_ + 1;
-                                }
                             }
                             break;
 
@@ -341,8 +336,12 @@ void JAM::Main() {
                         case ELECTION_MSG:
                             if (payload.GetElectionCommand() == ELECT_WIN) {
                                 // Distribute to all
-                                multicast_list = clientManager_.GetAllClientSockAddress();
+                                multicast_list = clientManager_.GetAllClientSockAddressWithoutMe();
                                 udpWrapper_.SendPayloadList(payload, &multicast_list);
+                                // Do recovery
+                                order_ = last_witness_order_ + 1;
+                                addr = clientManager_.get_self_address();
+                                udpWrapper_.LeaderRecover(&addr);
                             } else {
                                 // Targeted payload
                                 udpWrapper_.SendPayloadSingle(payload, payload.GetAddress());
