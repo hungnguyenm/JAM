@@ -63,10 +63,11 @@ bool LeaderManager::PingLeader() {
     if(leader == nullptr) {
         DCOUT("Election in progress/or no clients, no heartbeat");
         return false;
-    } else if (is_curr_client_leader()) {
-        DCOUT("I am leader, no heartbeat");
-        return false;
     }
+//    else if (is_curr_client_leader()) {
+//        DCOUT("I am leader, no heartbeat");
+//        return false;
+//    }
 
     Payload payload;
     payload.SetType(MessageType::STATUS_MSG);
@@ -168,12 +169,12 @@ void LeaderManager::HandleElectionMessage(Payload msg)
 
             msg.SetElectionCommand(ELECT_WIN);
 
-            for(int i = 0; i < clients.size(); i++) {
-                sockaddr_in addr = clients[i].get_sock_address();
-                msg.SetAddress(&addr);
+//            for(int i = 0; i < clients.size(); i++) {
+//                sockaddr_in addr = clients[i].get_sock_address();
+//                msg.SetAddress(&addr);
 
-                queues_->push(CentralQueues::LEADER_OUT, msg);
-            }
+            queues_->push(CentralQueues::LEADER_OUT, msg);
+//            }
 
             clientManager_->set_new_leader(clientManager_->get_self_address());
             break;
