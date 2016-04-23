@@ -175,8 +175,10 @@ void JAM::Main() {
     // Infinite loop to monitor central communication
     for (; ;) {
         if (queues_.wait_for_data(JAM_CENTRAL_TIMEOUT)) {
-            if (queues_.is_terminate())
+            if (queues_.is_terminate()) {
+                DCOUT("INFO: JAM - Received terminate signal");
                 break;          // Only exit loop if receive terminate signal
+            }
 
             // Go through each queue and handle data if available
             bool has_data;
@@ -370,7 +372,7 @@ void JAM::Main() {
         }
     }
 
-    DCOUT("INFO: JAM - Received terminate signal");
+    // Terminating
     payload.clear();
     payload.SetType(STATUS_MSG);
     if (leaderManager_.is_curr_client_leader()) {

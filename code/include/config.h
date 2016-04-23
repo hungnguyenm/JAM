@@ -8,7 +8,11 @@
 #ifndef JAM_CONFIG_H
 #define JAM_CONFIG_H
 
+#ifdef SPECLAB
+#define DEFAULT_INTERFACE           "em1"   // Default UDP interface
+#else
 #define DEFAULT_INTERFACE           "en0"   // Default UDP interface
+#endif
 #define DEFAULT_PORT                "9346"  // Default UDP datagram port
 
 #define MIN_PORT                    9000    // Port must be greater than MIN_PORT
