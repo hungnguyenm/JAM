@@ -43,6 +43,8 @@ private:
 
     void StartElection();
     void HeartBeatPing();
+
+    boost::mutex m_leader_;
 };
 
 

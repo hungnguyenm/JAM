@@ -9,6 +9,8 @@ LeaderManager::LeaderManager(CentralQueues *queues, ClientManager *clientManager
 }
 
 ClientInfo *LeaderManager::GetCurrentLeader() {
+    boost::mutex::scoped_lock lock(m_leader_);
+
     if (lastLeader_ == nullptr) {
         lastLeader_ = clientManager_->get_current_leader();
     }
