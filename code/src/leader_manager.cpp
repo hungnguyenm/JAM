@@ -96,6 +96,8 @@ void LeaderManager::HandleElectionMessage(Payload msg) {
             }
 
             DCOUT("INFO: LM - I won the election");
+            electionInProgress_ = false;
+            cancelledElection_ = false;
             msg.SetElectionCommand(ELECT_WIN);
             queues_->push(CentralQueues::LEADER_OUT, msg);
             clientManager_->set_new_leader(clientManager_->get_self_address());
@@ -104,6 +106,7 @@ void LeaderManager::HandleElectionMessage(Payload msg) {
         case ElectionCommand::ELECT_WIN:
             // Set the new leader here
             electionInProgress_ = false;
+            cancelledElection_ = false;
             clientManager_->set_new_leader(*msg.GetAddress());
             DCOUT("INFO: LM - Another client wins election");
             break;
@@ -145,6 +148,9 @@ void LeaderManager::StartElection() {
             payload.SetElectionCommand(ElectionCommand::ELECT_WIN);
             queues_->push(CentralQueues::LEADER_OUT, payload);
         }
+
+        electionInProgress_ = false;
+        cancelledElection_ = false;
         clientManager_->set_new_leader(clientManager_->get_self_address());
 
         return;
