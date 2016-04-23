@@ -115,14 +115,10 @@ void LeaderManager::HandleElectionMessage(Payload msg) {
 }
 
 void LeaderManager::UdpCrashDetected(const sockaddr_in& addr) {
-    long size = higherOrderClients_.size();
-
     if(RemoveHigherOrderClient(addr) ||
             (clientManager_->get_current_leader() == nullptr && electionInProgress_ == false)) {
         StartElection();
     }
-
-    long afterSize = higherOrderClients_.size();
 }
 
 std::vector<sockaddr_in> LeaderManager::GetHigherOrderPingTargets() {
