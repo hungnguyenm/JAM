@@ -68,13 +68,14 @@ void LeaderManager::StartElection() {
     cancelledElection_ = false;
 
     auto higherOrderClients = clientManager_->GetHigherOrderClients();
-    sentElectionCandidatesOut_ = higherOrderClients.size();
+//    sentElectionCandidatesOut_ = higherOrderClients.size();
 
     Payload payload;
     payload.SetType(MessageType::ELECTION_MSG);
 
     // Declare yourself to be the winner and tell all clients that you are the winner
     if (higherOrderClients.size() == 0) {
+        DCOUT("INFO: LM - I won the election");
         if(clientManager_->get_client_count() > 1) {
             payload.SetElectionCommand(ElectionCommand::ELECT_WIN);
             queues_->push(CentralQueues::LEADER_OUT, payload);
@@ -122,15 +123,17 @@ void LeaderManager::HandleElectionMessage(Payload msg) {
 
         case ElectionCommand::ELECT_STOP:
             DCOUT("INFO: LM - election stop received");
-            sentElectionCandidatesOut_ = 0;
+            higherOrderClients_.clear();
             cancelledElection_ = true;
             break;
 
         case ElectionCommand::ELECT_YIELD:
             DCOUT("INFO: LM - election yield received");
-            --sentElectionCandidatesOut_;
+//            for(int i = 0; i < higherOrderClients_.size(); ++i) {
+//                if()
+//            }
 
-            if (sentElectionCandidatesOut_ > 0 || cancelledElection_) {
+            if (higherOrderClients_.size() > 0 || cancelledElection_) {
                 break;
             }
 
@@ -171,4 +174,13 @@ void LeaderManager::StopLeaderHeartBeat() {
         delete heartbeatThread_;
         DCOUT("INFO: LM - Heartbeat stopped");
     }
+}
+
+
+void UdpCrashDetected(const sockaddr_in& addr) {
+
+}
+
+std::vector<sockaddr_in> LeaderManager::GetHigherOrderPingTargets() {
+    return higherOrderClients_;
 }
