@@ -25,8 +25,21 @@ void HoldQueue::AddMessageToQueue(Payload payload) {
 
 void HoldQueue::ProcessPayloads() {
 
-    while(delivery_queue_.size() > 0 && delivery_queue_[0].GetOrder() == expected_order_) {
+    int payload_order = delivery_queue_[0].GetOrder()
+    while(delivery_queue_.size() > 0 && payload_order == expected_order_) {
         Payload payload = delivery_queue_[0];
+
+        //prevent duplicate sending so goes through history queue
+        // and returns without doing anything
+        // if the payload has already been sent (duplicate)
+        std::deque<Payload>::iterator it = history_queue_.begin();
+        while (it != history_queue_.end()) {
+            if (payload_order == it->GetOrder()) {
+                DCOUT("WARNING: HoldQueue - Trying to send duplicate message-ignored");
+                return;
+            }
+            ++it;
+        }
 
         StreamCommunicator::SendMessage(user_handler_pipe_,
                                         payload.GetUsername(),
@@ -37,10 +50,11 @@ void HoldQueue::ProcessPayloads() {
         expected_order_ += 1; //increase the expected order of the next message
     }
 
-//    if (recovery_counter_ >= 10) {
-//        //TODO: Add thing to do here to recover messages??
-//        queues_->push(CentralQueues::HISTORY_REQUEST, expected_order_);
-//    }
+    if (recovery_counter_ >= 5) {
+        //TODO: Add thing to do here to recover messages??
+        DCOUT("WARNING: HoldQueue - Requesting history message order = ");
+        queues_->push(CentralQueues::HISTORY_REQUEST, expected_order_);
+    }
 }
 
 bool HoldQueue::GetPayloadInHistory(int32_t order, Payload* payload) {
