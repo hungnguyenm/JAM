@@ -14,7 +14,6 @@ class LeaderManager {
 public:
     LeaderManager(CentralQueues* queues, ClientManager* clientManager);
 
-    ClientInfo* GetCurrentLeader();
     bool GetLeaderAddress(sockaddr_in* addr); // Some silly c style interface
     bool is_curr_client_leader();
     bool is_leader(const sockaddr_in& addr);
@@ -34,8 +33,6 @@ private:
     boost::thread* heartbeatThread_;
     CentralQueues* queues_;                        // Central queues for inter-communication
     ClientManager* clientManager_;
-
-    ClientInfo* lastLeader_;
 
     long sentElectionCandidatesOut_;
     bool cancelledElection_ = false;
