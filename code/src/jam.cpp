@@ -198,17 +198,10 @@ void JAM::Main() {
 
                 if (queues_.try_pop_udp_crash(addr)) {
                     has_data = true;
-                    bool is_leader = leaderManager_.is_leader(addr);
-                    leaderManager_.UdpCrashDetected(addr);
                     if (clientManager_.RemoveClient(addr, &username)) {
                         DCOUT("INFO: JAM - Client unreachable at " +
                               ClientManager::StringifyClient(addr));
                         cout << "NOTICE - " << username << " crashed." << endl;
-
-                        // Notify leader manager
-                        if (is_leader) {
-                            leaderManager_.LeaderCrash();
-                        }
 
                         // Clear history
                         udpWrapper_.ClearReceivedHistory(&addr);
@@ -223,6 +216,7 @@ void JAM::Main() {
                         multicast_list = clientManager_.GetAllClientSockAddressWithoutMe();
                         udpWrapper_.SendPayloadList(payload, &multicast_list);
                     }
+                    leaderManager_.UdpCrashDetected(addr);
                 }
 
                 if (queues_.try_pop_udp_in(payload)) {
@@ -282,11 +276,11 @@ void JAM::Main() {
                                     }
                                     break;
                                 case LEADER_LEAVE:
-                                    leaderManager_.LeaderCrash();
                                     addr = *payload.GetAddress();
                                     if (clientManager_.RemoveClient(addr, &username)) {
                                         cout << "NOTICE - " << username << " left the chat." << endl;
                                     }
+                                    leaderManager_.UdpCrashDetected(addr);
                                     udpWrapper_.ClearReceivedHistory(&addr);
                                     break;
                                 default:
