@@ -28,7 +28,7 @@ public:
     void ReceivedPing(Payload ping);
     void LeaderCrash();
 
-    bool PingLeader();
+    bool Ping();
 
 private:
     boost::thread* heartbeatThread_;

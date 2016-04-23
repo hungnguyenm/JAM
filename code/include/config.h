@@ -10,10 +10,9 @@
 
 #define DEFAULT_INTERFACE           "en0"   // Default UDP interface
 #define DEFAULT_PORT                "9346"  // Default UDP datagram port
-#define DEFAULT_PORT_DEBUG_1        "9347"  // Default UDP datagram port for debugging
-#define DEFAULT_PORT_DEBUG_2        "9348"  // Default UDP datagram port for debugging
 
 #define MIN_PORT                    9000    // Port must be greater than MIN_PORT
+#define MAX_UDP_BIND_RETRIES        10      // Number of retries for different UDP port to bind
 
 #define MAX_MESSAGE_LENGTH          100     // Maximum message length per payload
 #define MAX_USER_NAME_LENGTH        20      // Maximum displayed user name length

@@ -20,8 +20,8 @@ UdpWrapper::~UdpWrapper() {
         close(sockfd_);
 }
 
-JamStatus UdpWrapper::Start(const char *port) {
-    JamStatus ret = InitUdpSocket(port);
+JamStatus UdpWrapper::Start(const char *port, uint16_t *bport) {
+    JamStatus ret = InitUdpSocket(port, bport);
 
     if (ret == SUCCESS) {
         // Start all task threads
@@ -185,7 +185,7 @@ void UdpWrapper::ClearReceivedHistory(const sockaddr_in *addr) {
     }
 }
 
-JamStatus UdpWrapper::InitUdpSocket(const char *port) {
+JamStatus UdpWrapper::InitUdpSocket(const char *port, uint16_t *bport) {
     JamStatus ret = SUCCESS;
     addrinfo hints, *servinfo;
 
@@ -196,14 +196,23 @@ JamStatus UdpWrapper::InitUdpSocket(const char *port) {
 
     if (getaddrinfo(NULL, port, &hints, &servinfo) == 0) {
         if ((sockfd_ = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) >= 0) {
-            memcpy(&this_addr_, (sockaddr_in *) servinfo->ai_addr, servinfo->ai_addrlen);
-            if (bind(sockfd_, servinfo->ai_addr, servinfo->ai_addrlen) == 0) {
-                DCOUT("INFO: UdpWrapper - Socket binds successful at port " + std::string(DEFAULT_PORT));
-                freeaddrinfo(servinfo);
-                is_ready_ = true;
-            } else {
-                DCERR("ERROR: UdpWrapper - Failed to bind");
-                ret = UDP_BIND_ERROR;
+            for (uint8_t retries = 0; retries < MAX_UDP_BIND_RETRIES; ++retries) {
+                uint16_t bind_port = ntohs(((sockaddr_in *) servinfo->ai_addr)->sin_port) + retries;
+                ((sockaddr_in *) servinfo->ai_addr)->sin_port = htons(bind_port);
+                if (bind(sockfd_, servinfo->ai_addr, servinfo->ai_addrlen) == 0) {
+                    DCOUT("INFO: UdpWrapper - Socket binds successful at port " +
+                          u16_to_string(bind_port));
+                    memcpy(&this_addr_, (sockaddr_in *) servinfo->ai_addr, servinfo->ai_addrlen);
+                    freeaddrinfo(servinfo);
+                    is_ready_ = true;
+                    *bport = htons(bind_port);
+                    ret = SUCCESS;
+                    break;          // Exit loop to prevent next binding
+                } else {
+                    DCERR(std::string("ERROR: UdpWrapper - Failed to bind at port " +
+                                      u16_to_string(bind_port)).c_str());
+                    ret = UDP_BIND_ERROR;
+                }
             }
         } else {
             DCERR("ERROR: UdpWrapper - Failed to create socket fd");
@@ -339,6 +348,15 @@ void UdpWrapper::RunMonitor() {
     }
     exit:
     DCOUT("INFO: UdpMonitor - Received terminate message");
+}
+
+std::string UdpWrapper::u16_to_string(uint16_t in) {
+    std::stringstream ss;
+    ss << std::dec << in;
+    std::string str;
+    ss >> str;
+
+    return str;
 }
 
 std::string UdpWrapper::u32_to_string(uint32_t in) {

@@ -31,10 +31,11 @@ public:
      * Initialize UDP socket and start listening
      *
      * @param port      port to bind
+     * @param bport     bind port to return
      *
      * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
-    JamStatus Start(const char *port);
+    JamStatus Start(const char *port, uint16_t *bport);
 
     // TODO: implement start as client
 
@@ -141,10 +142,11 @@ private:
      * Initialize listening UDP socket (bind to specific port)
      *
      * @param port      port to bind
+     * @param bport     bind port to return
      *
      * @returns         SUCCESS if bind normally, other JamStatus errors otherwise
      */
-    JamStatus InitUdpSocket(const char *port);
+    JamStatus InitUdpSocket(const char *port, uint16_t *bport);
 
     /**
      * Start reader thread to listen for incoming packets.
@@ -162,6 +164,8 @@ private:
     void RunMonitor();
 
     // -- Helper functions
+    std::string u16_to_string(uint16_t in);
+
     std::string u32_to_string(uint32_t in);
 
     bool payload_already_received(in_addr_t ip,
