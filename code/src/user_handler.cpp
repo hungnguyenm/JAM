@@ -53,8 +53,8 @@ void UserHandler::HandleInput() {
             // grab the input from the command line and write it to the pipe
             getline(std::cin, data);
 
-            if (std::cin.eof()) {
-                DCOUT("INFO: UserHandler - Ctrl+D captured");
+            if (std::cin.eof() || data == TERMINATE_MESSAGE) {
+                DCOUT("INFO: UserHandler - exit captured");
                 queues_->signal_terminate();
                 break;
             }

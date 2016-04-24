@@ -472,3 +472,8 @@ bool JAM::GetInterfaceAddress(const char *interface, uint16_t port, sockaddr_in 
 
     return ret;
 }
+
+void JAM::PrintClientList() {
+    cout << "Current users:" << endl;
+    clientManager_.PrintClients();
+}

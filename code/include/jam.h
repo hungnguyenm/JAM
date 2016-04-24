@@ -98,6 +98,8 @@ private:
      * @return          TRUE if detected; FALSE otherwise
      */
     bool GetInterfaceAddress(const char *interface, uint16_t port, sockaddr_in *addr);
+
+    void PrintClientList();
 };
 
 #endif //JAM_JAM_H

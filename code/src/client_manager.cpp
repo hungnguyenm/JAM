@@ -211,6 +211,7 @@ bool ClientManager::set_new_leader(const ClientInfo&  newLeader) {
     }
 
     info->set_leader(true);
+    EncodeClientList();
 
     return true;
 }

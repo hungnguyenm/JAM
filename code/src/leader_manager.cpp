@@ -100,7 +100,11 @@ void LeaderManager::HandleElectionMessage(Payload msg) {
             cancelledElection_ = false;
             msg.SetElectionCommand(ELECT_WIN);
             queues_->push(CentralQueues::LEADER_OUT, msg);
-            clientManager_->set_new_leader(clientManager_->get_self_address());
+            if (clientManager_->set_new_leader(clientManager_->get_self_address())) {
+                DCOUT("INFO: LM - Set leader success!");
+            } else {
+                DCOUT("INFO: LM - Set leader failed!");
+            }
             break;
 
         case ElectionCommand::ELECT_WIN:
@@ -147,7 +151,11 @@ void LeaderManager::StartElection() {
 
         electionInProgress_ = false;
         cancelledElection_ = false;
-        clientManager_->set_new_leader(clientManager_->get_self_address());
+        if (clientManager_->set_new_leader(clientManager_->get_self_address())) {
+            DCOUT("INFO: LM - Set leader success!");
+        } else {
+            DCOUT("INFO: LM - Set leader failed!");
+        }
 
         return;
     }
