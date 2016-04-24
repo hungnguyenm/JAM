@@ -118,9 +118,9 @@ void LeaderManager::HandleElectionMessage(Payload msg) {
     }
 }
 
-void LeaderManager::UdpCrashDetected(const sockaddr_in& addr) {
-    if(RemoveHigherOrderClient(addr) ||
-            (clientManager_->get_current_leader() == nullptr && electionInProgress_ == false)) {
+void LeaderManager::UdpCrashDetected(const sockaddr_in &addr) {
+    if (RemoveHigherOrderClient(addr) ||
+        (clientManager_->get_current_leader() == nullptr && !electionInProgress_)) {
         StartElection();
     }
 }
@@ -144,10 +144,8 @@ void LeaderManager::StartElection() {
     // Declare yourself to be the winner and tell all clients that you are the winner
     if (higherOrderClients.size() == 0) {
         DCOUT("INFO: LM - I won the election");
-        if(clientManager_->get_client_count() > 1) {
-            payload.SetElectionCommand(ElectionCommand::ELECT_WIN);
-            queues_->push(CentralQueues::LEADER_OUT, payload);
-        }
+        payload.SetElectionCommand(ElectionCommand::ELECT_WIN);
+        queues_->push(CentralQueues::LEADER_OUT, payload);
 
         electionInProgress_ = false;
         cancelledElection_ = false;
@@ -185,7 +183,7 @@ void LeaderManager::HeartBeatPing() {
             queues_->push(CentralQueues::QueueType::LEADER_OUT, payload);
         }
 
-        if(electionInProgress_ && cancelledElection_) {
+        if (electionInProgress_ && cancelledElection_) {
             Payload payload;
             payload.SetType(MessageType::STATUS_MSG);
             payload.SetStatus(Status::PING_TARGET);
@@ -195,9 +193,9 @@ void LeaderManager::HeartBeatPing() {
     }
 }
 
-bool LeaderManager::RemoveHigherOrderClient(const ClientInfo& info) {
-    for(auto it = higherOrderClients_.begin(); it != higherOrderClients_.end(); ++it) {
-        if(info == *it) {
+bool LeaderManager::RemoveHigherOrderClient(const ClientInfo &info) {
+    for (auto it = higherOrderClients_.begin(); it != higherOrderClients_.end(); ++it) {
+        if (info == *it) {
             higherOrderClients_.erase(it);
             return true;
         }
