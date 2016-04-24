@@ -54,7 +54,7 @@ void UserHandler::HandleInput() {
             getline(std::cin, data);
 
             if (std::cin.eof()) {
-                // ctrl+d has been input
+                DCOUT("INFO: UserHandler - Ctrl+D captured");
                 queues_->signal_terminate();
                 break;
             }

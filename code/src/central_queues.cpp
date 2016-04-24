@@ -8,7 +8,8 @@
 
 #include "../include/central_queues.h"
 
-CentralQueues::CentralQueues() {
+CentralQueues::CentralQueues() :
+        exit_(false) {
 
 }
 

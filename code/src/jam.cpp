@@ -300,7 +300,7 @@ void JAM::Main() {
                             if (payload.GetElectionCommand() == ELECT_WIN) {
                                 addr = *payload.GetAddress();
                                 udpWrapper_.LeaderRecover(&addr);
-                                
+
                                 // Handle deferred joining client
                                 while (joinQueue_.try_pop(payload)) {
                                     // Rebuild payload to acknowledge
