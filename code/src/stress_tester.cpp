@@ -11,7 +11,8 @@ StressTester::StressTester(CentralQueues* queues, int millis, const std::string&
         boost::thread(boost::bind(StressTester::Run, this));
 }
 
-void Run() {
+void StressTester::Run() {
+    boost::this_thread::sleep(boost::posix_time::milliseconds(delay_));
     std::ifstream file;
     file.open (fileName_);
 
