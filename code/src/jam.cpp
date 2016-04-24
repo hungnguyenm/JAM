@@ -200,7 +200,7 @@ void JAM::Main() {
                         has_data = true;
                         // Leader recover first
                         udpWrapper_.LeaderRecover(&addr);
-                        
+
                         payload.SetType(CHAT_MSG);
                         payload.SetUsername(user_name_);
                         if (payload.EncodePayload() == SUCCESS) {

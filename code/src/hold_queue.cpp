@@ -48,7 +48,7 @@ void HoldQueue::AddMessageToQueue(Payload payload) {
 
 void HoldQueue::ProcessPayloads() {
 
-    while (delivery_queue_.size() > 0 && delivery_queue_[0].GetOrder() == expected_order_) {
+    while (delivery_queue_.size() > 0 && delivery_queue_[0].GetOrder() <= expected_order_) {
         Payload payload = delivery_queue_[0];
 
         StreamCommunicator::SendMessage(user_handler_pipe_,

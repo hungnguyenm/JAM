@@ -6,8 +6,7 @@
 #include "../include/user_handler.h"
 
 UserHandler::UserHandler(CentralQueues *queues) :
-    queues_(queues)
-{
+        queues_(queues) {
     FD_ZERO(&activeFdSet_);
     FD_SET(STDIN_FILENO, &activeFdSet_);
 
@@ -59,10 +58,15 @@ void UserHandler::HandleInput() {
                 break;
             }
 
-            Payload payload;
-            payload.SetType(MessageType::CHAT_MSG);
-            payload.SetMessage(data);
-            queues_->push(CentralQueues::QueueType::USER_OUT, payload);
+            if (data.length() < MAX_MESSAGE_LENGTH) {
+                Payload payload;
+                payload.SetType(MessageType::CHAT_MSG);
+                payload.SetMessage(data);
+                queues_->push(CentralQueues::QueueType::USER_OUT, payload);
+            } else {
+                std::cout << "NOTICE - Message length exceeds maximum. This message is discarded: " <<
+                data << std::endl;
+            }
 
         } else if (FD_ISSET(incomingFd_[0], &readFdSet_)) {
             std::string username = StreamCommunicator::ListenForData(incomingFd_[0]);
