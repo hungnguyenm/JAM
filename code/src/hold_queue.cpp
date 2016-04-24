@@ -5,8 +5,11 @@
 #include "../include/hold_queue.h"
 
 HoldQueue::HoldQueue(CentralQueues *queues) :
-        queues_(queues), user_handler_pipe_(-1),
-        expected_order_(DEFAULT_FIRST_ORDER), recovery_counter_(0) {
+        queues_(queues),
+        user_handler_pipe_(-1),
+        expected_order_(DEFAULT_FIRST_ORDER),
+        recovery_counter_(0),
+        first_payload_(true) {
     delivery_queue_.reserve(MAX_HOLDBACK_QUEUE_LENGTH);
 }
 
@@ -15,7 +18,7 @@ HoldQueue::~HoldQueue() {
 
 void HoldQueue::AddMessageToQueue(Payload payload) {
 
-    if (payload.GetType() == CHAT_MSG) {
+    if (payload.GetType() == CHAT_MSG && payload.GetOrder() != DEFAULT_NO_ORDER) {
 
         //prevent duplicate sending so goes through history queue
         // and returns without doing anything
@@ -27,6 +30,11 @@ void HoldQueue::AddMessageToQueue(Payload payload) {
                 return;
             }
             ++it;
+        }
+
+        if (first_payload_) {
+            expected_order_ = payload.GetOrder();
+            first_payload_ = false;
         }
 
         delivery_queue_.push_back(payload);

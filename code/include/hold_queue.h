@@ -39,6 +39,8 @@ private:
     int user_handler_pipe_;
     int expected_order_;
     int recovery_counter_;
+
+    bool first_payload_;
 };
 
 #endif //JAM_HOLD_QUEUE_H
