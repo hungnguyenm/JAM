@@ -65,10 +65,10 @@ set_target_properties(jam_3 PROPERTIES COMPILE_FLAGS "-DDEBUG")
 # Executables - secure
 if (OPENSSL_FOUND)
     add_executable(dchats ${MAIN_SECURE_HEADERS} ${MAIN_SECURE_SOURCES} src/main.cpp)
-    set_target_properties(dchat PROPERTIES COMPILE_FLAGS "-DSPECLAB -DSECURE")
+    set_target_properties(dchats PROPERTIES COMPILE_FLAGS "-DSPECLAB -DSECURE")
 
     add_executable(dchatds ${MAIN_SECURE_HEADERS} ${MAIN_SECURE_SOURCES} src/main.cpp)
-    set_target_properties(dchatd PROPERTIES COMPILE_FLAGS "-DSPECLAB -DDEBUG -DSECURE")
+    set_target_properties(dchatds PROPERTIES COMPILE_FLAGS "-DSPECLAB -DDEBUG -DSECURE")
 
     add_executable(jams_1 ${MAIN_SECURE_HEADERS} ${MAIN_SECURE_SOURCES} src/dev/dev_h_1.cpp)
     set_target_properties(jams_1 PROPERTIES COMPILE_FLAGS "-DDEBUG -DSECURE")
