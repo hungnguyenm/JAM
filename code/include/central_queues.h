@@ -9,8 +9,13 @@
 #ifndef JAM_CENTRAL_QUEUES_H
 #define JAM_CENTRAL_QUEUES_H
 
-#include "concurrent_queue.h"
+#ifdef SECURE
+#include "payload_secure.h"
+#else
 #include "payload.h"
+#endif
+
+#include "concurrent_queue.h"
 
 #include <sys/socket.h>
 #include "boost/variant.hpp"

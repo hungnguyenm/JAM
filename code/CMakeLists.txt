@@ -96,3 +96,7 @@ if (Boost_FOUND)
     target_link_libraries(test-udp_wrapper ${Boost_LIBRARIES})
     target_link_libraries(test-hold_queue ${Boost_LIBRARIES})
 endif ()
+
+if (OPENSSL_FOUND)
+    target_link_libraries(jams_1 ${OPENSSL_LIBRARIES})
+endif ()

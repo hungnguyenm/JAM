@@ -9,8 +9,13 @@
 #ifndef JAM_UDP_WRAPPER_H
 #define JAM_UDP_WRAPPER_H
 
-#include "config.h"
+#ifdef SECURE
+#include "payload_secure.h"
+#else
 #include "payload.h"
+#endif
+
+#include "config.h"
 #include "concurrent_queue.h"
 #include "concurrent_ticket.h"
 #include "central_queues.h"

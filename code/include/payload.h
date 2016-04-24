@@ -66,9 +66,6 @@ public:
     sockaddr_in *GetAddress();
     void SetAddress(const sockaddr_in *address);
 
-    bool GetEncryption() const;
-    void SetEncryption(bool encrypt);
-
     MessageType GetType() const;
     void SetType(MessageType type);
 
@@ -144,7 +141,6 @@ private:
     };
 
     sockaddr_in address_;           // Sender/Receiver address (IPv4 only)
-    bool encrypt_;
     uint8_t username_[MAX_USER_NAME_LENGTH];
     uint8_t message_[MAX_MESSAGE_LENGTH];
 
@@ -186,8 +182,6 @@ private:
     int32_t unpacki32(uint8_t *&buf);
 
     uint32_t unpacku32(uint8_t *&buf);
-
-    // -- Cryptography functions
 };
 
 #endif //JAM_PAYLOAD_H

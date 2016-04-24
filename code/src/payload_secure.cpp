@@ -11,6 +11,7 @@
  */
 
 #include "../include/payload_secure.h"
+#include <iostream>
 
 using namespace std;
 
@@ -18,8 +19,8 @@ Payload::Payload()
         : type_(NA),
           order_(DEFAULT_NO_ORDER),
           username_length_(0),
-          message_length_(0) {
-    encrypt_ = ENCRYPT_SET != 0;
+          message_length_(0),
+          enc_length_(0) {
 }
 
 Payload::Payload(uint32_t uid, AckStatus ack) {
@@ -28,7 +29,6 @@ Payload::Payload(uint32_t uid, AckStatus ack) {
 
 Payload::Payload(const Payload &payload) {
     memcpy(&address_, &(payload.address_), sizeof(address_));
-    encrypt_ = payload.encrypt_;
     memcpy(username_, payload.username_, MAX_USER_NAME_LENGTH);
     memcpy(message_, payload.message_, MAX_MESSAGE_LENGTH);
 
@@ -42,11 +42,13 @@ Payload::Payload(const Payload &payload) {
     message_length_ = payload.message_length_;
     memcpy(payload_, payload.payload_, HEADER_LENGTH + MAX_USER_NAME_LENGTH + MAX_MESSAGE_LENGTH);
     length_ = payload.length_;
+
+    enc_length_ = payload.enc_length_;
+    memcpy(enc_buffer_, payload.enc_buffer_, MAX_MESSAGE_LENGTH);
 }
 
 void Payload::operator=(const Payload &payload) {
     memcpy(&address_, &(payload.address_), sizeof(address_));
-    encrypt_ = payload.encrypt_;
     memcpy(username_, payload.username_, MAX_USER_NAME_LENGTH);
     memcpy(message_, payload.message_, MAX_MESSAGE_LENGTH);
 
@@ -60,13 +62,16 @@ void Payload::operator=(const Payload &payload) {
     message_length_ = payload.message_length_;
     memcpy(payload_, payload.payload_, HEADER_LENGTH + MAX_USER_NAME_LENGTH + MAX_MESSAGE_LENGTH);
     length_ = payload.length_;
+
+    enc_length_ = payload.enc_length_;
+    memcpy(enc_buffer_, payload.enc_buffer_, MAX_MESSAGE_LENGTH);
 }
 
-bool Payload::operator==(const Payload& other) {
+bool Payload::operator==(const Payload &other) {
     return (this->GetOrder() == other.GetOrder());
 }
 
-bool Payload::operator<(const Payload& other) const {
+bool Payload::operator<(const Payload &other) const {
     return (this->GetOrder() < other.GetOrder());
 }
 
@@ -80,14 +85,6 @@ sockaddr_in *Payload::GetAddress() {
 
 void Payload::SetAddress(const sockaddr_in *address) {
     memcpy(&address_, address, sizeof(address_));
-}
-
-bool Payload::GetEncryption() const {
-    return encrypt_;
-}
-
-void Payload::SetEncryption(bool encrypt) {
-    encrypt_ = encrypt;
 }
 
 MessageType Payload::GetType() const {
@@ -182,7 +179,8 @@ JamStatus Payload::SetUsername(string username) {
             username_[i] = (uint8_t) username[i];
         }
         username_[i] = '\0';
-        length_ = HEADER_LENGTH + username_length_ + message_length_;
+
+        length_ = HEADER_LENGTH + username_length_ + enc_length_;
     } else {
         ret = ERROR_INVALID_PARAMETERS;
     }
@@ -199,12 +197,19 @@ JamStatus Payload::SetMessage(string message) {
 
     if (message.size() < MAX_MESSAGE_LENGTH) {
         message_length_ = (uint32_t) message.size();
+        enc_length_ = ((message_length_ + AES_BLOCK_SIZE) / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
         uint32_t i = 0;
         for (i = 0; i < message_length_; ++i) {
             message_[i] = (uint8_t) message[i];
         }
         message_[i] = '\0';
-        length_ = HEADER_LENGTH + username_length_ + message_length_;
+        length_ = HEADER_LENGTH + username_length_ + enc_length_;
+
+        // Encryption
+        AES_set_encrypt_key(aes_key, sizeof(aes_key) * 8, &enc_key_);
+        memset(iv_, 0, AES_BLOCK_SIZE);
+        memset(enc_buffer_, 0, MAX_MESSAGE_LENGTH);
+        AES_cbc_encrypt(message_, enc_buffer_, message_length_, &enc_key_, iv_, AES_ENCRYPT);
     } else {
         ret = ERROR_INVALID_PARAMETERS;
     }
@@ -217,8 +222,15 @@ JamStatus Payload::SetMessage(uint8_t *in, uint32_t length) {
 
     if (length < MAX_MESSAGE_LENGTH) {
         message_length_ = length;
+        enc_length_ = ((message_length_ + AES_BLOCK_SIZE) / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
         memcpy(message_, in, length);
-        length_ = HEADER_LENGTH + username_length_ + message_length_;
+        length_ = HEADER_LENGTH + username_length_ + enc_length_;
+
+        // Encryption
+        AES_set_encrypt_key(aes_key, sizeof(aes_key) * 8, &enc_key_);
+        memset(iv_, 0, AES_BLOCK_SIZE);
+        memset(enc_buffer_, 0, MAX_MESSAGE_LENGTH);
+        AES_cbc_encrypt(message_, enc_buffer_, message_length_, &enc_key_, iv_, AES_ENCRYPT);
     } else {
         ret = ERROR_INVALID_PARAMETERS;
     }
@@ -257,11 +269,12 @@ JamStatus Payload::EncodePayload() {
                     // no encode
                     break;
             }
+
             packu32(buffer, username_length_);
             packu32(buffer, message_length_);
             memcpy(buffer, username_, username_length_);
             buffer += username_length_;
-            memcpy(buffer, message_, message_length_);
+            memcpy(buffer, enc_buffer_, enc_length_);
         } catch (...) {
             ret = ENCODE_ERROR;
         }
@@ -336,7 +349,20 @@ JamStatus Payload::DecodePayload() {
                     ((message_length_ = unpacku32(buffer)) < MAX_MESSAGE_LENGTH)) {
                     memcpy(username_, buffer, username_length_);
                     buffer += username_length_;
-                    memcpy(message_, buffer, message_length_);
+                    // Decryption
+                    AES_set_decrypt_key(aes_key, sizeof(aes_key) * 8, &dec_key_);
+                    memset(iv_, 0, AES_BLOCK_SIZE);
+                    memset(enc_buffer_, 0, MAX_MESSAGE_LENGTH);
+                    enc_length_ = ((message_length_ + AES_BLOCK_SIZE) / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
+                    memcpy(enc_buffer_, buffer, enc_length_);
+                    AES_cbc_encrypt(enc_buffer_, message_, enc_length_, &dec_key_, iv_, AES_DECRYPT);
+                    message_[message_length_] = '\0';
+                    // Info
+                    if (order_ != DEFAULT_NO_ORDER) {
+                        cout << "AES: Encrypted: " <<
+                        string(enc_buffer_, enc_buffer_ + enc_length_) <<
+                        endl << "AES: Decrypted: " << string(message_, message_ + message_length_) << endl;
+                    }
                 } else {
                     ret = DECODE_ERROR;
                 }

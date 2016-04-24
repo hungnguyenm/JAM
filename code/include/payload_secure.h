@@ -26,6 +26,10 @@
 
 #define QUIT_MSG_LENGTH 4       // Self-terminate message for UdpReader (must be different than payload length)
 
+const static unsigned char aes_key[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC,
+                                        0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99,
+                                        0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
+
 enum MessageType : uint8_t {
     CHAT_MSG, STATUS_MSG, ELECTION_MSG, RECOVER_MSG, ACK_MSG, NA
 };
@@ -58,40 +62,48 @@ public:
     Payload(const Payload &payload);
 
     // operators
-    void operator=(const Payload& payload);
-    bool operator==(const Payload& other);
-    bool operator<(const Payload& other) const;
+    void operator=(const Payload &payload);
+
+    bool operator==(const Payload &other);
+
+    bool operator<(const Payload &other) const;
 
     ~Payload();
 
     sockaddr_in *GetAddress();
+
     void SetAddress(const sockaddr_in *address);
 
-    bool GetEncryption() const;
-    void SetEncryption(bool encrypt);
-
     MessageType GetType() const;
+
     void SetType(MessageType type);
 
     uint32_t GetUid() const;
+
     void SetUid(uint32_t uid);
 
     AckStatus GetAck() const;
+
     void SetAck(AckStatus ack);
 
     int32_t GetOrder() const;
+
     void SetOrder(int32_t order);
 
     Status GetStatus() const;
+
     void SetStatus(Status status);
 
     ElectionCommand GetElectionCommand() const;
+
     void SetElectionCommand(ElectionCommand command);
 
     RecoverCommand GetRecoverCommand() const;
+
     void SetRecoverCommand(RecoverCommand command);
 
     std::size_t GetLength() const;
+
     void SetLength(uint32_t length);
 
     uint32_t GetUsernameLength() const;
@@ -99,13 +111,17 @@ public:
     uint32_t GetMessageLength() const;
 
     std::string GetUsername();
+
     JamStatus SetUsername(std::string username);
 
     std::string GetMessage();
+
     JamStatus SetMessage(std::string message);
+
     JamStatus SetMessage(uint8_t *in, uint32_t length);
 
     const uint8_t *payload() const;
+
     uint8_t *payload();
 
     /**
@@ -127,7 +143,7 @@ public:
      *
      * @return          SUCCESS on normal operation, other JamStatus errors otherwise
      */
-    JamStatus  EncodeTerminatePayload();
+    JamStatus EncodeTerminatePayload();
 
     /**
      * Extracts private variables from byte stream payload
@@ -145,7 +161,6 @@ private:
     };
 
     sockaddr_in address_;           // Sender/Receiver address (IPv4 only)
-    bool encrypt_;
     uint8_t username_[MAX_USER_NAME_LENGTH];
     uint8_t message_[MAX_MESSAGE_LENGTH];
 
@@ -189,6 +204,11 @@ private:
     uint32_t unpacku32(uint8_t *&buf);
 
     // -- Cryptography functions
+    unsigned char iv_[AES_BLOCK_SIZE];       // This must be set to random in production
+    AES_KEY enc_key_;
+    AES_KEY dec_key_;
+    uint8_t enc_buffer_[MAX_MESSAGE_LENGTH];
+    uint32_t enc_length_;
 };
 
 #endif //JAM_PAYLOAD_H

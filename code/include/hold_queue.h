@@ -5,11 +5,16 @@
 #ifndef JAM_HOLD_QUEUE_H
 #define JAM_HOLD_QUEUE_H
 
-#include <queue>
+#ifdef SECURE
+#include "payload_secure.h"
+#else
 #include "payload.h"
+#endif
+
 #include "stream_communicator.h"
 #include "central_queues.h"
 
+#include <queue>
 
 class HoldQueue {
 

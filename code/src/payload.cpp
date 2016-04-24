@@ -19,7 +19,6 @@ Payload::Payload()
           order_(DEFAULT_NO_ORDER),
           username_length_(0),
           message_length_(0) {
-    encrypt_ = ENCRYPT_SET != 0;
 }
 
 Payload::Payload(uint32_t uid, AckStatus ack) {
@@ -28,7 +27,6 @@ Payload::Payload(uint32_t uid, AckStatus ack) {
 
 Payload::Payload(const Payload &payload) {
     memcpy(&address_, &(payload.address_), sizeof(address_));
-    encrypt_ = payload.encrypt_;
     memcpy(username_, payload.username_, MAX_USER_NAME_LENGTH);
     memcpy(message_, payload.message_, MAX_MESSAGE_LENGTH);
 
@@ -46,7 +44,6 @@ Payload::Payload(const Payload &payload) {
 
 void Payload::operator=(const Payload &payload) {
     memcpy(&address_, &(payload.address_), sizeof(address_));
-    encrypt_ = payload.encrypt_;
     memcpy(username_, payload.username_, MAX_USER_NAME_LENGTH);
     memcpy(message_, payload.message_, MAX_MESSAGE_LENGTH);
 
@@ -80,14 +77,6 @@ sockaddr_in *Payload::GetAddress() {
 
 void Payload::SetAddress(const sockaddr_in *address) {
     memcpy(&address_, address, sizeof(address_));
-}
-
-bool Payload::GetEncryption() const {
-    return encrypt_;
-}
-
-void Payload::SetEncryption(bool encrypt) {
-    encrypt_ = encrypt;
 }
 
 MessageType Payload::GetType() const {
