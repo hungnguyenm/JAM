@@ -63,8 +63,16 @@ add_executable(jam_3 ${MAIN_HEADERS} ${MAIN_SOURCES} src/dev/dev_h_3.cpp)
 set_target_properties(jam_3 PROPERTIES COMPILE_FLAGS "-DDEBUG")
 
 # Executables - secure
-add_executable(jams_1 ${MAIN_SECURE_HEADERS} ${MAIN_SECURE_SOURCES} src/dev/dev_h_1.cpp)
-set_target_properties(jams_1 PROPERTIES COMPILE_FLAGS "-DDEBUG -DSECURE")
+if (OPENSSL_FOUND)
+    add_executable(dchats ${MAIN_SECURE_HEADERS} ${MAIN_SECURE_SOURCES} src/main.cpp)
+    set_target_properties(dchat PROPERTIES COMPILE_FLAGS "-DSPECLAB -DSECURE")
+
+    add_executable(dchatds ${MAIN_SECURE_HEADERS} ${MAIN_SECURE_SOURCES} src/main.cpp)
+    set_target_properties(dchatd PROPERTIES COMPILE_FLAGS "-DSPECLAB -DDEBUG -DSECURE")
+
+    add_executable(jams_1 ${MAIN_SECURE_HEADERS} ${MAIN_SECURE_SOURCES} src/dev/dev_h_1.cpp)
+    set_target_properties(jams_1 PROPERTIES COMPILE_FLAGS "-DDEBUG -DSECURE")
+endif ()
 
 # Test executables
 add_executable(test-udp_wrapper ${MAIN_HEADERS} ${MAIN_SOURCES} test/test_udp_wrapper.cpp)
@@ -80,8 +88,13 @@ ADD_DEPENDENCIES(speclab dchat dchatd)
 ADD_CUSTOM_TARGET(local)
 ADD_DEPENDENCIES(local jam_1 jam_2 jam_3)
 
-ADD_CUSTOM_TARGET(local-secure)
-ADD_DEPENDENCIES(local-secure jams_1)
+if (OPENSSL_FOUND)
+    ADD_CUSTOM_TARGET(speclab-secure)
+    ADD_DEPENDENCIES(speclab-secure dchats dchatds)
+
+    ADD_CUSTOM_TARGET(local-secure)
+    ADD_DEPENDENCIES(local-secure jams_1)
+endif ()
 
 if (Boost_FOUND)
     target_link_libraries(dchat ${Boost_LIBRARIES})
@@ -91,12 +104,18 @@ if (Boost_FOUND)
     target_link_libraries(jam_2 ${Boost_LIBRARIES})
     target_link_libraries(jam_3 ${Boost_LIBRARIES})
 
-    target_link_libraries(jams_1 ${Boost_LIBRARIES})
-
     target_link_libraries(test-udp_wrapper ${Boost_LIBRARIES})
     target_link_libraries(test-hold_queue ${Boost_LIBRARIES})
-endif ()
 
-if (OPENSSL_FOUND)
-    target_link_libraries(jams_1 ${OPENSSL_LIBRARIES})
+    if (OPENSSL_FOUND)
+        target_link_libraries(dchats ${Boost_LIBRARIES})
+        target_link_libraries(dchatds ${Boost_LIBRARIES})
+
+        target_link_libraries(jams_1 ${Boost_LIBRARIES})
+
+        target_link_libraries(dchats ${OPENSSL_LIBRARIES})
+        target_link_libraries(dchatds ${OPENSSL_LIBRARIES})
+
+        target_link_libraries(jams_1 ${OPENSSL_LIBRARIES})
+    endif ()
 endif ()
