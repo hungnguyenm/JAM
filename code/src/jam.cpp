@@ -7,6 +7,7 @@
  */
 
 #include "../include/jam.h"
+#include "../include/stress_tester.h"
 
 #include <ifaddrs.h>
 #include <arpa/inet.h>
@@ -171,6 +172,10 @@ void JAM::Main() {
     string username;
     uint8_t buffer[MAX_MESSAGE_LENGTH];
     uint32_t length;
+
+#ifdef STRESS
+    StressTester stressTester(&queues_, STRESS_TEST_INTERVAL, "test_messages.txt");
+#endif
 
     // Infinite loop to monitor central communication
     for (; ;) {

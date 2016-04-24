@@ -12,10 +12,11 @@
 #include "central_queues.h"
 
 class StressTester {
-    StressTester(CentralQueues* queues, int millis, const std::string& fileName);
+public:
+    StressTester(CentralQueues *queues, int millis, const std::string &fileName);
 
 private:
-    CentralQueues* queues_;
+    CentralQueues *queues_;
     int delay_;
     std::string fileName_;
 
