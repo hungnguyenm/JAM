@@ -38,6 +38,7 @@
 #define JAM_CENTRAL_TIMEOUT         1000    // Timeout for main jam waiting internal communication in miliseconds
 #define JOIN_TIMEOUT                10000   // Timeout to join chat group in miliseconds
 
+#define TERMINATE_MESSAGE           "EXIT"  // For terminating using chat message
 #define TERMINATE_WAIT              2       // Waiting time for each thread to terminate in seconds
 
 #define MK_ERROR(x)                 (0x00000000|(x))

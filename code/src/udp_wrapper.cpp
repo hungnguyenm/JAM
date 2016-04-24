@@ -177,11 +177,11 @@ void UdpWrapper::ClearReceivedHistory(const sockaddr_in *addr) {
     in_addr_t ip = addr->sin_addr.s_addr;
     in_port_t port = addr->sin_port;
 
-    for (std::deque<std::tuple<in_addr_t, in_port_t, uint32_t>>::iterator it = received_queue_.begin();
-         it != received_queue_.end(); ++it) {
-        if (std::get<0>(*it) == ip && std::get<1>(*it) == port) {
-            received_queue_.erase(it);
-        }
+    for (auto i = received_queue_.begin(); i != received_queue_.end() ; ) {
+        if (std::get<0>(*i) == ip && std::get<1>(*i) == port)
+            i = received_queue_.erase(i);
+        else
+            ++i;
     }
 }
 
