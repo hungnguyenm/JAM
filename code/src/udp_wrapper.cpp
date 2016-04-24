@@ -341,7 +341,9 @@ void UdpWrapper::RunMonitor() {
                             (*queues_).push(CentralQueues::QueueType::UDP_CRASH, *payload.GetAddress());
                             ack_tickets_.erase(uid);
                             // If this is payload that need to send to leader then push to queue for recovering
-                            leader_failed_queue_.push(payload);
+                            if (payload.GetType() == CHAT_MSG && payload.GetOrder() == DEFAULT_NO_ORDER) {
+                                leader_failed_queue_.push(payload);
+                            }
                         }
                     }
                 } else {
