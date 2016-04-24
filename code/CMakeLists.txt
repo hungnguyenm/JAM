@@ -49,7 +49,7 @@ set(MAIN_SECURE_SOURCES src/leader_manager.cpp src/payload_secure.cpp src/centra
         src/client_manager.cpp src/hold_queue.cpp src/jam.cpp)
 
 # Executables - non-secure
-add_executable(dchat ${MAIN_HEADERS} ${MAIN_SOURCES} src/main.cpp)
+add_executable(dchat ${MAIN_HEADERS} ${MAIN_SOURCES} src/main.cpp include/StressTester.cpp src/stress_tester.cpp include/stress_tester.h)
 set_target_properties(dchat PROPERTIES COMPILE_FLAGS "-DSPECLAB")
 
 add_executable(dchatd ${MAIN_HEADERS} ${MAIN_SOURCES} src/main.cpp)

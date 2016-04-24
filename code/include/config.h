@@ -14,6 +14,8 @@
 #define DEFAULT_INTERFACE           "en0"   // Default UDP interface
 #endif
 
+#define STRESS_TEST_ENABLED         1
+
 #define DEFAULT_PORT                "9346"  // Default UDP datagram port
 
 #define MIN_PORT                    9000    // Port must be greater than MIN_PORT
