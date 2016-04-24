@@ -198,6 +198,9 @@ void JAM::Main() {
                     // These conditions are for reducing computation overhead in case no leader
                     if (queues_.try_pop_user_out(payload)) {
                         has_data = true;
+                        // Leader recover first
+                        udpWrapper_.LeaderRecover(&addr);
+                        
                         payload.SetType(CHAT_MSG);
                         payload.SetUsername(user_name_);
                         if (payload.EncodePayload() == SUCCESS) {
