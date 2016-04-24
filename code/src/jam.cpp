@@ -7,7 +7,10 @@
  */
 
 #include "../include/jam.h"
+
+#ifdef STRESS
 #include "../include/stress_tester.h"
+#endif
 
 #include <ifaddrs.h>
 #include <arpa/inet.h>
