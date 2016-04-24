@@ -64,6 +64,7 @@ private:
     ClientManager clientManager_;
     LeaderManager leaderManager_;
     HoldQueue holdQueue_;
+    ConcurrentQueue<Payload> joinQueue_;
 
     int32_t order_;                         // Order kept track as leader
     int32_t last_witness_order_;            // Order kept track for leader recovery

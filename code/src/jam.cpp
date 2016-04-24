@@ -241,15 +241,20 @@ void JAM::Main() {
                         case STATUS_MSG:
                             switch (payload.GetStatus()) {
                                 case CLIENT_JOIN:
-                                    // Rebuild payload to acknowledge
-                                    payload.clear();
-                                    payload.SetType(STATUS_MSG);
-                                    payload.SetStatus(CLIENT_JOIN_ACK);
-                                    payload.SetMessage(clientManager_.GetPayload(),
-                                                       clientManager_.GetPayloadSize());
+                                    if (leaderManager_.is_election_happening()) {
+                                        // There is an election going on, need to defer this client
+                                        joinQueue_.push(payload);
+                                    } else {
+                                        // Rebuild payload to acknowledge
+                                        payload.clear();
+                                        payload.SetType(STATUS_MSG);
+                                        payload.SetStatus(CLIENT_JOIN_ACK);
+                                        payload.SetMessage(clientManager_.GetPayload(),
+                                                           clientManager_.GetPayloadSize());
 
-                                    addr = *payload.GetAddress();
-                                    udpWrapper_.SendPayloadSingle(payload, &addr);
+                                        addr = *payload.GetAddress();
+                                        udpWrapper_.SendPayloadSingle(payload, &addr);
+                                    }
                                     break;
                                 case CLIENT_JOIN_MULTICAST:
                                     addr = *payload.GetAddress();
@@ -295,6 +300,19 @@ void JAM::Main() {
                             if (payload.GetElectionCommand() == ELECT_WIN) {
                                 addr = *payload.GetAddress();
                                 udpWrapper_.LeaderRecover(&addr);
+                                
+                                // Handle deferred joining client
+                                while (joinQueue_.try_pop(payload)) {
+                                    // Rebuild payload to acknowledge
+                                    payload.clear();
+                                    payload.SetType(STATUS_MSG);
+                                    payload.SetStatus(CLIENT_JOIN_ACK);
+                                    payload.SetMessage(clientManager_.GetPayload(),
+                                                       clientManager_.GetPayloadSize());
+
+                                    addr = *payload.GetAddress();
+                                    udpWrapper_.SendPayloadSingle(payload, &addr);
+                                }
                             }
                             break;
 
