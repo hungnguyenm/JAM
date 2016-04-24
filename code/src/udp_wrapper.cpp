@@ -78,6 +78,11 @@ JamStatus UdpWrapper::SendPayloadSingle(Payload payload,
             payload.SetUid(uid_++);
             payload.SetAddress(addr);
             if (payload.EncodePayload() == SUCCESS) {
+                // Leader recover -- this client is not leader
+                if (payload.GetType() == STATUS_MSG && payload.GetStatus() == PING) {
+                    LeaderRecover(addr);
+                }
+
                 out_queue_.push(payload);
             } else {
                 ret = ENCODE_VALIDATION_FAILED;
@@ -123,6 +128,11 @@ JamStatus UdpWrapper::SendPayloadList(Payload payload,
             payload.SetUid(uid_++);
             payload.SetAddress(&addr);
             if (payload.EncodePayload() == SUCCESS) {
+                // Leader recover -- this client is leader
+                if (payload.GetType() == STATUS_MSG && payload.GetStatus() == PING) {
+                    LeaderRecover(&this_addr_);
+                }
+
                 out_queue_.push(payload);
             } else {
                 ret = ENCODE_VALIDATION_FAILED;
@@ -166,7 +176,6 @@ JamStatus UdpWrapper::GetAddressFromInfo(const char *addr,
 void UdpWrapper::LeaderRecover(const sockaddr_in *addr) {
     Payload payload;
 
-    DCOUT("INFO: UdpWrapper - Leader crashed recovery");
     while (leader_failed_queue_.try_pop(payload)) {
         SendPayloadSingle(payload, addr);
     }
