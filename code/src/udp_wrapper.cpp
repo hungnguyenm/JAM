@@ -201,8 +201,8 @@ JamStatus UdpWrapper::InitUdpSocket(const char *port, uint16_t *bport) {
 
     if (getaddrinfo(NULL, port, &hints, &servinfo) == 0) {
         if ((sockfd_ = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) >= 0) {
+            uint16_t bind_port = ntohs(((sockaddr_in *) servinfo->ai_addr)->sin_port);
             for (uint8_t retries = 0; retries < MAX_UDP_BIND_RETRIES; ++retries) {
-                uint16_t bind_port = ntohs(((sockaddr_in *) servinfo->ai_addr)->sin_port) + retries;
                 ((sockaddr_in *) servinfo->ai_addr)->sin_port = htons(bind_port);
                 if (bind(sockfd_, servinfo->ai_addr, servinfo->ai_addrlen) == 0) {
                     DCOUT("INFO: UdpWrapper - Socket binds successful at port " +
@@ -218,6 +218,7 @@ JamStatus UdpWrapper::InitUdpSocket(const char *port, uint16_t *bport) {
                                       u16_to_string(bind_port)).c_str());
                     ret = UDP_BIND_ERROR;
                 }
+                bind_port++;
             }
         } else {
             DCERR("ERROR: UdpWrapper - Failed to create socket fd");
