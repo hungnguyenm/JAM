@@ -7,7 +7,7 @@
 #include <fstream>
 
 StressTester::StressTester(CentralQueues* queues, int millis, const std::string& fileName) :
-    fd_(fd), delay_(millis), fileName_(fileName) {
+    queues_(queues), delay_(millis), fileName_(fileName) {
         boost::thread(boost::bind(StressTester::Run, this));
 }
 
@@ -20,7 +20,7 @@ void StressTester::Run() {
     Payload payload;
     payload.SetType(MessageType::CHAT_MSG);
     DCOUT("INFO: ST -  Beginning stress test");
-    while (std::getline(infile, line))
+    while (std::getline(file, line))
     {
         payload.SetMessage(line);
         queues_->push(CentralQueues::QueueType::USER_OUT, payload);
