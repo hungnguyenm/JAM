@@ -108,6 +108,8 @@ public:
      */
     void LeaderRecover(const sockaddr_in *addr);
 
+    void LeaderRecover();
+
     /**
      * Clear received history from another client
      *

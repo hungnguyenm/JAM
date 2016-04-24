@@ -78,11 +78,6 @@ JamStatus UdpWrapper::SendPayloadSingle(Payload payload,
             payload.SetUid(uid_++);
             payload.SetAddress(addr);
             if (payload.EncodePayload() == SUCCESS) {
-                // Leader recover -- this client is not leader
-                if (payload.GetType() == STATUS_MSG && payload.GetStatus() == PING) {
-                    LeaderRecover(addr);
-                }
-
                 out_queue_.push(payload);
             } else {
                 ret = ENCODE_VALIDATION_FAILED;
@@ -128,11 +123,6 @@ JamStatus UdpWrapper::SendPayloadList(Payload payload,
             payload.SetUid(uid_++);
             payload.SetAddress(&addr);
             if (payload.EncodePayload() == SUCCESS) {
-                // Leader recover -- this client is leader
-                if (payload.GetType() == STATUS_MSG && payload.GetStatus() == PING) {
-                    LeaderRecover(&this_addr_);
-                }
-
                 out_queue_.push(payload);
             } else {
                 ret = ENCODE_VALIDATION_FAILED;
@@ -177,8 +167,14 @@ void UdpWrapper::LeaderRecover(const sockaddr_in *addr) {
     Payload payload;
 
     while (leader_failed_queue_.try_pop(payload)) {
+        DCOUT("INFO: UdpWrapper - Leader Recover for payload uid = " +
+              u32_to_string(payload.GetUid()));
         SendPayloadSingle(payload, addr);
     }
+}
+
+void UdpWrapper::LeaderRecover() {
+    LeaderRecover(&this_addr_);
 }
 
 void UdpWrapper::ClearReceivedHistory(const sockaddr_in *addr) {
@@ -186,7 +182,7 @@ void UdpWrapper::ClearReceivedHistory(const sockaddr_in *addr) {
     in_addr_t ip = addr->sin_addr.s_addr;
     in_port_t port = addr->sin_port;
 
-    for (auto i = received_queue_.begin(); i != received_queue_.end() ; ) {
+    for (auto i = received_queue_.begin(); i != received_queue_.end();) {
         if (std::get<0>(*i) == ip && std::get<1>(*i) == port)
             i = received_queue_.erase(i);
         else

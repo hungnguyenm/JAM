@@ -23,7 +23,7 @@ JAM::JAM()
           leaderManager_(&queues_, &clientManager_),
           holdQueue_(&queues_),
           order_(DEFAULT_FIRST_ORDER),
-          last_witness_order_(DEFAULT_FIRST_ORDER) {
+          last_witness_order_(DEFAULT_FIRST_ORDER - 1) {
     holdQueue_.SetUserHandlerPipe(userHandler_.get_write_pipe());
 }
 
@@ -350,9 +350,11 @@ void JAM::Main() {
                                     // This client is the leader, need to ping all other clients
                                     multicast_list = clientManager_.GetAllClientSockAddressWithoutMe();
                                     udpWrapper_.SendPayloadList(payload, &multicast_list);
+                                    udpWrapper_.LeaderRecover();
                                 } else if (leaderManager_.GetLeaderAddress(&addr)) {
                                     // This client is not the leader, need to ping the leader
                                     udpWrapper_.SendPayloadSingle(payload, &addr);
+                                    udpWrapper_.LeaderRecover(&addr);
                                 }
                             } else if (payload.GetStatus() == PING_TARGET) {
                                 // Handle targeted ping
