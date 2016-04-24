@@ -9,6 +9,7 @@
 #include <boost/thread.hpp>
 
 #include "stream_communicator.h"
+#include "central_queues.h"
 
 class StressTester {
     StressTester(CentralQueues* queues, int millis, const std::string& fileName);

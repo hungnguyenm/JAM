@@ -49,7 +49,7 @@ set(MAIN_SECURE_SOURCES src/leader_manager.cpp src/payload_secure.cpp src/centra
         src/client_manager.cpp src/hold_queue.cpp src/jam.cpp)
 
 # Executables - non-secure
-add_executable(dchat ${MAIN_HEADERS} ${MAIN_SOURCES} src/main.cpp include/StressTester.cpp src/stress_tester.cpp include/stress_tester.h)
+add_executable(dchat ${MAIN_HEADERS} ${MAIN_SOURCES} src/main.cpp)
 set_target_properties(dchat PROPERTIES COMPILE_FLAGS "-DSPECLAB")
 
 add_executable(dchatd ${MAIN_HEADERS} ${MAIN_SOURCES} src/main.cpp)
@@ -81,6 +81,9 @@ set_target_properties(test-udp_wrapper PROPERTIES COMPILE_FLAGS "-DDEBUG")
 add_executable(test-hold_queue ${MAIN_HEADERS} ${MAIN_SOURCES} test/test_hold_queue.cpp)
 set_target_properties(test-hold_queue PROPERTIES COMPILE_FLAGS "-DDEBUG")
 
+add_executable(test-stress ${MAIN_HEADERS} ${MAIN_SOURCES} src/stress_tester.cpp include/stress_tester.h src/main.cpp)
+set_target_properties(test-stress PROPERTIES COMPILE_FLAGS "-DDEBUG -DSTRESS")
+
 # Group targets
 ADD_CUSTOM_TARGET(speclab)
 ADD_DEPENDENCIES(speclab dchat dchatd)
@@ -106,6 +109,7 @@ if (Boost_FOUND)
 
     target_link_libraries(test-udp_wrapper ${Boost_LIBRARIES})
     target_link_libraries(test-hold_queue ${Boost_LIBRARIES})
+    target_link_libraries(test-stress ${Boost_LIBRARIES})
 
     if (OPENSSL_FOUND)
         target_link_libraries(dchats ${Boost_LIBRARIES})
