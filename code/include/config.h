@@ -17,7 +17,7 @@
 #define DEFAULT_PORT                "9346"  // Default UDP datagram port
 
 #define MIN_PORT                    9000    // Port must be greater than MIN_PORT
-#define MAX_UDP_BIND_RETRIES        10      // Number of retries for different UDP port to bind
+#define MAX_UDP_BIND_RETRIES        20      // Number of retries for different UDP port to bind
 
 #define MAX_MESSAGE_LENGTH          256     // Maximum message length per payload
 #define MAX_USER_NAME_LENGTH        20      // Maximum displayed user name length
@@ -30,7 +30,7 @@
 
 #define MAX_CLIENT_BUFFER_LENGTH    256     // Maximum client list encoded length
 
-#define UDP_RECEIVER_QUEUE_SIZE     100     // Number of payload receiving kept track by receiver to prevent duplicate
+#define UDP_RECEIVER_QUEUE_SIZE     1000    // Number of payload receiving kept track by receiver to prevent duplicate
 #define NUM_UDP_RETRIES             2       // Default number of UDP resend before notify crash
 #define UDP_TIMEOUT                 2000    // Timeout before trying resend UDP payload in miliseconds
 #define ACK_MONITOR_INTERVAL        1       // Ack check interval in seconds
