@@ -173,6 +173,7 @@ void JAM::Main() {
     int32_t history_request;
     vector<sockaddr_in> multicast_list;
     string username;
+    string message;
     uint8_t buffer[MAX_MESSAGE_LENGTH];
     uint32_t length;
 
@@ -201,10 +202,14 @@ void JAM::Main() {
                         // Leader recover first
                         udpWrapper_.LeaderRecover(&addr);
 
-                        payload.SetType(CHAT_MSG);
-                        payload.SetUsername(user_name_);
-                        if (payload.EncodePayload() == SUCCESS) {
-                            udpWrapper_.SendPayloadSingle(payload, &addr);
+                        if (payload.GetMessage() == LIST_MESSAGE) {
+                            PrintClientList();
+                        } else {
+                            payload.SetType(CHAT_MSG);
+                            payload.SetUsername(user_name_);
+                            if (payload.EncodePayload() == SUCCESS) {
+                                udpWrapper_.SendPayloadSingle(payload, &addr);
+                            }
                         }
                     }
                 }
